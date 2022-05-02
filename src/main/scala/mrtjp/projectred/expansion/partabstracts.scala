@@ -8,9 +8,8 @@ package mrtjp.projectred.expansion
 import codechicken.lib.data.{MCDataInput, MCDataOutput}
 import codechicken.lib.vec.{BlockCoord, Rotation, Vector3}
 import codechicken.multipart._
-import mrtjp.core.world.PlacementLib
 import mrtjp.projectred.api.{IConnectable, IScrewdriver}
-import mrtjp.projectred.core.{TFacePowerPart, TFaceConnectable, TSwitchPacket}
+import mrtjp.projectred.core.{NewPlacementLib, TFaceConnectable, TFacePowerPart, TSwitchPacket}
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
@@ -102,7 +101,7 @@ trait TFaceElectricalDevice extends TMultiPart with TCuboidPart with TNormalOccl
     def canStay =
     {
         val pos = new BlockCoord(tile).offset(side)
-        PlacementLib.canPlaceGateOnSide(world, pos.x, pos.y, pos.z, side^1)
+        NewPlacementLib.canPlaceGateOnSide(world, pos.x, pos.y, pos.z, side^1)
     }
 
     def dropIfCantStay() =

@@ -1,13 +1,12 @@
 package mrtjp.projectred.transmission
 
 import java.util.{List => JList}
-
 import codechicken.lib.vec._
 import codechicken.multipart.{MultiPartRegistry, TItemMultiPart}
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.item.{ItemCore, TItemGlassSound}
-import mrtjp.core.world.PlacementLib
 import mrtjp.projectred.ProjectRedTransmission
+import mrtjp.projectred.core.NewPlacementLib
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.entity.player.EntityPlayer
@@ -30,7 +29,7 @@ class ItemPartWire extends ItemWireCommon("projectred.transmission.wire")
     def newPart(item:ItemStack, player:EntityPlayer, world:World, pos:BlockCoord, side:Int, vhit:Vector3) =
     {
         val onPos = pos.copy.offset(side^1)
-        if (!PlacementLib.canPlaceWireOnSide(world, onPos.x, onPos.y, onPos.z, side)) null
+        if (!NewPlacementLib.canPlaceWireOnSide(world, onPos.x, onPos.y, onPos.z, side)) null
         else
         {
             val wiredef = WireDef.values(item.getItemDamage)

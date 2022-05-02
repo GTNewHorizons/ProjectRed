@@ -12,9 +12,8 @@ import codechicken.lib.vec._
 import codechicken.microblock.FaceMicroClass
 import codechicken.multipart._
 import cpw.mods.fml.relauncher.{Side, SideOnly}
-import mrtjp.core.world.PlacementLib
 import mrtjp.projectred.api.{IConnectable, IScrewdriver}
-import mrtjp.projectred.core.{Configurator, TFaceConnectable, TSwitchPacket}
+import mrtjp.projectred.core.{Configurator, NewPlacementLib, TFaceConnectable, TSwitchPacket}
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
@@ -174,7 +173,7 @@ abstract class GatePart extends TMultiPart with TCuboidPart with TNormalOcclusio
     def canStay =
     {
         val pos = new BlockCoord(tile).offset(side)
-        PlacementLib.canPlaceGateOnSide(world, pos.x, pos.y, pos.z, side^1)
+        NewPlacementLib.canPlaceGateOnSide(world, pos.x, pos.y, pos.z, side^1)
     }
 
     def dropIfCantStay() =

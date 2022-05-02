@@ -6,14 +6,13 @@
 package mrtjp.projectred.integration
 
 import java.util.{List => JList}
-
 import codechicken.lib.render.{CCRenderState, TextureUtils}
 import codechicken.lib.vec.{BlockCoord, Scale, Translation, Vector3}
 import codechicken.multipart.{MultiPartRegistry, TItemMultiPart, TMultiPart}
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.item.{ItemCore, ItemDefinition, TItemGlassSound}
-import mrtjp.core.world.PlacementLib
 import mrtjp.projectred.ProjectRedIntegration
+import mrtjp.projectred.core.NewPlacementLib
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.entity.player.EntityPlayer
@@ -32,7 +31,7 @@ class ItemPartGate extends ItemCore("projectred.integration.gate") with TItemMul
     def newPart(item:ItemStack, player:EntityPlayer, world:World, pos:BlockCoord, side:Int, vhit:Vector3):TMultiPart =
     {
         val onPos = pos.copy.offset(side^1)
-        if (!PlacementLib.canPlaceGateOnSide(world, onPos.x, onPos.y, onPos.z, side)) return null
+        if (!NewPlacementLib.canPlaceGateOnSide(world, onPos.x, onPos.y, onPos.z, side)) return null
 
         val gtype = GateDefinition(item.getItemDamage)
         if (!gtype.implemented) return null

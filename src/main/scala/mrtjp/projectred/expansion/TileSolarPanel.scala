@@ -13,10 +13,9 @@ import codechicken.microblock.FaceMicroClass
 import codechicken.multipart.{MultiPartRegistry, TItemMultiPart, TMultiPart}
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.item.{ItemCore, TItemGlassSound}
-import mrtjp.core.world.PlacementLib
 import mrtjp.projectred.ProjectRedExpansion
 import mrtjp.projectred.api.IConnectable
-import mrtjp.projectred.core.{ILowLoadMachine, ILowLoadPowerLine, PowerConductor}
+import mrtjp.projectred.core.{ILowLoadMachine, ILowLoadPowerLine, NewPlacementLib, PowerConductor}
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemStack
@@ -130,7 +129,7 @@ class ItemSolarPanel extends ItemCore("projectred.expansion.solar_panel") with T
     override def newPart(item:ItemStack, player:EntityPlayer, world:World, pos:BlockCoord, side:Int, vhit:Vector3):TMultiPart =
     {
         val onPos = pos.copy.offset(side^1)
-        if (!PlacementLib.canPlaceGateOnSide(world, onPos.x, onPos.y, onPos.z, side)) return null
+        if (!NewPlacementLib.canPlaceGateOnSide(world, onPos.x, onPos.y, onPos.z, side)) return null
 
         val solar = MultiPartRegistry.createPart("pr_solar", false).asInstanceOf[SolarPanelPart]
         if (solar != null) solar.preparePlacement(player, pos, side, item.getItemDamage)

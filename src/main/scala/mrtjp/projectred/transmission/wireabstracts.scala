@@ -8,7 +8,6 @@ import codechicken.microblock.handler.MicroblockProxy
 import codechicken.microblock.{ISidedHollowConnect, ItemMicroPart, MicroMaterialRegistry}
 import codechicken.multipart.{PartMap, TMultiPart, TNormalOcclusion, TileMultipart}
 import cpw.mods.fml.relauncher.{Side, SideOnly}
-import mrtjp.core.world.PlacementLib
 import mrtjp.projectred.ProjectRedCore
 import mrtjp.projectred.api.IConnectable
 import mrtjp.projectred.core._
@@ -247,7 +246,7 @@ abstract class WirePart extends TMultiPart with TWireCommons with TFaceConnectab
     override def canStay =
     {
         val pos = new BlockCoord(tile).offset(side)
-        PlacementLib.canPlaceWireOnSide(world, pos.x, pos.y, pos.z, side^1)
+        NewPlacementLib.canPlaceWireOnSide(world, pos.x, pos.y, pos.z, side^1)
     }
 
     override def getItem = getWireType.makeStack

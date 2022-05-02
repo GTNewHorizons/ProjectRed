@@ -10,9 +10,9 @@ import codechicken.multipart._
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.color.Colors_old
 import mrtjp.core.vec.InvertX
-import mrtjp.core.world.{PlacementLib, WorldLib}
+import mrtjp.core.world.WorldLib
 import mrtjp.projectred.ProjectRedIllumination
-import mrtjp.projectred.core.RenderHalo
+import mrtjp.projectred.core.{NewPlacementLib, RenderHalo}
 import mrtjp.projectred.core.libmc.PRLib
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.entity.player.EntityPlayer
@@ -182,7 +182,7 @@ object BaseLightPart
 {
     def canPlaceLight(w:World, x:Int, y:Int, z:Int, side:Int):Boolean =
     {
-        if (PlacementLib.canPlaceLight(w, x, y, z, side)) return true
+        if (NewPlacementLib.canPlaceLight(w, x, y, z, side)) return true
 
         val part = PRLib.getMultiPart(w, x, y, z, side)
         if (part.isInstanceOf[HollowMicroblock]) return true

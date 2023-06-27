@@ -2,10 +2,6 @@ package mrtjp.projectred.core;
 
 import static mrtjp.projectred.core.PartDefs.*;
 
-import mrtjp.core.color.Colors_old;
-import mrtjp.projectred.ProjectRedCore;
-import mrtjp.projectred.core.libmc.recipe.*;
-
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
@@ -15,6 +11,9 @@ import net.minecraftforge.oredict.ShapelessOreRecipe;
 
 import codechicken.microblock.handler.MicroblockProxy;
 import cpw.mods.fml.common.registry.GameRegistry;
+import mrtjp.core.color.Colors_old;
+import mrtjp.projectred.ProjectRedCore;
+import mrtjp.projectred.core.libmc.recipe.*;
 
 public class CoreRecipes {
 

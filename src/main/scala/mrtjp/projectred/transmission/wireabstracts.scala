@@ -149,7 +149,6 @@ trait TWireCommons
   @SideOnly(Side.CLIENT)
   override def renderStatic(pos: Vector3, pass: Int) = {
     if (pass == 0 && useStaticRenderer) {
-      TextureUtils.bindAtlas(0)
       CCRenderState.setBrightness(world, x, y, z)
       doStaticTessellation(pos, pass)
       true
@@ -160,7 +159,6 @@ trait TWireCommons
   override def renderDynamic(pos: Vector3, frame: Float, pass: Int) {
     if (pass == 0 && !useStaticRenderer) {
       GL11.glDisable(GL11.GL_LIGHTING)
-      TextureUtils.bindAtlas(0)
       CCRenderState.hasColour = true
       CCRenderState.startDrawing()
 

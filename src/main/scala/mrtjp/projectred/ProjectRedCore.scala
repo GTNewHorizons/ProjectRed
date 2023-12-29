@@ -25,7 +25,7 @@ import org.apache.logging.log4j.LogManager
 )
 object ProjectRedCore {
   val log = LogManager.getFormatterLogger("ProjRed|Core")
-  final val VERSION = "GRADLETOKEN_VERSION"
+  final val VERSION = Tags.VERSION
 
   /** Items * */
   var itemPart: ItemPart = null

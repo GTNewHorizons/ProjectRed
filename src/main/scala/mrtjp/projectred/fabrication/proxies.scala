@@ -19,6 +19,7 @@ import mrtjp.projectred.ProjectRedFabrication._
 import mrtjp.projectred.core.{IProxy, PartDefs}
 import mrtjp.projectred.integration.{GateDefinition, RenderGate}
 import mrtjp.projectred.{ProjectRedFabrication, ProjectRedIntegration}
+import mrtjp.projectred.Tags
 import net.minecraft.init.{Blocks, Items}
 import net.minecraft.inventory.InventoryCrafting
 import net.minecraft.item.ItemStack
@@ -52,8 +53,8 @@ class FabricationProxy_server extends IProxy with IPartFactory2 {
     }
   }
 
-  override def version = "@VERSION@"
-  override def build = "@BUILD_NUMBER@"
+  override def version = Tags.VERSION
+  override def build = "0"
 
   override def createPart(name: String, nbt: NBTTagCompound) = createPart(name)
   override def createPart(name: String, packet: MCDataInput) = createPart(name)

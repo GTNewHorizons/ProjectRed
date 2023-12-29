@@ -15,6 +15,7 @@ import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.gui.GuiHandler
 import mrtjp.projectred.ProjectRedIntegration._
 import mrtjp.projectred.core.{IProxy, PartDefs}
+import mrtjp.projectred.Tags
 import net.minecraft.init.Blocks
 import net.minecraft.item.ItemStack
 import net.minecraftforge.client.MinecraftForgeClient
@@ -55,8 +56,8 @@ class IntegrationProxy_server extends IProxy with IPartFactory {
     case _          => null
   }
 
-  override def version = "@VERSION@"
-  override def build = "@BUILD_NUMBER@"
+  override def version = Tags.VERSION
+  override def build = "0"
 }
 
 class IntegrationProxy_client extends IntegrationProxy_server {

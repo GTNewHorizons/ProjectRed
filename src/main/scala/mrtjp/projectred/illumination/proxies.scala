@@ -8,6 +8,7 @@ import mrtjp.core.color.Colors_old
 import mrtjp.projectred.ProjectRedIllumination
 import mrtjp.projectred.ProjectRedIllumination._
 import mrtjp.projectred.core.{Configurator, IProxy}
+import mrtjp.projectred.Tags
 import net.minecraft.item.Item
 import net.minecraftforge.client.MinecraftForgeClient
 
@@ -51,8 +52,8 @@ class IlluminationProxy_server extends IProxy with IPartFactory {
     case None    => null
   }
 
-  override def version = "@VERSION@"
-  override def build = "@BUILD_NUMBER@"
+  override def version = Tags.VERSION
+  override def build = "0"
 }
 
 class IlluminationProxy_client extends IlluminationProxy_server {

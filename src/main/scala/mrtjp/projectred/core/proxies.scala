@@ -7,6 +7,7 @@ import mrtjp.core.fx.FXEngine
 import mrtjp.projectred.ProjectRedCore._
 import mrtjp.projectred.core.libmc.fx.{ParticleIconRegistry, ParticleManagement}
 import mrtjp.projectred.core.libmc.recipe.RecipeLib
+import mrtjp.projectred.Tags
 import net.minecraftforge.common.MinecraftForge
 
 class CoreProxy_server extends IProxy {
@@ -27,8 +28,8 @@ class CoreProxy_server extends IProxy {
 
   def postinit() {}
 
-  override def version = "@VERSION@"
-  override def build = "@BUILD_NUMBER@"
+  override def version = Tags.VERSION
+  override def build = "0"
 }
 
 class CoreProxy_client extends CoreProxy_server {

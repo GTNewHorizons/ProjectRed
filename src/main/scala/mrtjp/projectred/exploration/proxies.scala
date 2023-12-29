@@ -20,6 +20,7 @@ import mrtjp.projectred.core.{
   PartDefs,
   ShapelessOreNBTRecipe
 }
+import mrtjp.projectred.Tags
 import net.minecraft.init.{Blocks, Items}
 import net.minecraft.item.ItemStack
 import net.minecraftforge.client.MinecraftForgeClient
@@ -312,8 +313,8 @@ class ExplorationProxy_server extends IProxy {
     InvWrapper.register(BarrelInvWrapper)
   }
 
-  override def version = "@VERSION@"
-  override def build = "@BUILD_NUMBER@"
+  override def version = Tags.VERSION
+  override def build = "0"
 }
 
 class ExplorationProxy_client extends ExplorationProxy_server {

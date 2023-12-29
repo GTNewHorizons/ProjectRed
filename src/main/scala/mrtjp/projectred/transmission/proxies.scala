@@ -7,6 +7,7 @@ import codechicken.multipart.{MultiPartRegistry, TMultiPart}
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.projectred.ProjectRedTransmission._
 import mrtjp.projectred.core.IProxy
+import mrtjp.projectred.Tags
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraftforge.client.MinecraftForgeClient
 
@@ -55,8 +56,8 @@ class TransmissionProxy_server extends IProxy with IPartFactory2 {
     case _ => null
   }
 
-  override def version = "@VERSION@"
-  override def build = "@BUILD_NUMBER@"
+  override def version = Tags.VERSION
+  override def build = "0"
 }
 
 class TransmissionProxy_client extends TransmissionProxy_server {

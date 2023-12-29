@@ -13,6 +13,7 @@ import mrtjp.core.data.{TClientKeyTracker, TServerKeyTracker}
 import mrtjp.core.gui.GuiHandler
 import mrtjp.projectred.ProjectRedExpansion._
 import mrtjp.projectred.core.{Configurator, IProxy, PartDefs}
+import mrtjp.projectred.Tags
 import net.minecraft.client.Minecraft
 import net.minecraft.init.{Blocks, Items}
 import net.minecraft.item.{Item, ItemStack}
@@ -76,8 +77,8 @@ class ExpansionProxy_server extends IProxy with IPartFactory2 {
     MinecraftForge.EVENT_BUS.register(TeleposedEnderPearlProperty)
   }
 
-  override def version = "@VERSION@"
-  override def build = "@BUILD_NUMBER@"
+  override def version = Tags.VERSION
+  override def build = "0"
 
   override def createPart(name: String, nbt: NBTTagCompound) = createPart(name)
   override def createPart(name: String, packet: MCDataInput) = createPart(name)

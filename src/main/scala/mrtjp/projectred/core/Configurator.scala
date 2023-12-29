@@ -6,14 +6,15 @@
 package mrtjp.projectred.core
 
 import mrtjp.core.data.{ModConfig, SpecialConfigGui, TModGuiFactory}
+import mrtjp.projectred.Tags
 import net.minecraft.client.gui.GuiScreen
 
 object Configurator extends ModConfig("ProjRed|Core") {
 
   /** Constants * */
   var modName = "Project Red"
-  var version = "@VERSION@"
-  var buildnumber = "@BUILD_NUMBER@"
+  var version = Tags.VERSION
+  var buildnumber = "0"
 
   /** General Settings * */
   var versionChecking = true

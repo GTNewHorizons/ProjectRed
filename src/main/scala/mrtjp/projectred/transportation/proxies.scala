@@ -8,6 +8,7 @@ import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.gui.GuiHandler
 import mrtjp.projectred.ProjectRedTransportation._
 import mrtjp.projectred.core.{Configurator, IProxy}
+import mrtjp.projectred.Tags
 import net.minecraftforge.client.MinecraftForgeClient
 
 class TransportationProxy_server extends IProxy with IPartFactory {
@@ -63,8 +64,8 @@ class TransportationProxy_server extends IProxy with IPartFactory {
     case _                       => null
   }
 
-  override def version = "@VERSION@"
-  override def build = "@BUILD_NUMBER@"
+  override def version = Tags.VERSION
+  override def build = "0"
 }
 
 class TransportationProxy_client extends TransportationProxy_server {

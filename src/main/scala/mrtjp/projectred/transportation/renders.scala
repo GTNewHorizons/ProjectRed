@@ -133,7 +133,7 @@ object RenderPipe {
   }
 
   def renderBreakingOverlay(icon: IIcon, pipe: SubcorePipePart) {
-    CCRenderState.setPipeline(
+    CCRenderState.instance.setPipeline(
       new Translation(pipe.x, pipe.y, pipe.z),
       new IconTransformation(icon)
     )
@@ -219,10 +219,10 @@ object RenderPipe {
     GL11.glEnable(GL11.GL_LIGHTING)
 
     val t = new Vector3(x, y, z).add(-4 / 16d, 0, -4 / 16d)
-
-    CCRenderState.setPipeline(new Translation(t))
-    CCRenderState.alphaOverride = 32
-    CCRenderState.baseColour = Colors(colour).rgba
+    val state = CCRenderState.instance
+    state.setPipeline(new Translation(t))
+    state.alphaOverride = 32
+    state.baseColour = Colors(colour).rgba
     BlockRenderer.renderCuboid(
       new Cuboid6(1 / 16d, 1 / 16d, 1 / 16d, 7 / 16d, 7 / 16d, 7 / 16d),
       0
@@ -239,13 +239,15 @@ object RenderPipe {
     GL11.glDisable(GL11.GL_LIGHTING)
     GL11.glDisable(GL11.GL_CULL_FACE)
     GL11.glDepthMask(false)
-    CCRenderState.startDrawing()
-    CCRenderState.pullLightmap()
-    CCRenderState.setDynamic()
+    val state = CCRenderState.instance
+    state.startDrawing()
+    state.pullLightmap()
+    state.setDynamic()
   }
 
   private def restoreRenderState() {
-    CCRenderState.draw()
+    val state = CCRenderState.instance
+    state.draw()
     GL11.glDepthMask(true)
     GL11.glColor3f(1, 1, 1)
     GL11.glEnable(GL11.GL_CULL_FACE)
@@ -264,16 +266,17 @@ object RenderPipe {
     GL11.glEnable(GL11.GL_BLEND)
     GL11.glDepthMask(false)
     GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-    CCRenderState.reset()
+    val state = CCRenderState.instance
+    state.reset()
     TextureUtils.bindAtlas(0)
-    CCRenderState.setDynamic()
-    CCRenderState.setBrightness(part.world, pos.x, pos.y, pos.z)
-    CCRenderState.alphaOverride = 127
-    CCRenderState.startDrawing()
+    state.setDynamic()
+    state.setBrightness(part.world, pos.x, pos.y, pos.z)
+    state.alphaOverride = 127
+    state.startDrawing()
 
     tFunc()
 
-    CCRenderState.draw()
+    state.draw()
     GL11.glDisable(GL11.GL_BLEND)
     GL11.glDepthMask(true)
     GL11.glPopMatrix()
@@ -528,16 +531,17 @@ object PipeItemRenderer extends IItemRenderer {
     val pdef = PipeDefs.values(meta)
     if (pdef == null) return
     TextureUtils.bindAtlas(0)
-    CCRenderState.reset()
-    CCRenderState.setDynamic()
-    CCRenderState.pullLightmap()
-    CCRenderState.startDrawing()
+    val state = CCRenderState.instance
+    state.reset()
+    state.setDynamic()
+    state.pullLightmap()
+    state.startDrawing()
 
     RenderPipe.renderInv(
       new Scale(scale).`with`(new Translation(x, y, z)),
       new IconTransformation(pdef.sprites(0))
     )
 
-    CCRenderState.draw()
+    state.draw()
   }
 }

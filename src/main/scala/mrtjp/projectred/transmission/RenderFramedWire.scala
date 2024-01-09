@@ -65,7 +65,7 @@ object RenderFramedWire {
   }
 
   def renderBreakingOverlay(icon: IIcon, wire: FramedWirePart) {
-    CCRenderState.setPipeline(
+    CCRenderState.instance.setPipeline(
       new Translation(wire.x, wire.y, wire.z),
       new IconTransformation(icon)
     )
@@ -91,18 +91,18 @@ object RenderFramedWire {
     GL11.glEnable(GL11.GL_BLEND)
     GL11.glDepthMask(false)
     GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-
-    CCRenderState.reset()
+    val state = CCRenderState.instance
+    state.reset()
     TextureUtils.bindAtlas(0)
-    CCRenderState.setDynamic()
-    CCRenderState.setBrightness(part.world, pos.x, pos.y, pos.z)
-    CCRenderState.alphaOverride = 127
-    CCRenderState.startDrawing()
+    state.setDynamic()
+    state.setBrightness(part.world, pos.x, pos.y, pos.z)
+    state.alphaOverride = 127
+    state.startDrawing()
 
     getOrGenerateJacketedModel(modelKey(part))
       .renderMaterial(Vector3.zero, material)
 
-    CCRenderState.draw()
+    state.draw()
 
     GL11.glDisable(GL11.GL_BLEND)
     GL11.glDepthMask(true)

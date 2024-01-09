@@ -106,7 +106,7 @@ object RenderWire {
       }
     }
 
-    CCRenderState.setPipeline(
+    CCRenderState.instance.setPipeline(
       new Translation(wire.x, wire.y, wire.z),
       new IconTransformation(icon)
     )

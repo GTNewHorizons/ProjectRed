@@ -839,9 +839,10 @@ class InputPanelButtonsModel extends ComponentModel {
 
   override def renderModel(t: Transformation, orient: Int) {
     val icon = new IconTransformation(baseIcon)
+    val state = CCRenderState.instance
     for (i <- 0 until 16) {
-      CCRenderState.setPipeline(
-        CCRenderState.lightMatrix,
+      state.setPipeline(
+        state.lightMatrix,
         orientT(orient).`with`(t),
         icon,
         ColourMultiplier.instance(Colors(i).rgba)

@@ -31,10 +31,11 @@ trait TWireItemRenderCommon extends IItemRenderer {
     val wdef = WireDef.values(meta)
     if (wdef == null) return
     TextureUtils.bindAtlas(0)
-    CCRenderState.reset()
-    CCRenderState.setDynamic()
-    CCRenderState.pullLightmap()
-    CCRenderState.startDrawing()
+    val state = CCRenderState.instance
+    state.reset()
+    state.setDynamic()
+    state.pullLightmap()
+    state.startDrawing()
 
     doRender(
       wdef.thickness,
@@ -43,7 +44,7 @@ trait TWireItemRenderCommon extends IItemRenderer {
       new IconTransformation(wdef.wireSprites(0))
     )
 
-    CCRenderState.draw()
+    state.draw()
   }
 
   def doRender(thickness: Int, renderHue: Int, ops: IVertexOperation*)

@@ -77,11 +77,12 @@ object RenderGate {
 
   def renderInv(stack: ItemStack, t: Transformation, id: Int) {
     val r = renderers(id)
+    val state = CCRenderState.instance
     TextureUtils.bindAtlas(0)
     r.prepareInv(stack)
-    CCRenderState.startDrawing()
+    state.startDrawing()
     r.renderStatic(t, 0)
-    CCRenderState.draw()
+    state.draw()
     if (r.hasSpecials) r.renderDynamic(t)
   }
 
@@ -761,11 +762,11 @@ class RenderTimer extends GateRenderer[SequentialGatePart] {
   }
 
   override def renderDynamic(t: Transformation) {
-    CCRenderState.startDrawing()
-    CCRenderState.pullLightmap()
-    CCRenderState.setDynamic()
+    val state = CCRenderState.instance
+    state.pullLightmap()
+    state.setDynamic()
     pointer.renderModel(t, 0)
-    CCRenderState.draw()
+    state.draw()
   }
 }
 
@@ -808,11 +809,12 @@ class RenderSequencer extends GateRenderer[SequentialGatePart] {
   override def hasSpecials = true
 
   override def renderDynamic(t: Transformation) {
-    CCRenderState.startDrawing()
-    CCRenderState.pullLightmap()
-    CCRenderState.setDynamic()
+    val state = CCRenderState.instance
+    state.startDrawing()
+    state.pullLightmap()
+    state.setDynamic()
     pointer.renderModel(t, 0)
-    CCRenderState.draw()
+    state.draw()
   }
 }
 
@@ -857,11 +859,12 @@ class RenderCounter extends GateRenderer[SequentialGatePart] {
   override def hasSpecials = true
 
   override def renderDynamic(t: Transformation) {
-    CCRenderState.startDrawing()
-    CCRenderState.pullLightmap()
-    CCRenderState.setDynamic()
+    val state = CCRenderState.instance
+    state.startDrawing()
+    state.pullLightmap()
+    state.setDynamic()
     pointer.renderModel(t, if (reflect) 1 else 0)
-    CCRenderState.draw()
+    state.draw()
   }
 }
 
@@ -913,11 +916,12 @@ class RenderStateCell extends GateRenderer[SequentialGatePart] {
   }
 
   override def renderDynamic(t: Transformation) {
-    CCRenderState.startDrawing()
-    CCRenderState.pullLightmap()
-    CCRenderState.setDynamic()
+    val state = CCRenderState.instance
+    state.startDrawing()
+    state.pullLightmap()
+    state.setDynamic()
     pointer.renderModel(t, if (reflect) 1 else 0)
-    CCRenderState.draw()
+    state.draw()
   }
 }
 

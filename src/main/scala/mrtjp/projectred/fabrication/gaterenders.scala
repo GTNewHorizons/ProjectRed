@@ -6,6 +6,7 @@
 package mrtjp.projectred.fabrication
 
 import codechicken.lib.math.MathHelper
+import codechicken.lib.render.CCRenderState
 import codechicken.lib.vec.Transformation
 import mrtjp.core.color.Colors
 import mrtjp.projectred.core.TFaceOrient._

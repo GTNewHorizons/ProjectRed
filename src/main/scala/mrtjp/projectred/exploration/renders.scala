@@ -99,26 +99,27 @@ object GemSawRenderer extends IItemRenderer {
       case _ => return
     }
 
-    CCRenderState.reset()
-    CCRenderState.setDynamic()
-    CCRenderState.pullLightmap()
+    val state = CCRenderState.instance
+    state.reset()
+    state.setDynamic()
+    state.pullLightmap()
     CCRenderState.changeTexture("microblock:textures/items/saw.png")
-    CCRenderState.baseColour = 0xffffffff
+    state.baseColour = 0xffffffff
 
-    CCRenderState.startDrawing()
+    state.startDrawing()
     handle.render(t)
     holder.render(t)
-    CCRenderState.draw()
+    state.draw()
 
     if (rtype != ItemRenderType.EQUIPPED_FIRST_PERSON)
       GL11.glDisable(GL11.GL_LIGHTING)
     GL11.glDisable(GL11.GL_CULL_FACE)
 
-    CCRenderState.startDrawing()
-    CCRenderState.baseColour = colour(item)
+    state.startDrawing()
+    state.baseColour = colour(item)
     blade.render(t, new UVTranslation(0, 4 / 64d))
-    CCRenderState.baseColour = 0xffffffff
-    CCRenderState.draw()
+    state.baseColour = 0xffffffff
+    state.draw()
 
     GL11.glEnable(GL11.GL_CULL_FACE)
     if (rtype != EQUIPPED_FIRST_PERSON) GL11.glEnable(GL11.GL_LIGHTING)
@@ -150,9 +151,10 @@ object RenderLily extends TInstancedBlockRender {
   ) = {
     val te = WorldLib.getTileEntity(w, x, y, z, classOf[TileLily])
     if (te != null) {
-      CCRenderState.reset()
-      CCRenderState.lightMatrix.locate(w, x, y, z)
-      CCRenderState.setBrightness(w, x, y, z)
+      val state = CCRenderState.instance
+      state.reset()
+      state.lightMatrix.locate(w, x, y, z)
+      state.setBrightness(w, x, y, z)
       model.render(
         new Translation(x, y, z),
         new IconTransformation(icons(te.growth))
@@ -169,13 +171,14 @@ object RenderLily extends TInstancedBlockRender {
   override def getIcon(side: Int, meta: Int) = icons(7)
 
   override def renderInvBlock(r: RenderBlocks, meta: Int) {
-    CCRenderState.reset()
-    CCRenderState.setDynamic()
-    CCRenderState.pullLightmap()
-    CCRenderState.setNormal(0, -1, 0)
-    CCRenderState.startDrawing()
+    val state = CCRenderState.instance
+    state.reset()
+    state.setDynamic()
+    state.pullLightmap()
+    state.setNormal(0, -1, 0)
+    state.startDrawing()
     r.drawCrossedSquares(icons(7), -0.5d, -0.95d, -0.5d, 1.65f)
-    CCRenderState.draw()
+    state.draw()
   }
 
   override def registerIcons(reg: IIconRegister) {

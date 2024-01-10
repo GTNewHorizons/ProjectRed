@@ -109,12 +109,13 @@ class LightButtonPart(m: Int)
   @SideOnly(Side.CLIENT)
   override def renderStatic(pos: Vector3, pass: Int) = {
     if (pass == 0) {
-      CCRenderState.setBrightness(world, x, y, z)
-      CCRenderState.setPipeline(
+      val state = CCRenderState.instance
+      state.setBrightness(world, x, y, z)
+      state.setPipeline(
         new Translation(x, y, z),
         new IconTransformation(ItemPartButton.icon),
         new ColourMultiplier(Colors(colorMeta).rgba),
-        CCRenderState.lightMatrix
+        state.lightMatrix
       )
       BlockRenderer.renderCuboid(getBounds, 0)
       true

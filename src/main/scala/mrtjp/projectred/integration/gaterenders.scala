@@ -763,6 +763,7 @@ class RenderTimer extends GateRenderer[SequentialGatePart] {
 
   override def renderDynamic(t: Transformation) {
     val state = CCRenderState.instance
+    state.startDrawing()
     state.pullLightmap()
     state.setDynamic()
     pointer.renderModel(t, 0)

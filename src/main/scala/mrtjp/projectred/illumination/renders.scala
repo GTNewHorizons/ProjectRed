@@ -80,7 +80,7 @@ object LampTESR extends TileEntitySpecialRenderer with IItemRenderer {
     te match {
       case light: ILight if light.isOn =>
         val meta =
-          te.getWorldObj.getBlockMetadata(te.xCoord, te.yCoord, te.zCoord)
+          te.getWorldObj.getBlockMetadata(te.xCoord, te.yCoord, te.zCoord) % 16
         RenderHalo.addLight(te.xCoord, te.yCoord, te.zCoord, meta, lBounds)
       case _ =>
     }

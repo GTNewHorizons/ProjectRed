@@ -1,9 +1,9 @@
 package mrtjp.projectred.exploration
 
 import java.lang.{Character => JChar}
-
 import codechicken.microblock.BlockMicroMaterial
 import cpw.mods.fml.client.registry.ClientRegistry
+import cpw.mods.fml.common.Loader
 import cpw.mods.fml.common.registry.GameRegistry
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.block.TileRenderRegistry
@@ -693,18 +693,33 @@ object ExplorationRecipes {
   private def initEtcRecipes() {
 
     /** Wool Gin to string recipe * */
-    GameRegistry.addRecipe(
-      new ItemStack(Items.string, 4),
-      "gw",
-      'g': JChar,
-      new ItemStack(
-        ProjectRedExploration.itemWoolGin,
-        1,
-        OreDictionary.WILDCARD_VALUE
-      ),
-      'w': JChar,
-      Blocks.wool
-    )
+    if (Loader.isModLoaded("dreamcraft")) {
+      GameRegistry.addRecipe(
+        new ItemStack(Items.string, 2),
+        "gw",
+        'g': JChar,
+        new ItemStack(
+          ProjectRedExploration.itemWoolGin,
+          1,
+          OreDictionary.WILDCARD_VALUE
+        ),
+        'w': JChar,
+        Blocks.wool
+      )
+    } else {
+      GameRegistry.addRecipe(
+        new ItemStack(Items.string, 4),
+        "gw",
+        'g': JChar,
+        new ItemStack(
+          ProjectRedExploration.itemWoolGin,
+          1,
+          OreDictionary.WILDCARD_VALUE
+        ),
+        'w': JChar,
+        Blocks.wool
+      )
+    }
 
     /** Item Barrel  * */
     GameRegistry.addRecipe(

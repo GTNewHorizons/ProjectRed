@@ -3,12 +3,12 @@
 dependencies {
     api("com.github.GTNewHorizons:ForgeMultipart:1.4.8:dev")
     api("com.github.GTNewHorizons:ForgeRelocation:0.1.2:dev")
-    implementation("com.github.GTNewHorizons:NotEnoughItems:2.5.23-GTNH:dev")
+    implementation("com.github.GTNewHorizons:NotEnoughItems:2.6.0-GTNH:dev")
 
-    compileOnly("com.github.GTNewHorizons:TinkersConstruct:1.11.11-GTNH:dev") {
+    compileOnly("com.github.GTNewHorizons:TinkersConstruct:1.12.2-GTNH:dev") {
         transitive = false
     }
-    compileOnly("com.github.GTNewHorizons:StorageDrawers:1.13.3-GTNH:dev") {
+    compileOnly("com.github.GTNewHorizons:StorageDrawers:1.13.5-GTNH:dev") {
         transitive = false
     }
 

@@ -141,9 +141,10 @@ object WireModelGen {
     n
   }
 
-  private val threadLocal = ThreadLocal.withInitial(new Supplier[WireModelGen]() {
-    override def get(): WireModelGen = new WireModelGen()
-  })
+  private val threadLocal =
+    ThreadLocal.withInitial(new Supplier[WireModelGen]() {
+      override def get(): WireModelGen = new WireModelGen()
+    })
 
   def getThreadLocal() = threadLocal.get()
 }
@@ -164,7 +165,6 @@ class WireModelGen {
   var model: CCModel = null
   var i = 0
   var inv = false
-
 
   private def numFaces: Int = {
     if (inv) return 22

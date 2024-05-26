@@ -4,10 +4,13 @@ import codechicken.lib.render._
 import codechicken.lib.vec._
 import codechicken.lib.render.uv._
 import codechicken.lib.math.MathHelper
+
 import java.util
 import codechicken.lib.lighting.{LightMatrix, LightModel}
 import net.minecraft.util.IIcon
 import codechicken.lib.render.CCRenderState.IVertexOperation
+
+import java.util.function.Supplier
 
 object RenderWire {
 
@@ -47,14 +50,14 @@ object RenderWire {
   def getOrGenerateModel(key: Int) = {
     var m = wireModels(key)
     if (m == null) wireModels(key) = {
-      m = WireModelGen.generateModel(key, false); m
+      m = WireModelGen.getThreadLocal().generateModel(key, false); m
     }
     m
   }
   def getOrGenerateInvModel(thickness: Int) = {
     var m = invModels(thickness)
     if (m == null) invModels(thickness) = {
-      m = WireModelGen.generateInvModel(thickness); m
+      m = WireModelGen.getThreadLocal().generateInvModel(thickness); m
     }
     m
   }
@@ -130,11 +133,26 @@ class UVT(t: Transformation) extends UVTransformation {
   override def inverse() = new UVT(t.inverse())
 }
 
+object WireModelGen {
+  val reorientSide = Array(0, 3, 3, 0, 0, 3)
+  def countConnections(mask: Int) = {
+    var n = 0
+    for (r <- 0 until 4) if ((mask & 1 << r) != 0) n += 1
+    n
+  }
+
+  private val threadLocal = ThreadLocal.withInitial(new Supplier[WireModelGen]() {
+    override def get(): WireModelGen = new WireModelGen()
+  })
+
+  def getThreadLocal() = threadLocal.get()
+}
+
 /** All generations are done on side 0 so know that for rotation r 0 = side 3 =
   * +Z = SOUTH 1 = side 4 = -X = WEST 2 = side 2 = -Z = NORTH 3 = side 5 = +X =
   * EAST
   */
-object WireModelGen {
+class WireModelGen {
   var side = 0
   var tw = 0
   var th = 0
@@ -147,11 +165,6 @@ object WireModelGen {
   var i = 0
   var inv = false
 
-  def countConnections(mask: Int) = {
-    var n = 0
-    for (r <- 0 until 4) if ((mask & 1 << r) != 0) n += 1
-    n
-  }
 
   private def numFaces: Int = {
     if (inv) return 22
@@ -173,7 +186,7 @@ object WireModelGen {
     h = th / 16d
     mask = key & 0xff
     connMask = (mask & 0xf0) >> 4 | mask & 0xf
-    connCount = countConnections(connMask)
+    connCount = WireModelGen.countConnections(connMask)
     model = CCModel.quadModel(numFaces * 4)
     i = 0
 
@@ -204,8 +217,8 @@ object WireModelGen {
       new Vertex5(0.5 - w, h, 0.5 - w, 8 - tw, 16 - tw)
     )
 
-    if (tex == 0 || tex == 1) tex = (tex + reorientSide(side)) % 2
-    var r = reorientSide(side)
+    if (tex == 0 || tex == 1) tex = (tex + WireModelGen.reorientSide(side)) % 2
+    var r = WireModelGen.reorientSide(side)
     if (tex == 1) r += 3
     if (r != 0) {
       val uvt = new UVT(
@@ -363,12 +376,11 @@ object WireModelGen {
     i_verts
   }
 
-  val reorientSide = Array(0, 3, 3, 0, 0, 3)
   private val sideReflect = new UVT(
     Rotation.quarterRotations(2).at(new Vector3(8, 0, 16))
   )
   private def reflectSide(verts: Array[Vertex5], r: Int) {
-    if ((r + reorientSide(side)) % 4 >= 2)
+    if ((r + WireModelGen.reorientSide(side)) % 4 >= 2)
       for (vert <- verts) vert.apply(sideReflect)
   }
 

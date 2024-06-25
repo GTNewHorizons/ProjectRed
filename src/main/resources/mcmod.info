@@ -9,161 +9,62 @@
   "authors": [ "MrTJP", "ChickenBones"],
   "credits": "Eloraam, GitHub contributors",
   "logoFile": "",
-  "screenshots": [],
-  "requiredMods": [
-      "Forge",
-      "ForgeMultipart",
-      "MrTJPCoreMod"
-  ],
-  "dependencies": [
-      "ForgeMultipart",
-      "MrTJPCoreMod"
-  ],
-  "dependants" : [
-      "ProjRed|Transmission",
-      "ProjRed|Integration",
-      "ProjRed|Fabrication",
-      "ProjRed|Illumination",
-      "ProjRed|Expansion",
-      "ProjRed|Transportation",
-      "ProjRed|Exploration",
-      "ProjRed|Compatibility"
-  ],
-  "useDependencyInformation": true
+  "screenshots": []
 },
 {
   "modid": "${modId}|Compatibility",
   "name": "${modName} Compatibility",
   "parent":"${modId}|Core",
   "version": "${modVersion}",
-  "mcversion": "${minecraftVersion}",
-  "requiredMods": [
-      "ProjRed|Core"
-  ],
-  "dependencies": [
-      "${modId}|Core",
-      "${modId}|Transmission",
-      "${modId}|Exploration",
-      "${modId}|Transportation",
-      "TConstruct",
-      "ComputerCraft"
-  ],
-  "dependants" : [],
-  "useDependencyInformation": true
+  "mcversion": "${minecraftVersion}"
 },
 {
   "modid": "${modId}|Fabrication",
   "name": "${modName} Fabrication",
   "parent":"${modId}|Core",
-  "parent":"${modId}|Core",
   "version": "${modVersion}",
-  "requiredMods": [
-      "${modId}|Core",
-      "${modId}|Integration",
-      "${modId}|Transmission"
-  ],
-  "dependencies": [
-      "${modId}|Core",
-      "${modId}|Integration",
-      "${modId}|Transmission"
-  ],
-  "dependants" : [],
-  "useDependencyInformation": true
+  "mcversion": "${minecraftVersion}"
 },
 {
   "modid": "${modId}|Transmission",
   "name": "${modName} Transmission",
   "parent":"${modId}|Core",
   "version": "${modVersion}",
-  "mcversion": "${minecraftVersion}",
-  "requiredMods": [
-      "${modId}|Core"
-  ],
-  "dependencies": [
-      "${modId}|Core"
-  ],
-  "dependants" : [
-      "${modId}|Expansion",
-      "${modId}|Fabrication"
-  ],
-  "useDependencyInformation": true
+  "mcversion": "${minecraftVersion}"
 },
 {
   "modid": "${modId}|Integration",
   "name": "${modName} Integration",
   "parent":"${modId}|Core",
   "version": "${modVersion}",
-  "mcversion": "${minecraftVersion}",
-  "requiredMods": [
-      "${modId}|Core"
-  ],
-  "dependencies": [
-      "${modId}|Core"
-  ],
-  "dependants" : [
-      "${modId}|Fabrication"
-  ],
-  "useDependencyInformation": true
+  "mcversion": "${minecraftVersion}"
 },
 {
   "modid": "${modId}|Illumination",
   "name": "${modName} Illumination",
   "parent":"${modId}|Core",
   "version": "${modVersion}",
-  "mcversion": "${minecraftVersion}",
-  "requiredMods": [
-      "${modId}|Core"
-  ],
-  "dependencies": [
-      "${modId}|Core"
-  ],
-  "dependants" : [],
-  "useDependencyInformation": true
+  "mcversion": "${minecraftVersion}"
 },
 {
   "modid": "${modId}|Expansion",
   "name": "${modName} Expansion",
   "parent":"${modId}|Core",
   "version": "${modVersion}",
-  "mcversion": "${minecraftVersion}",
-  "requiredMods": [
-      "${modId}|Core"
-  ],
-  "dependencies": [
-      "${modId}|Core",
-      "${modId}|Transmission"
-  ],
-  "dependants" : [],
-  "useDependencyInformation": true
+  "mcversion": "${minecraftVersion}"
 },
 {
   "modid": "${modId}|Transportation",
   "name": "${modName} Transportation",
   "parent":"${modId}|Core",
   "version": "${modVersion}",
-  "mcversion": "${minecraftVersion}",
-  "requiredMods": [
-      "${modId}|Core"
-  ],
-  "dependencies": [
-      "${modId}|Core"
-  ],
-  "dependants" : [],
-  "useDependencyInformation": true
+  "mcversion": "${minecraftVersion}"
 },
 {
   "modid": "${modId}|Exploration",
   "name": "${modName} Exploration",
   "parent":"${modId}|Core",
   "version": "${modVersion}",
-  "mcversion": "${minecraftVersion}",
-  "requiredMods": [
-      "${modId}|Core"
-  ],
-  "dependencies": [
-      "${modId}|Core"
-  ],
-  "dependants" : [],
-  "useDependencyInformation": true
+  "mcversion": "${minecraftVersion}"
 }
 ]

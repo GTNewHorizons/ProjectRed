@@ -273,9 +273,7 @@ class SlotProjectCrafting(
       val stack2 = storage(i)
       if (stack2 != null && ingredientMatch(recipe, stack1, stack2)) {
         if (stack2.getItem.hasContainerItem(stack2)) {
-          val cStack = stack2.getItem.getContainerItem(stack2)
-          storage(i) =
-            if (cStack.getItemDamage < cStack.getMaxDamage) cStack else null
+          storage(i) = stack2.getItem.getContainerItem(stack2)
           return true
         } else if (stack2.stackSize >= 1) {
           stack2.stackSize -= 1

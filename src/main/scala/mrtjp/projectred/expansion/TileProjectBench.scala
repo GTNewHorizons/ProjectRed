@@ -304,6 +304,21 @@ class SlotProjectCrafting(
     emptyIndex
   }
 
+  private def getValidGridIndex(
+      storage: Array[ItemStack],
+      cStack: ItemStack
+  ): Int = {
+    for (i <- 18 until 27) {
+      if (
+        storage(i) != null && storage(i)
+          .isItemEqual(cStack) && !storage(i).isStackable
+      ) {
+        return i
+      }
+    }
+    -1
+  }
+
   // Eat resource from inventory
   private def eatResource(
       recipe: IRecipe,
@@ -318,17 +333,24 @@ class SlotProjectCrafting(
       if (storage(i) != null && ingredientMatch(recipe, stackIn, storage(i))) {
         if (storage(i).getItem.hasContainerItem(storage(i))) {
           val cStack = storage(i).getItem.getContainerItem(storage(i))
-          val j = getValidStorageIndex(storage, cStack)
+          var j = getValidStorageIndex(storage, cStack)
           if (j == -1) {
-            if (!tile.isSearch)
+            if (!tile.isSearch && cStack.isStackable) {
               ForgeHooks.onPlayerTossEvent(player, cStack, false)
+            } else if (!cStack.isStackable) {
+              j = getValidGridIndex(storage, cStack)
+              if (j != -1) {
+                storage(j) = cStack
+                return true
+              } else {
+                return false
+              }
+            }
           } else if (storage(i).isStackable) {
-
             if (storage(j) == null)
               storage(j) = cStack
             else
               storage(j).stackSize += 1
-
           } else { // if not stackable
             storage(i) = cStack
             return true

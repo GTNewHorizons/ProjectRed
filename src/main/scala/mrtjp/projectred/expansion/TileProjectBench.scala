@@ -6,14 +6,22 @@
 package mrtjp.projectred.expansion
 
 import java.util.{List => JList}
-
 import codechicken.lib.data.MCDataInput
 import codechicken.lib.gui.GuiDraw
 import codechicken.lib.render.uv.{MultiIconTransformation, UVTransformation}
 import cpw.mods.fml.common.FMLCommonHandler
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.color.Colors
-import mrtjp.core.gui._
+import mrtjp.core.gui.{
+  GuiLib,
+  IconButtonNode,
+  ItemDisplayNode,
+  NodeContainer,
+  NodeGui,
+  Slot3,
+  TGuiBuilder,
+  TSlot3
+}
 import mrtjp.core.inventory.TInventory
 import mrtjp.core.item.{ItemEquality, ItemKey}
 import mrtjp.core.render.TCubeMapRender
@@ -35,6 +43,7 @@ import net.minecraft.item.crafting.{CraftingManager, IRecipe}
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.util.IIcon
 import net.minecraft.world.{IBlockAccess, World}
+import net.minecraftforge.common.ForgeHooks
 import net.minecraftforge.oredict.{ShapedOreRecipe, ShapelessOreRecipe}
 import org.lwjgl.input.Keyboard
 
@@ -53,6 +62,10 @@ class TileProjectBench
   var currentInputs = new Array[ItemStack](9)
 
   private var recipeNeedsUpdate = true
+
+  /* if the function searchFor used to check the recipe validation (maybe), so it will not give to
+   * ForgeHooks.onPlayerTossEvent in eatRecipe to drop the container if the inventory of the bench is full */
+  var isSearch = false
 
   override def save(tag: NBTTagCompound) {
     super.save(tag)
@@ -215,6 +228,8 @@ class SlotProjectCrafting(
       if (s != null) s.copy else null
     }.toArray
 
+    tile.isSearch = true
+
     if (
       searchFor(
         player.worldObj,
@@ -242,13 +257,24 @@ class SlotProjectCrafting(
     tile.updateRecipe()
   }
 
+  private var start = 0
+  private var end = 0
+
   def searchFor(
       world: World,
       recipe: IRecipe,
       inputs: Array[ItemStack],
       storage: Array[ItemStack]
   ): Boolean = {
-    i = 0
+
+    if (tile.isPlanRecipe) { // search in resources inventory
+      start = 0
+      end = 18
+    } else { // search in crafting grid inventory
+      start = 18
+      end = 27
+    }
+
     val invCrafting = new InventoryCrafting(new NodeContainer, 3, 3)
     for (i <- 0 until 9) {
       val item = inputs(i)
@@ -260,29 +286,85 @@ class SlotProjectCrafting(
     recipe.matches(invCrafting, world)
   }
 
-  private var i = 0
+  private def getValidStorageIndex(
+      storage: Array[ItemStack],
+      cStack: ItemStack
+  ): Int = {
+    var emptyIndex = -1
+    for (i <- 0 until 18) {
+      if (storage(i) == null && emptyIndex == -1) {
+        emptyIndex = i
+      } else if (storage(i) != null && storage(i).isItemEqual(cStack)) {
+        if (!storage(i).isStackable)
+          return i
+        else if (storage(i).stackSize < storage(i).getMaxStackSize)
+          return i
+      }
+    }
+    emptyIndex
+  }
+
+  private def getValidGridIndex(
+      storage: Array[ItemStack],
+      cStack: ItemStack
+  ): Int = {
+    for (i <- 18 until 27) {
+      if (
+        storage(i) != null && storage(i)
+          .isItemEqual(cStack) && !storage(i).isStackable
+      ) {
+        return i
+      }
+    }
+    -1
+  }
+
+  // Eat resource from inventory
   private def eatResource(
       recipe: IRecipe,
-      stack1: ItemStack,
+      stackIn: ItemStack,
       storage: Array[ItemStack]
   ): Boolean = {
-    def increment() = { i = (i + 1) % storage.length; i }
-    if (i < 18) i = 0 else increment()
-    val start = i
-    do {
-      val stack2 = storage(i)
-      if (stack2 != null && ingredientMatch(recipe, stack1, stack2)) {
-        if (stack2.getItem.hasContainerItem(stack2)) {
-          val cStack = stack2.getItem.getContainerItem(stack2)
-          storage(i) =
-            if (cStack.getItemDamage < cStack.getMaxDamage) cStack else null
-          return true
-        } else if (stack2.stackSize >= 1) {
-          stack2.stackSize -= 1
-          return true
-        }
+    for (i <- start until end) {
+      if (!tile.isPlanRecipe) {
+        start += 1
       }
-    } while (increment() != start)
+
+      if (storage(i) != null && ingredientMatch(recipe, stackIn, storage(i))) {
+        if (storage(i).getItem.hasContainerItem(storage(i))) {
+          val cStack = storage(i).getItem.getContainerItem(storage(i))
+          var j = getValidStorageIndex(storage, cStack)
+          if (j == -1) {
+            if (!tile.isSearch && cStack.isStackable) {
+              ForgeHooks.onPlayerTossEvent(player, cStack, false)
+            } else if (!cStack.isStackable) {
+              j = getValidGridIndex(storage, cStack)
+              if (j != -1) {
+                storage(j) = cStack
+                return true
+              } else {
+                return false
+              }
+            }
+          } else if (storage(i).isStackable) {
+            if (storage(j) == null)
+              storage(j) = cStack
+            else
+              storage(j).stackSize += 1
+          } else { // if not stackable
+            storage(i) = cStack
+            return true
+          }
+        }
+
+        // "eat" a peace of stack-able item and then check if to send to oblivion :>
+        storage(i).stackSize -= 1
+        if (storage(i).stackSize == 0)
+          storage(i) = null
+
+        return true
+      }
+    }
     false
   }
 
@@ -398,7 +480,6 @@ class ContainerProjectBench(player: EntityPlayer, tile: TileProjectBench)
         if (tryMergeItemStack(stack, 9, 27, false))
           return true // merge to storage
       }
-
     false
   }
 }
@@ -455,15 +536,6 @@ class GuiProjectBench(tile: TileProjectBench, c: ContainerProjectBench)
     GuiDraw.drawString("Project Bench", 8, 6, Colors.GREY.argb, false)
     GuiDraw.drawString("Inventory", 8, 116, Colors.GREY.argb, false)
   }
-
-  override def drawFront_Impl(mouse: Point, rframe: Float) {
-    if (
-      Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(
-        Keyboard.KEY_RSHIFT
-      )
-    )
-      GuiProjectBench.drawPlanOutputOverlay(c.slots)
-  }
 }
 
 object GuiProjectBench extends TGuiBuilder {
@@ -475,29 +547,6 @@ object GuiProjectBench extends TGuiBuilder {
       case t: TileProjectBench =>
         new GuiProjectBench(t, t.createContainer(player))
       case _ => null
-    }
-  }
-
-  def drawPlanOutputOverlay(slots: Iterable[TSlot3]) {
-    for (slot <- slots) if (slot.getHasStack) {
-      val stack = slot.getStack
-      if (ItemPlan.hasRecipeInside(stack)) {
-        val output = ItemPlan.loadPlanOutput(stack)
-        GuiDraw.drawRect(
-          slot.xDisplayPosition,
-          slot.yDisplayPosition,
-          16,
-          16,
-          Colors.LIGHT_BLUE.argb(0xcc)
-        )
-        ItemDisplayNode.renderItem(
-          Point(slot.xDisplayPosition + 1, slot.yDisplayPosition + 1),
-          Size(14, 14),
-          0,
-          true,
-          output
-        )
-      }
     }
   }
 }

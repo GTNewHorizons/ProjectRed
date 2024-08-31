@@ -349,15 +349,6 @@ class GuiAutoCrafter(tile: TileAutoCrafter, c: ContainerAutoCrafter)
     GuiDraw.drawString("Auto Crafting Bench", 8, 6, Colors.GREY.argb, false)
     GuiDraw.drawString("Inventory", 8, 120, Colors.GREY.argb, false)
   }
-
-  override def drawFront_Impl(mouse: Point, rframe: Float) {
-    if (
-      Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(
-        Keyboard.KEY_RSHIFT
-      )
-    )
-      GuiProjectBench.drawPlanOutputOverlay(c.slots)
-  }
 }
 
 object GuiAutoCrafter extends TGuiBuilder {

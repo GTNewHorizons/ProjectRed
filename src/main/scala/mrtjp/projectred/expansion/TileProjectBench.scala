@@ -536,15 +536,6 @@ class GuiProjectBench(tile: TileProjectBench, c: ContainerProjectBench)
     GuiDraw.drawString("Project Bench", 8, 6, Colors.GREY.argb, false)
     GuiDraw.drawString("Inventory", 8, 116, Colors.GREY.argb, false)
   }
-
-  override def drawFront_Impl(mouse: Point, rframe: Float) {
-    if (
-      Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(
-        Keyboard.KEY_RSHIFT
-      )
-    )
-      GuiProjectBench.drawPlanOutputOverlay(c.slots)
-  }
 }
 
 object GuiProjectBench extends TGuiBuilder {
@@ -556,29 +547,6 @@ object GuiProjectBench extends TGuiBuilder {
       case t: TileProjectBench =>
         new GuiProjectBench(t, t.createContainer(player))
       case _ => null
-    }
-  }
-
-  def drawPlanOutputOverlay(slots: Iterable[TSlot3]) {
-    for (slot <- slots) if (slot.getHasStack) {
-      val stack = slot.getStack
-      if (ItemPlan.hasRecipeInside(stack)) {
-        val output = ItemPlan.loadPlanOutput(stack)
-        GuiDraw.drawRect(
-          slot.xDisplayPosition,
-          slot.yDisplayPosition,
-          16,
-          16,
-          Colors.LIGHT_BLUE.argb(0xcc)
-        )
-        ItemDisplayNode.renderItem(
-          Point(slot.xDisplayPosition + 1, slot.yDisplayPosition + 1),
-          Size(14, 14),
-          0,
-          true,
-          output
-        )
-      }
     }
   }
 }

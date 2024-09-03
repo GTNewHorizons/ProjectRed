@@ -368,17 +368,23 @@ class SlotProjectCrafting(
     false
   }
 
+  /** Match one ingredient from storage, and match it with recipe input
+    * @param stackIn
+    *   : one of the recipe inputs
+    * @param stackSt
+    *   : one of the storage inputs
+    */
   private def ingredientMatch(
       recipe: IRecipe,
-      stack1: ItemStack,
-      stack2: ItemStack
+      stackIn: ItemStack,
+      stackSt: ItemStack
   ) = {
     val eq = new ItemEquality
-    eq.matchMeta = !stack1.isItemStackDamageable
+    eq.matchMeta = !stackIn.isItemStackDamageable
     eq.matchNBT = false
     eq.matchOre = recipe.isInstanceOf[ShapedOreRecipe] || recipe
       .isInstanceOf[ShapelessOreRecipe]
-    eq.matches(ItemKey.get(stack1), ItemKey.get(stack2))
+    eq.matches(ItemKey.get(stackIn), ItemKey.get(stackSt))
   }
 
   // Following 3 methods copy-pasted from TSlot3 for obfuscation issues

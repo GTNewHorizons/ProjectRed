@@ -29,7 +29,6 @@ import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.util.IIcon
 import net.minecraft.world.IBlockAccess
 import net.minecraftforge.oredict.{ShapedOreRecipe, ShapelessOreRecipe}
-import org.lwjgl.input.Keyboard
 
 import scala.collection.JavaConversions._
 
@@ -41,43 +40,44 @@ class TileAutoCrafter
     with TGuiMachine {
   var planSlot = 0
 
-  var currentRecipe: IRecipe = null
-  var currentInputs = new ItemQueue
-  var currentOutput: ItemKeyStack = null
+  var eq: ItemEquality = new ItemEquality
+  private var currentRecipe: IRecipe = _
+  private val currentInputs = new ItemQueue
+  private var currentOutput: ItemKeyStack = _
 
   private val invCrafting = new InventoryCrafting(new NodeContainer, 3, 3)
   private var recipeNeedsRefresh = true
   private var cycleTimer1 = getUnpoweredCycleTimer
   private var cycleTimer2 = getPoweredCycleTimer
 
-  override def save(tag: NBTTagCompound) {
+  override def save(tag: NBTTagCompound): Unit = {
     super.save(tag)
     saveInv(tag)
     tag.setInteger("cyt1", cycleTimer1)
     tag.setInteger("cyt2", cycleTimer2)
   }
 
-  override def load(tag: NBTTagCompound) {
+  override def load(tag: NBTTagCompound): Unit = {
     super.load(tag)
     loadInv(tag)
     cycleTimer1 = tag.getInteger("cyt1")
     cycleTimer2 = tag.getInteger("cyt2")
   }
 
-  override def read(in: MCDataInput, key: Int) = key match {
+  override def read(in: MCDataInput, key: Int): Unit = key match {
     case 2 => cyclePlanSlot()
     case _ => super.read(in, key)
   }
 
-  def sendCyclePlanSlot() {
+  def sendCyclePlanSlot(): Unit = {
     writeStream(2).sendToServer()
   }
 
-  def getUnpoweredCycleTimer = 40
-  def getPoweredCycleTimer = 10
-  def getCraftsPerPowerCycle = 5
+  private def getUnpoweredCycleTimer = 40
+  private def getPoweredCycleTimer = 10
+  private def getCraftsPerPowerCycle = 5
 
-  override def getBlock = ProjectRedExpansion.machine2
+  override def getBlock: BlockMachine = ProjectRedExpansion.machine2
 
   override def doesOrient = false
   override def doesRotate = false
@@ -87,13 +87,14 @@ class TileAutoCrafter
   override def size = 27
   override def name = "auto_bench"
 
-  override def canExtractItem(slot: Int, item: ItemStack, side: Int) =
+  override def canExtractItem(slot: Int, item: ItemStack, side: Int): Boolean =
     9 until 27 contains slot
-  override def canInsertItem(slot: Int, item: ItemStack, side: Int) =
+  override def canInsertItem(slot: Int, item: ItemStack, side: Int): Boolean =
     9 until 27 contains slot
-  override def getAccessibleSlotsFromSide(side: Int) = (9 until 27).toArray
+  override def getAccessibleSlotsFromSide(side: Int): Array[Int] =
+    (9 until 27).toArray
 
-  override def update() {
+  override def update(): Unit = {
     super.update()
 
     if (recipeNeedsRefresh) {
@@ -119,7 +120,7 @@ class TileAutoCrafter
     }
   }
 
-  def cyclePlanSlot() {
+  private def cyclePlanSlot(): Unit = {
     val start = planSlot
     do planSlot = (planSlot + 1) % 9 while (planSlot != start && getStackInSlot(
       planSlot
@@ -127,7 +128,7 @@ class TileAutoCrafter
     if (planSlot != start) refreshRecipe()
   }
 
-  def refreshRecipe() {
+  private def refreshRecipe(): Unit = {
     currentRecipe = null
     currentInputs.clear()
     currentOutput = null
@@ -150,12 +151,12 @@ class TileAutoCrafter
     }
   }
 
-  override def markDirty() {
+  override def markDirty(): Unit = {
     super.markDirty()
     recipeNeedsRefresh = true
   }
 
-  def tryCraft(): Boolean = {
+  private def tryCraft(): Boolean = {
     if (currentRecipe != null && checkSpaceForOutput)
       if (
         currentInputs.result.forall(p => containsEnoughResource(p._1, p._2))
@@ -168,8 +169,7 @@ class TileAutoCrafter
     false
   }
 
-  def containsEnoughResource(item: ItemKey, amount: Int): Boolean = {
-    val eq = new ItemEquality
+  private def containsEnoughResource(item: ItemKey, amount: Int): Boolean = {
     eq.matchMeta = !item.makeStack(0).isItemStackDamageable
     eq.matchNBT = false
     eq.matchOre = currentRecipe.isInstanceOf[ShapedOreRecipe] || currentRecipe
@@ -186,20 +186,19 @@ class TileAutoCrafter
     false
   }
 
-  def checkSpaceForOutput = {
+  private def checkSpaceForOutput: Boolean = {
     val w =
       InvWrapper.wrap(this).setInternalMode(true).setSlotsFromRange(9 until 27)
     w.getSpaceForItem(currentOutput.key) >= currentOutput.stackSize
   }
 
-  def produceOutput() {
+  private def produceOutput(): Unit = {
     val w =
       InvWrapper.wrap(this).setInternalMode(true).setSlotsFromRange(9 until 27)
     w.injectItem(currentOutput.key, currentOutput.stackSize)
   }
 
-  def eatResource(item: ItemKey, amount: Int) {
-    val eq = new ItemEquality
+  def eatResource(item: ItemKey, amount: Int): Unit = {
     eq.matchMeta = !item.makeStack(0).isItemStackDamageable
     eq.matchNBT = false
     eq.matchOre = currentRecipe.isInstanceOf[ShapedOreRecipe] || currentRecipe
@@ -226,12 +225,12 @@ class TileAutoCrafter
     }
   }
 
-  override def onBlockRemoval() {
+  override def onBlockRemoval(): Unit = {
     super.onBlockRemoval()
     dropInvContents(world, x, y, z)
   }
 
-  override def openGui(player: EntityPlayer) {
+  override def openGui(player: EntityPlayer): Unit = {
     GuiAutoCrafter.open(player, createContainer(player), _.writeCoord(x, y, z))
   }
 
@@ -258,9 +257,9 @@ class ContainerAutoCrafter(player: EntityPlayer, tile: TileAutoCrafter)
     addPlayerInv(player, 8, 130)
   }
 
-  var slot = -1
+  var slot: Int = -1
 
-  override def detectAndSendChanges() {
+  override def detectAndSendChanges(): Unit = {
     super.detectAndSendChanges()
     import scala.collection.JavaConversions._
     for (i <- crafters) {
@@ -272,7 +271,7 @@ class ContainerAutoCrafter(player: EntityPlayer, tile: TileAutoCrafter)
     }
   }
 
-  override def updateProgressBar(id: Int, bar: Int) = id match {
+  override def updateProgressBar(id: Int, bar: Int): Unit = id match {
     case 3 => tile.planSlot = bar
     case _ => super.updateProgressBar(id, bar)
   }
@@ -280,17 +279,24 @@ class ContainerAutoCrafter(player: EntityPlayer, tile: TileAutoCrafter)
   override def doMerge(stack: ItemStack, from: Int): Boolean = {
     if (0 until 9 contains from) // plan slots
       {
-        tryMergeItemStack(stack, 27, 63, false) // merge to inventory
+        tryMergeItemStack(stack, 27, 63, reverse = false) // merge to inventory
       } else if (9 until 27 contains from) // storage
       {
         if (stack.getItem.isInstanceOf[ItemPlan])
-          tryMergeItemStack(stack, 0, 9, false) // merge to plan
-        else tryMergeItemStack(stack, 27, 63, false) // merge to inventory
+          tryMergeItemStack(stack, 0, 9, reverse = false) // merge to plan
+        else
+          tryMergeItemStack(
+            stack,
+            27,
+            63,
+            reverse = false
+          ) // merge to inventory
       } else if (27 until 63 contains from) // player inventory
       {
         if (stack.getItem.isInstanceOf[ItemPlan])
-          tryMergeItemStack(stack, 0, 9, false) // merge to plan
-        else tryMergeItemStack(stack, 9, 27, false) // merge to storage
+          tryMergeItemStack(stack, 0, 9, reverse = false) // merge to plan
+        else
+          tryMergeItemStack(stack, 9, 27, reverse = false) // merge to storage
       } else false
   }
 }
@@ -299,7 +305,7 @@ class GuiAutoCrafter(tile: TileAutoCrafter, c: ContainerAutoCrafter)
     extends NodeGui(c, 176, 212) {
   {
     val cycle = new IconButtonNode {
-      override def drawButton(mouseover: Boolean) {
+      override def drawButton(mouseover: Boolean): Unit = {
         PRResources.guiAutoCrafter.bind()
         drawTexturedModalRect(position.x, position.y, 176, 0, 14, 14)
       }
@@ -310,7 +316,7 @@ class GuiAutoCrafter(tile: TileAutoCrafter, c: ContainerAutoCrafter)
     addChild(cycle)
   }
 
-  override def drawBack_Impl(mouse: Point, rframe: Float) {
+  override def drawBack_Impl(mouse: Point, rframe: Float): Unit = {
     PRResources.guiAutoCrafter.bind()
     GuiDraw.drawTexturedModalRect(0, 0, 0, 0, size.width, size.height)
 
@@ -342,7 +348,7 @@ class GuiAutoCrafter(tile: TileAutoCrafter, c: ContainerAutoCrafter)
         Point(152, 58),
         Size(16, 16),
         zPosition,
-        true,
+        drawNumber = true,
         ItemPlan.loadPlanOutput(plan)
       )
 
@@ -352,10 +358,13 @@ class GuiAutoCrafter(tile: TileAutoCrafter, c: ContainerAutoCrafter)
 }
 
 object GuiAutoCrafter extends TGuiBuilder {
-  override def getID = ExpansionProxy.autoCrafterGui
+  override def getID: Int = ExpansionProxy.autoCrafterGui
 
   @SideOnly(Side.CLIENT)
-  override def buildGui(player: EntityPlayer, data: MCDataInput) = {
+  override def buildGui(
+      player: EntityPlayer,
+      data: MCDataInput
+  ): GuiAutoCrafter = {
     WorldLib.getTileEntity(player.worldObj, data.readCoord()) match {
       case t: TileAutoCrafter =>
         new GuiAutoCrafter(t, t.createContainer(player))
@@ -372,16 +381,21 @@ object RenderAutoCrafter extends TCubeMapRender {
 
   var iconT: UVTransformation = _
 
-  override def getData(w: IBlockAccess, x: Int, y: Int, z: Int) = (0, 0, iconT)
-  override def getInvData = (0, 0, iconT)
+  override def getData(
+      w: IBlockAccess,
+      x: Int,
+      y: Int,
+      z: Int
+  ): (Int, Int, UVTransformation) = (0, 0, iconT)
+  override def getInvData: (Int, Int, UVTransformation) = (0, 0, iconT)
 
-  override def getIcon(side: Int, meta: Int) = side match {
+  override def getIcon(side: Int, meta: Int): IIcon = side match {
     case 0 => bottom
     case 1 => top
     case _ => side1
   }
 
-  override def registerIcons(reg: IIconRegister) {
+  override def registerIcons(reg: IIconRegister): Unit = {
     bottom = reg.registerIcon("projectred:mechanical/autobench/bottom")
     top = reg.registerIcon("projectred:mechanical/autobench/top")
     side1 = reg.registerIcon("projectred:mechanical/autobench/side1")

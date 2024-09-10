@@ -54,6 +54,7 @@ class TileProjectBench
     with ISidedInventory
     with TGuiMachine {
 
+  var eq: ItemEquality = new ItemEquality
   val invCrafting = new InventoryCrafting(new NodeContainer, 3, 3)
   val invCraftingResult = new InventoryCraftResult
 
@@ -393,12 +394,11 @@ class SlotProjectCrafting(
       stackIn: ItemStack,
       stackSt: ItemStack
   ) = {
-    val eq = new ItemEquality
-    eq.matchMeta = !stackIn.isItemStackDamageable
-    eq.matchNBT = false
-    eq.matchOre = recipe.isInstanceOf[ShapedOreRecipe] || recipe
+    tile.eq.matchMeta = !stackIn.isItemStackDamageable
+    tile.eq.matchNBT = false
+    tile.eq.matchOre = recipe.isInstanceOf[ShapedOreRecipe] || recipe
       .isInstanceOf[ShapelessOreRecipe]
-    eq.matches(ItemKey.get(stackIn), ItemKey.get(stackSt))
+    tile.eq.matches(ItemKey.get(stackIn), ItemKey.get(stackSt))
   }
 
   // Following 3 methods copy-pasted from TSlot3 for obfuscation issues

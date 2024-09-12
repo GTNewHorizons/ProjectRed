@@ -362,7 +362,8 @@ class SlotProjectCrafting(
   }
 
   /** Get the index of the first empty slot, if they are not any, returns
-    * [[INVALID_INDEX]], stack is unused here, but need to be used with [[setItemStackInStorage]]
+    * [[INVALID_INDEX]], stack is unused here, but need to be used with
+    * [[setItemStackInStorage]]
     */
   private def getIndexOfEmptySlotInResourceStorage(
       storage: Array[ItemStack],
@@ -372,8 +373,8 @@ class SlotProjectCrafting(
     INVALID_INDEX
   }
 
-  /** Decrease the stack size of item stack in the i slot of the storage,
-    * and null if the decreased stack size <= 0.
+  /** Decrease the stack size of item stack in the i slot of the storage, and
+    * null if the decreased stack size <= 0.
     * @param storage
     *   the copy of the Project Bench storage
     * @param i
@@ -477,34 +478,8 @@ class SlotProjectCrafting(
         } else {
           // "eat" a peace of stack-able item and then check if to send to oblivion :>
           decreaseOneItemStack(storage, i)
-
           return (true, null)
         }
-        /*
-          var j = getValidResourceStorageIndex(storage, cStack)
-          if (j == INVALID_INDEX) {
-            if (cStack.isStackable) {
-              itemToDrop = cStack
-            } else if (!cStack.isStackable) {
-              j = getValidCraftingGridIndex(storage, cStack)
-              if (j != INVALID_INDEX) {
-                storage(j) = cStack
-                return (true, itemToDrop)
-              } else {
-                return (false, itemToDrop)
-              }
-            }
-          } else {
-            if (storage(i).stackSize < storage(i).getMaxStackSize) {
-              if (storage(j) == null)
-                storage(j) = cStack
-              else
-                storage(j).stackSize += 1
-            } else { // if not stackable
-              storage(i) = cStack
-              return (true, itemToDrop)
-            }
-          }*/
       }
     }
     (false, null)

@@ -17,9 +17,9 @@ import mrtjp.core.gui.{
   ItemDisplayNode,
   NodeContainer,
   NodeGui,
+  Slot3,
   TGuiBuilder,
-  TSlot3,
-  Slot3
+  TSlot3
 }
 import mrtjp.core.inventory.TInventory
 import mrtjp.core.item.{ItemEquality, ItemKey}
@@ -37,10 +37,10 @@ import net.minecraft.inventory.{
   InventoryCrafting,
   SlotCrafting
 }
-import net.minecraft.item.ItemStack
+import net.minecraft.item.{Item, ItemStack}
 import net.minecraft.item.crafting.{CraftingManager, IRecipe}
 import net.minecraft.nbt.NBTTagCompound
-import net.minecraft.util.IIcon
+import net.minecraft.util.{ChatComponentText, IIcon}
 import net.minecraft.world.{IBlockAccess, World}
 import net.minecraftforge.common.ForgeHooks
 import net.minecraftforge.oredict.{ShapedOreRecipe, ShapelessOreRecipe}
@@ -57,6 +57,7 @@ class TileProjectBench
   var eq: ItemEquality = new ItemEquality
   val invCrafting = new InventoryCrafting(new NodeContainer, 3, 3)
   val invCraftingResult = new InventoryCraftResult
+  val INVALID_INDEX = -1
 
   var isPlanRecipe = false
   var tRecipe: IRecipe = _
@@ -196,6 +197,22 @@ class TileProjectBench
 
   override def createContainer(player: EntityPlayer) =
     new ContainerProjectBench(player, this)
+
+  def getInventoryCopy: Array[ItemStack] = {
+    (0 until 27).map { i =>
+      val s = getStackInSlot(i)
+      if (s != null) s.copy else null
+    }.toArray
+  }
+
+  /** Check if the inventory is empty */
+  def isStorageNotFull: Boolean = {
+    9 until 27 foreach { i =>
+      if (getStackInSlot(i) == null)
+        return true
+    }
+    false
+  }
 }
 
 class SlotProjectCrafting(
@@ -214,30 +231,51 @@ class SlotProjectCrafting(
     )
     with TSlot3 {
 
-  /** Invalid slot index */
-  private val INVALID_INDEX = -1
+  private val previous_indices = Array[Int](
+    tile.INVALID_INDEX,
+    tile.INVALID_INDEX,
+    tile.INVALID_INDEX,
+    tile.INVALID_INDEX,
+    tile.INVALID_INDEX,
+    tile.INVALID_INDEX,
+    tile.INVALID_INDEX,
+    tile.INVALID_INDEX,
+    tile.INVALID_INDEX
+  )
 
-  /** @return
-    *   copy of crafting grid [[0 - 8]] and resources storage [[9 - 26]]
-    */
-  private def getInventoryCopy: Array[ItemStack] = {
-    (0 until 27).map { i =>
-      val s = tile.getStackInSlot(i)
-      if (s != null) s.copy else null
-    }.toArray
+  /** Check if the stack1 can be stacked and is equal to stack2 */
+  private def isStackableEqual(
+      stack1: ItemStack,
+      stack2: ItemStack
+  ): Boolean = {
+    if (stack1 != null && stack2 != null)
+      stack1.isItemEqual(stack2) && stack1.stackSize < stack1.getMaxStackSize
+    else false
+  }
+
+  /** Check if the stack has container */
+  private def hasContainer(
+      stack: ItemStack
+  ): Boolean = {
+    stack.getItem.hasContainerItem(stack)
+  }
+
+  /** Return the container of the stack */
+  private def getContainer(
+      stack: ItemStack
+  ): ItemStack = {
+    stack.getItem.getContainerItem(stack)
   }
 
   override def canTakeStack(player: EntityPlayer): Boolean = {
     if (tile.isPlanRecipe) {
-      val storage = getInventoryCopy
-
+      val storage = tile.getInventoryCopy
       return {
         val (search, _) =
           searchFor(player.worldObj, tile.tRecipe, tile.tInputs, storage)
         search
       }
     }
-
     // copied from super for obfuscation bug
     canRemoveDelegate()
   }
@@ -246,25 +284,52 @@ class SlotProjectCrafting(
       player: EntityPlayer,
       stack: ItemStack
   ): Unit = {
+    onShiftFromSlot(player, stack, isShift = false)
+  }
+
+  def onShiftFromSlot(
+      player: EntityPlayer,
+      stack: ItemStack,
+      isShift: Boolean
+  ): Unit = {
     onCrafting(stack)
 
     // search for crafting possibility
-    val storage = getInventoryCopy
-    val (search, itemToDrops) =
-      searchFor(player.worldObj, tile.tRecipe, tile.tInputs, storage)
+    val storage = tile.getInventoryCopy
 
-    // checks if the crafting is done
+    val (search, itemToDrops) = searchFor(
+      player.worldObj,
+      tile.tRecipe,
+      tile.tInputs,
+      storage
+    )
+
+    // do if the crafting is possible
     if (search) {
-      // set all the slots by new values from storage copy
-      for (i <- 0 until 27) {
-        val stack = storage(i)
-        if (stack == null || stack.stackSize <= 0)
-          tile.setInventorySlotContents(i, null)
+      // if the player do shift + click
+      if (isShift) {
+        if (stack.isStackable)
+          setItemStackInStorage(
+            storage,
+            stack,
+            tile.INVALID_INDEX,
+            getIndexOfStackableItemStackInResourceStorage
+          )
         else
-          tile.setInventorySlotContents(i, stack)
+          setItemStackInStorage(
+            storage,
+            stack,
+            tile.INVALID_INDEX,
+            getIndexOfEmptySlotInResourceStorage
+          )
+      }
 
-        // if they are items to drop after creating it drop them
-        if (i < 9 && itemToDrops(i) != null)
+      // set all slots to a new value and drop items if they exist */
+      for (i <- 0 until 27) {
+        // checks to stackSize <= 0 no need because it's already done in [[decreaseStackSize]]
+        tile.setInventorySlotContents(i, storage(i))
+        if (i < 9) // because itemToDrops.size is 9
+          // drop items to ground
           ForgeHooks.onPlayerTossEvent(player, itemToDrops(i), false)
       }
     }
@@ -275,7 +340,6 @@ class SlotProjectCrafting(
     FMLCommonHandler
       .instance()
       .firePlayerCraftingEvent(player, stack, invCrafting)
-
     tile.updateRecipe()
   }
 
@@ -328,13 +392,17 @@ class SlotProjectCrafting(
 
     val invCrafting = new InventoryCrafting(new NodeContainer, 3, 3)
     for (i <- 0 until 9) {
-      val item = inputs(i)
-      if (item != null) {
-        val (eaten, itemToDrop) = eatResource(recipe, item, storage)
+      val stack = inputs(i)
+      if (stack != null) {
+        val (eaten, (itemToDrop, previous_index)) =
+          eatResource(recipe, storage, stack, previous_indices(i))
         if (!eaten)
           return (false, itemToDrops)
         itemToDrops(i) = itemToDrop
-        invCrafting.setInventorySlotContents(i, item)
+        previous_indices(i) = previous_index
+        invCrafting.setInventorySlotContents(i, stack)
+      } else {
+        previous_indices(i) = tile.INVALID_INDEX
       }
     }
     (recipe.matches(invCrafting, world), itemToDrops)
@@ -342,35 +410,49 @@ class SlotProjectCrafting(
 
   /** Get the storage index for stackable item stack, if the stackable item
     * stack was not find returns the first empty slot index in this case if they
-    * are not any valid index return [[INVALID_INDEX]]
+    * are not any valid index return [[tile.INVALID_INDEX]]
+    * @param previous
+    *   is the previous index of the input
     */
   private def getIndexOfStackableItemStackInResourceStorage(
       storage: Array[ItemStack],
-      stack: ItemStack
+      stack: ItemStack,
+      previous_index: Int
   ): Int = {
-    val emptyIndex = INVALID_INDEX
-    for (i <- 9 until 27) {
-      if (storage(i) == null && emptyIndex == INVALID_INDEX)
-        return i
-      else if (
-        storage(i).isItemEqual(stack)
-        && storage(i).stackSize < storage(i).getMaxStackSize
+    if (
+      previous_index != tile.INVALID_INDEX && isStackableEqual(
+        storage(previous_index),
+        stack
       )
-        return i
+    ) previous_index
+    else {
+      var emptyIndex = tile.INVALID_INDEX
+      var i = 9;
+      while (i < 27) {
+        if (isStackableEqual(storage(i), stack)) return i
+        else if (storage(i) == null && emptyIndex == tile.INVALID_INDEX)
+          emptyIndex = i
+        i += 1
+      }
+      emptyIndex
     }
-    emptyIndex
   }
 
   /** Get the index of the first empty slot, if they are not any, returns
-    * [[INVALID_INDEX]], stack is unused here, but need to be used with
+    * [[tile.INVALID_INDEX]], stack is unused here, but the function used in
     * [[setItemStackInStorage]]
     */
   private def getIndexOfEmptySlotInResourceStorage(
       storage: Array[ItemStack],
-      stack: ItemStack
+      stack: ItemStack,
+      previous: Int
   ): Int = {
-    for (i <- 9 until 27) if (storage(i) == null) return i
-    INVALID_INDEX
+    var i = 9;
+    while (i < 27) {
+      if (storage(i) == null) return i
+      i += 1
+    }
+    tile.INVALID_INDEX
   }
 
   /** Decrease the stack size of item stack in the i slot of the storage, and
@@ -380,10 +462,9 @@ class SlotProjectCrafting(
     * @param i
     *   the slot index of the storage
     */
-  private def decreaseOneItemStack(storage: Array[ItemStack], i: Int): Unit = {
+  private def decreaseStackSize(storage: Array[ItemStack], i: Int): Unit = {
     storage(i).stackSize -= 1
-    if (storage(i).stackSize <= 0)
-      storage(i) = null
+    if (storage(i).stackSize <= 0) storage(i) = null
   }
 
   /** Set item stack in Project Bench storage copy with getStackStorageIndex
@@ -394,32 +475,33 @@ class SlotProjectCrafting(
     * @param getStackStorageIndex
     *   the function used to find a valid index for setting the stack in storage
     * @return
-    *   stack if the index of getStackStorageIndex is [[INVALID_INDEX]] or null
-    *   if the index is valid
+    *   stack, [[tile.INVALID_INDEX]] if the index of getStackStorageIndex is
+    *   [[tile.INVALID_INDEX]] or null and index if the index is valid
     */
   private def setItemStackInStorage(
       storage: Array[ItemStack],
       stack: ItemStack,
-      getStackStorageIndex: (Array[ItemStack], ItemStack) => Int
-  ): ItemStack = {
-    val i = getStackStorageIndex(storage, stack)
-    if (i == INVALID_INDEX) {
-      return stack
+      previous_index: Int,
+      getStackStorageIndex: (Array[ItemStack], ItemStack, Int) => Int
+  ): (ItemStack, Int) = {
+    val j = getStackStorageIndex(storage, stack, previous_index)
+    if (j == tile.INVALID_INDEX) {
+      return (stack, j)
     } else {
-      if (storage(i) == null) storage(i) = stack
-      else storage(i).stackSize += 1
+      if (storage(j) == null) storage(j) = stack
+      else storage(j).stackSize += 1
     }
-    null
+    (null, j)
   }
 
   /** Use an item from recipe and compare with the Project Bench copied storage
     * to "eat"
     * @param recipe
     *   for matching ingredients
-    * @param stackIn
-    *   item from recipe to eat
     * @param storage
     *   the copy of Project Bench inventory
+    * @param stack
+    *   item from recipe to eat
     * @return
     *   [[Boolean]] can be item eaten or not <br> [[ItemStack]] item to drop in
     *   the world, because [[searchFor]] also used in [[canTakeStack]] function,
@@ -427,62 +509,66 @@ class SlotProjectCrafting(
     */
   private def eatResource(
       recipe: IRecipe,
-      stackIn: ItemStack,
-      storage: Array[ItemStack]
-  ): (Boolean, ItemStack) = {
+      storage: Array[ItemStack],
+      stack: ItemStack,
+      previous_index: Int
+  ): (Boolean, (ItemStack, Int)) = {
     for (i <- start until end) {
       if (!tile.isPlanRecipe) {
         start += 1
       }
-      if (storage(i) != null && ingredientMatch(recipe, stackIn, storage(i))) {
-        if (storage(i).getItem.hasContainerItem(storage(i))) {
-          val cStack = storage(i).getItem.getContainerItem(storage(i))
+      if (storage(i) != null && ingredientMatch(recipe, stack, storage(i))) {
+        if (hasContainer(storage(i))) {
+          val cStack = getContainer(storage(i))
           if (storage(i).isStackable) {
             if (cStack.isStackable) {
-              decreaseOneItemStack(storage, i)
+              decreaseStackSize(storage, i)
               return (
                 true,
                 setItemStackInStorage(
                   storage,
                   cStack,
+                  previous_index,
                   getIndexOfStackableItemStackInResourceStorage
                 )
               )
             } else { // cStack is not stackable
-              decreaseOneItemStack(storage, i)
+              decreaseStackSize(storage, i)
               return (
                 true,
                 setItemStackInStorage(
                   storage,
                   cStack,
+                  previous_index,
                   getIndexOfEmptySlotInResourceStorage
                 )
               )
             }
           } else { // storage(i) is not stackable
             if (cStack.isStackable) {
-              decreaseOneItemStack(storage, i)
+              decreaseStackSize(storage, i)
               return (
                 true,
                 setItemStackInStorage(
                   storage,
                   cStack,
+                  previous_index,
                   getIndexOfStackableItemStackInResourceStorage
                 )
               )
             } else { // cStack is not stackable
               storage(i) = cStack
-              return (true, null)
+              return (true, (null, i))
             }
           }
         } else {
           // "eat" a peace of stack-able item and then check if to send to oblivion :>
-          decreaseOneItemStack(storage, i)
-          return (true, null)
+          decreaseStackSize(storage, i)
+          return (true, (null, i))
         }
       }
     }
-    (false, null)
+    (false, (null, tile.INVALID_INDEX))
   }
 
   /** Match one ingredient from storage, and match it with recipe input
@@ -519,6 +605,10 @@ class SlotProjectCrafting(
 
 class ContainerProjectBench(player: EntityPlayer, tile: TileProjectBench)
     extends NodeContainer {
+
+  var output: SlotProjectCrafting = _
+  var plan: Slot3 = _
+
   {
     for (((x, y), i) <- GuiLib.createSlotGrid(48, 18, 3, 3, 0, 0).zipWithIndex)
       addSlotToContainer(new Slot3(tile, i, x, y))
@@ -526,12 +616,12 @@ class ContainerProjectBench(player: EntityPlayer, tile: TileProjectBench)
     for (((x, y), i) <- GuiLib.createSlotGrid(8, 76, 9, 2, 0, 0).zipWithIndex)
       addSlotToContainer(new Slot3(tile, i + 9, x, y))
 
-    val plan = new Slot3(tile, 27, 17, 36)
+    plan = new Slot3(tile, 27, 17, 36)
     plan.canPlaceDelegate = { _.getItem.isInstanceOf[ItemPlan] }
     plan.slotLimitCalculator = { () => 1 }
     addSlotToContainer(plan)
 
-    val output = new SlotProjectCrafting(player, tile, 28, 143, 36)
+    output = new SlotProjectCrafting(player, tile, 28, 143, 36)
     output.canPlaceDelegate = { _ => false }
     addSlotToContainer(output)
 
@@ -545,6 +635,20 @@ class ContainerProjectBench(player: EntityPlayer, tile: TileProjectBench)
     detectAndSendChanges()
   }
 
+  /** Do thing when clicked to slot LB => mouse 0, shift 0 LB + lshift => mouse
+    * 0, shift 1 LB + rshift => mouse 0, shift 1
+    *
+    * @param id
+    *   is the slot id
+    * @param mouse
+    *   the mouse code, where 1 is the right mouse
+    * @param shift
+    *   left or right shift code, where 1 is the left shift
+    * @param player
+    *   the current player clicking button
+    * @return
+    *   [[ItemStack]] of the slot
+    */
   override def slotClick(
       id: Int,
       mouse: Int,
@@ -552,7 +656,20 @@ class ContainerProjectBench(player: EntityPlayer, tile: TileProjectBench)
       player: EntityPlayer
   ): ItemStack = {
     var mode = shift
-    if (id == 28 && mode == 6) mode = 0
+    if (id == 28) {
+      if (mode == 6) mode = 0
+      else if (mode == 1 && mouse == 0) {
+        if (tile.isStorageNotFull) {
+          val stack = output.getStack
+          while (output.canTakeStack(player))
+            output.onShiftFromSlot(player, stack, isShift = true)
+        } else
+          player.addChatComponentMessage(
+            new ChatComponentText("§cStorage is full!")
+          )
+        return null
+      }
+    }
     super.slotClick(id, mouse, mode, player)
   }
 

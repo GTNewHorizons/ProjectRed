@@ -6,7 +6,6 @@
 package mrtjp.projectred.expansion
 
 import java.util.{List => JList}
-
 import codechicken.lib.packet.PacketCustom
 import codechicken.lib.vec.{BlockCoord, Rotation, Translation, Vector3}
 import cpw.mods.fml.common.FMLCommonHandler
@@ -23,8 +22,8 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.model.{ModelBiped, ModelRenderer}
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.enchantment.{
-  EnchantmentHelper,
   Enchantment,
+  EnchantmentHelper,
   EnumEnchantmentType
 }
 import net.minecraft.entity.player.EntityPlayer
@@ -37,6 +36,7 @@ import net.minecraft.util.{DamageSource, EnumChatFormatting, IIcon}
 import net.minecraft.world.World
 import net.minecraftforge.common.ISpecialArmor
 import net.minecraftforge.common.ISpecialArmor.ArmorProperties
+import org.lwjgl.input.Keyboard
 
 import scala.collection.mutable.{Set => MSet}
 
@@ -184,7 +184,16 @@ class ItemPlan extends ItemCore("projectred.expansion.plan") {
   var iconWritten: IIcon = null
 
   override def getIconIndex(stack: ItemStack) =
-    if (ItemPlan.hasRecipeInside(stack)) iconWritten else iconBlank
+    if (ItemPlan.hasRecipeInside(stack))
+      if (
+        Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(
+          Keyboard.KEY_RSHIFT
+        )
+      )
+        ItemPlan.loadPlanOutput(stack).getIconIndex
+      else
+        iconWritten
+    else iconBlank
 
   override def getIcon(stack: ItemStack, pass: Int) = getIconIndex(stack)
 

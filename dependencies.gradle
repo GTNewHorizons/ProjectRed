@@ -2,7 +2,7 @@
 
 dependencies {
     api("com.github.GTNewHorizons:ForgeMultipart:1.6.0:dev")
-    api("com.github.GTNewHorizons:ForgeRelocation:0.3.0:dev")
+    api("com.github.GTNewHorizons:ForgeRelocation:0.3.1:dev")
     implementation("com.github.GTNewHorizons:NotEnoughItems:2.7.11-GTNH:dev")
 
     compileOnly("com.github.GTNewHorizons:TinkersConstruct:1.13.2-GTNH:dev") {

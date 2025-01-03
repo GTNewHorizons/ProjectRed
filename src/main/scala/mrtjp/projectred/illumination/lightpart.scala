@@ -157,7 +157,7 @@ class BaseLightPart(obj: LightObject)
   @SideOnly(Side.CLIENT)
   override def renderStatic(pos: Vector3, pass: Int) = {
     if (pass == 0) {
-      CCRenderState.instance.setBrightness(world, x, y, z)
+      CCRenderState.instance.setBrightnessInstance(world, x, y, z)
       obj.render(this, meta, isOn, pos)
       true
     } else false
@@ -382,17 +382,17 @@ abstract class LightObject {
     GL11.glScaled(scale, scale, scale)
     TextureUtils.bindAtlas(0)
     val state = CCRenderState.instance
-    state.reset()
-    state.setDynamic()
-    state.pullLightmap()
-    state.startDrawing()
+    state.resetInstance()
+    state.setDynamicInstance()
+    state.pullLightmapInstance()
+    state.startDrawingInstance()
 
     // Tessellate
     getInvModelChassi.render(trans, icon)
     getInvModelBulb.render(trans, icon, cMult(color, inverted))
 
     // Draw
-    state.draw()
+    state.drawInstance()
 
     // Render Halo
     if (inverted) {

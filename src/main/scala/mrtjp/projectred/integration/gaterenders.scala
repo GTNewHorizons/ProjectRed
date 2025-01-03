@@ -80,9 +80,9 @@ object RenderGate {
     val state = CCRenderState.instance
     TextureUtils.bindAtlas(0)
     r.prepareInv(stack)
-    state.startDrawing()
+    state.startDrawingInstance()
     r.renderStatic(t, 0)
-    state.draw()
+    state.drawInstance()
     if (r.hasSpecials) r.renderDynamic(t)
   }
 
@@ -763,11 +763,11 @@ class RenderTimer extends GateRenderer[SequentialGatePart] {
 
   override def renderDynamic(t: Transformation) {
     val state = CCRenderState.instance
-    state.startDrawing()
-    state.pullLightmap()
-    state.setDynamic()
+    state.startDrawingInstance()
+    state.pullLightmapInstance()
+    state.setDynamicInstance()
     pointer.renderModel(t, 0)
-    state.draw()
+    state.drawInstance()
   }
 }
 
@@ -811,11 +811,11 @@ class RenderSequencer extends GateRenderer[SequentialGatePart] {
 
   override def renderDynamic(t: Transformation) {
     val state = CCRenderState.instance
-    state.startDrawing()
-    state.pullLightmap()
-    state.setDynamic()
+    state.startDrawingInstance()
+    state.pullLightmapInstance()
+    state.setDynamicInstance()
     pointer.renderModel(t, 0)
-    state.draw()
+    state.drawInstance()
   }
 }
 
@@ -861,11 +861,11 @@ class RenderCounter extends GateRenderer[SequentialGatePart] {
 
   override def renderDynamic(t: Transformation) {
     val state = CCRenderState.instance
-    state.startDrawing()
-    state.pullLightmap()
-    state.setDynamic()
+    state.startDrawingInstance()
+    state.pullLightmapInstance()
+    state.setDynamicInstance()
     pointer.renderModel(t, if (reflect) 1 else 0)
-    state.draw()
+    state.drawInstance()
   }
 }
 
@@ -918,11 +918,11 @@ class RenderStateCell extends GateRenderer[SequentialGatePart] {
 
   override def renderDynamic(t: Transformation) {
     val state = CCRenderState.instance
-    state.startDrawing()
-    state.pullLightmap()
-    state.setDynamic()
+    state.startDrawingInstance()
+    state.pullLightmapInstance()
+    state.setDynamicInstance()
     pointer.renderModel(t, if (reflect) 1 else 0)
-    state.draw()
+    state.drawInstance()
   }
 }
 

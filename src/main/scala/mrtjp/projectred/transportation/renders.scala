@@ -133,7 +133,7 @@ object RenderPipe {
   }
 
   def renderBreakingOverlay(icon: IIcon, pipe: SubcorePipePart) {
-    CCRenderState.instance.setPipeline(
+    CCRenderState.instance.setPipelineInstance(
       new Translation(pipe.x, pipe.y, pipe.z),
       new IconTransformation(icon)
     )
@@ -220,7 +220,7 @@ object RenderPipe {
 
     val t = new Vector3(x, y, z).add(-4 / 16d, 0, -4 / 16d)
     val state = CCRenderState.instance
-    state.setPipeline(new Translation(t))
+    state.setPipelineInstance(new Translation(t))
     state.alphaOverride = 32
     state.baseColour = Colors(colour).rgba
     BlockRenderer.renderCuboid(
@@ -240,14 +240,14 @@ object RenderPipe {
     GL11.glDisable(GL11.GL_CULL_FACE)
     GL11.glDepthMask(false)
     val state = CCRenderState.instance
-    state.startDrawing()
-    state.pullLightmap()
-    state.setDynamic()
+    state.startDrawingInstance()
+    state.pullLightmapInstance()
+    state.setDynamicInstance()
   }
 
   private def restoreRenderState() {
     val state = CCRenderState.instance
-    state.draw()
+    state.drawInstance()
     GL11.glDepthMask(true)
     GL11.glColor3f(1, 1, 1)
     GL11.glEnable(GL11.GL_CULL_FACE)
@@ -267,16 +267,16 @@ object RenderPipe {
     GL11.glDepthMask(false)
     GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
     val state = CCRenderState.instance
-    state.reset()
+    state.resetInstance()
     TextureUtils.bindAtlas(0)
-    state.setDynamic()
-    state.setBrightness(part.world, pos.x, pos.y, pos.z)
+    state.setDynamicInstance()
+    state.setBrightnessInstance(part.world, pos.x, pos.y, pos.z)
     state.alphaOverride = 127
-    state.startDrawing()
+    state.startDrawingInstance()
 
     tFunc()
 
-    state.draw()
+    state.drawInstance()
     GL11.glDisable(GL11.GL_BLEND)
     GL11.glDepthMask(true)
     GL11.glPopMatrix()
@@ -532,16 +532,16 @@ object PipeItemRenderer extends IItemRenderer {
     if (pdef == null) return
     TextureUtils.bindAtlas(0)
     val state = CCRenderState.instance
-    state.reset()
-    state.setDynamic()
-    state.pullLightmap()
-    state.startDrawing()
+    state.resetInstance()
+    state.setDynamicInstance()
+    state.pullLightmapInstance()
+    state.startDrawingInstance()
 
     RenderPipe.renderInv(
       new Scale(scale).`with`(new Translation(x, y, z)),
       new IconTransformation(pdef.sprites(0))
     )
 
-    state.draw()
+    state.drawInstance()
   }
 }

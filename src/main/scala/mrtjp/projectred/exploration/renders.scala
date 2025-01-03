@@ -100,26 +100,26 @@ object GemSawRenderer extends IItemRenderer {
     }
 
     val state = CCRenderState.instance
-    state.reset()
-    state.setDynamic()
-    state.pullLightmap()
+    state.resetInstance()
+    state.setDynamicInstance()
+    state.pullLightmapInstance()
     CCRenderState.changeTexture("microblock:textures/items/saw.png")
     state.baseColour = 0xffffffff
 
-    state.startDrawing()
+    state.startDrawingInstance()
     handle.render(t)
     holder.render(t)
-    state.draw()
+    state.drawInstance()
 
     if (rtype != ItemRenderType.EQUIPPED_FIRST_PERSON)
       GL11.glDisable(GL11.GL_LIGHTING)
     GL11.glDisable(GL11.GL_CULL_FACE)
 
-    state.startDrawing()
+    state.startDrawingInstance()
     state.baseColour = colour(item)
     blade.render(t, new UVTranslation(0, 4 / 64d))
     state.baseColour = 0xffffffff
-    state.draw()
+    state.drawInstance()
 
     GL11.glEnable(GL11.GL_CULL_FACE)
     if (rtype != EQUIPPED_FIRST_PERSON) GL11.glEnable(GL11.GL_LIGHTING)
@@ -152,9 +152,9 @@ object RenderLily extends TInstancedBlockRender {
     val te = WorldLib.getTileEntity(w, x, y, z, classOf[TileLily])
     if (te != null) {
       val state = CCRenderState.instance
-      state.reset()
+      state.resetInstance()
       state.lightMatrix.locate(w, x, y, z)
-      state.setBrightness(w, x, y, z)
+      state.setBrightnessInstance(w, x, y, z)
       model.render(
         new Translation(x, y, z),
         new IconTransformation(icons(te.growth))
@@ -172,13 +172,13 @@ object RenderLily extends TInstancedBlockRender {
 
   override def renderInvBlock(r: RenderBlocks, meta: Int) {
     val state = CCRenderState.instance
-    state.reset()
-    state.setDynamic()
-    state.pullLightmap()
-    state.setNormal(0, -1, 0)
-    state.startDrawing()
+    state.resetInstance()
+    state.setDynamicInstance()
+    state.pullLightmapInstance()
+    state.setNormalInstance(0, -1, 0)
+    state.startDrawingInstance()
     r.drawCrossedSquares(icons(7), -0.5d, -0.95d, -0.5d, 1.65f)
-    state.draw()
+    state.drawInstance()
   }
 
   override def registerIcons(reg: IIconRegister) {

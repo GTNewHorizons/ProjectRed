@@ -153,9 +153,9 @@ object GateItemRenderer extends IItemRenderer {
       GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
       TextureUtils.bindAtlas(0)
       val state = CCRenderState.instance
-      state.reset()
-      state.setDynamic()
-      state.pullLightmap()
+      state.resetInstance()
+      state.setDynamicInstance()
+      state.pullLightmapInstance()
 
       RenderGate.renderInv(
         item,

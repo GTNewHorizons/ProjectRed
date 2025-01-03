@@ -49,15 +49,15 @@ object LampTESR extends TileEntitySpecialRenderer with IItemRenderer {
       GL11.glScaled(s, s, s)
       TextureUtils.bindAtlas(0)
       val state = CCRenderState.instance
-      state.reset()
-      state.setDynamic()
-      state.pullLightmap()
-      state.startDrawing()
+      state.resetInstance()
+      state.setDynamicInstance()
+      state.pullLightmapInstance()
+      state.startDrawingInstance()
 
       val t = new Translation(x, y, z)
-      state.setPipeline(t, icon)
+      state.setPipelineInstance(t, icon)
       BlockRenderer.renderCuboid(Cuboid6.full, 0)
-      state.draw()
+      state.drawInstance()
 
       if (meta > 15) {
         RenderHalo.prepareRenderState()
@@ -119,12 +119,12 @@ trait ButtonRenderCommons extends IItemRenderer {
 
         TextureUtils.bindAtlas(0)
         val state = CCRenderState.instance
-        state.reset()
-        state.setDynamic()
-        state.pullLightmap()
-        state.startDrawing()
+        state.resetInstance()
+        state.setDynamicInstance()
+        state.pullLightmapInstance()
+        state.startDrawingInstance()
 
-        state.setPipeline(
+        state.setPipelineInstance(
           t,
           icon,
           new ColourMultiplier(Colors(color).rgba)
@@ -132,7 +132,7 @@ trait ButtonRenderCommons extends IItemRenderer {
         BlockRenderer.renderCuboid(invRenderBox, 0)
         drawExtras(t)
 
-        state.draw()
+        state.drawInstance()
         RenderHalo.prepareRenderState()
         RenderHalo.renderHalo(invLightBox, color, t)
         RenderHalo.restoreRenderState()

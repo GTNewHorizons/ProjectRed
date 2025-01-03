@@ -841,7 +841,7 @@ class InputPanelButtonsModel extends ComponentModel {
     val icon = new IconTransformation(baseIcon)
     val state = CCRenderState.instance
     for (i <- 0 until 16) {
-      state.setPipeline(
+      state.setPipelineInstance(
         state.lightMatrix,
         orientT(orient).`with`(t),
         icon,

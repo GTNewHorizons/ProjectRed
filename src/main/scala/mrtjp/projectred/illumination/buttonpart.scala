@@ -110,8 +110,8 @@ class LightButtonPart(m: Int)
   override def renderStatic(pos: Vector3, pass: Int) = {
     if (pass == 0) {
       val state = CCRenderState.instance
-      state.setBrightness(world, x, y, z)
-      state.setPipeline(
+      state.setBrightnessInstance(world, x, y, z)
+      state.setPipelineInstance(
         new Translation(x, y, z),
         new IconTransformation(ItemPartButton.icon),
         new ColourMultiplier(Colors(colorMeta).rgba),

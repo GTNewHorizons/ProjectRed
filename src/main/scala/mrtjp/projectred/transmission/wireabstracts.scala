@@ -149,7 +149,7 @@ trait TWireCommons
   @SideOnly(Side.CLIENT)
   override def renderStatic(pos: Vector3, pass: Int) = {
     if (pass == 0 && useStaticRenderer) {
-      CCRenderState.instance.setBrightness(world, x, y, z)
+      CCRenderState.instance.setBrightnessInstance(world, x, y, z)
       doStaticTessellation(pos, pass)
       true
     } else false
@@ -161,11 +161,11 @@ trait TWireCommons
       GL11.glDisable(GL11.GL_LIGHTING)
       val state = CCRenderState.instance
       state.hasColour = true
-      state.startDrawing()
+      state.startDrawingInstance()
 
       doDynamicTessellation(pos, frame, pass)
 
-      state.draw()
+      state.drawInstance()
       state.hasColour = false
       GL11.glEnable(GL11.GL_LIGHTING)
     }
@@ -173,7 +173,7 @@ trait TWireCommons
 
   @SideOnly(Side.CLIENT)
   override def drawBreaking(renderBlocks: RenderBlocks) {
-    CCRenderState.instance.reset()
+    CCRenderState.instance.resetInstance()
     doBreakTessellation(renderBlocks)
   }
 

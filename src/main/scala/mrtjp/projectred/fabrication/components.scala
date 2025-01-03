@@ -107,14 +107,14 @@ object ICComponentStore {
   def prepairRender() {
     TextureUtils.bindAtlas(0)
     val state = CCRenderState.instance
-    state.reset()
-    state.startDrawing()
-    state.pullLightmap()
-    state.setDynamic()
+    state.resetInstance()
+    state.startDrawingInstance()
+    state.pullLightmapInstance()
+    state.setDynamicInstance()
   }
 
   def finishRender() {
-    CCRenderState.instance.draw()
+    CCRenderState.instance.drawInstance()
   }
 
   def generateWireModels(name: String, count: Int) = {

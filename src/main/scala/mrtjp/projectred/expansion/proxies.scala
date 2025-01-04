@@ -1,7 +1,6 @@
 package mrtjp.projectred.expansion
 
 import java.lang.{Character => JC}
-
 import codechicken.lib.data.MCDataInput
 import codechicken.lib.packet.PacketCustom
 import codechicken.multipart.MultiPartRegistry.IPartFactory2
@@ -14,6 +13,11 @@ import mrtjp.core.gui.GuiHandler
 import mrtjp.projectred.ProjectRedExpansion._
 import mrtjp.projectred.core.{Configurator, IProxy, PartDefs}
 import mrtjp.projectred.Tags
+import mrtjp.projectred.expansion.TileProjectBench.{
+  GuiProjectBench,
+  RenderProjectBench,
+  TileProjectBench
+}
 import net.minecraft.client.Minecraft
 import net.minecraft.init.{Blocks, Items}
 import net.minecraft.item.{Item, ItemStack}

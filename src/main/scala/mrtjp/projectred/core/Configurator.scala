@@ -81,6 +81,8 @@ object Configurator extends ModConfig("ProjRed|Core") {
   var compat_ColoredLights = false
   var compat_MFRDeepStorage = true
   var compat_StorageDrawers = true
+  var module_Exploration = true
+  var module_Fabrication = true
 
   override def getFileName = "ProjectRed"
 
@@ -273,6 +275,21 @@ object Configurator extends ModConfig("ProjRed|Core") {
       compat_StorageDrawers,
       "This allows pipes to recognize storage drawers correctly."
     )
+    val modules = new BaseCategory(
+      "Modules",
+      "Contains settings to disable entire modules. Currently only Exploration and Fabrication can be disabled at this time."
+    )
+    module_Exploration = modules.put(
+      "Exploration Module",
+      module_Exploration,
+      "Enable Exploration Module."
+    )
+    module_Fabrication = modules.put(
+      "Fabrication Module",
+      module_Fabrication,
+      "Enable Fabrication Module."
+    )
+
   }
 }
 

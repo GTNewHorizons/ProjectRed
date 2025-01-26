@@ -6,6 +6,7 @@ import cpw.mods.fml.common.event.{
   FMLPostInitializationEvent,
   FMLPreInitializationEvent
 }
+import mrtjp.projectred.core.Configurator
 import mrtjp.projectred.exploration._
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.init.Blocks
@@ -22,6 +23,8 @@ import net.minecraft.item.ItemStack
   version = ProjectRedCore.VERSION
 )
 object ProjectRedExploration {
+
+  def isEnabled = Configurator.module_Exploration
 
   /** Blocks * */
   var blockOres: BlockOre = null
@@ -96,11 +99,13 @@ object ProjectRedExploration {
 
   @Mod.EventHandler
   def init(event: FMLInitializationEvent) {
-    ExplorationProxy.init()
+    if (isEnabled)
+      ExplorationProxy.init()
   }
 
   @Mod.EventHandler
   def postInit(event: FMLPostInitializationEvent) {
-    ExplorationProxy.postinit()
+    if (isEnabled)
+      ExplorationProxy.postinit()
   }
 }

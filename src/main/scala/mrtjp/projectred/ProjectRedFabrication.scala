@@ -11,6 +11,7 @@ import cpw.mods.fml.common.event.{
   FMLPostInitializationEvent,
   FMLPreInitializationEvent
 }
+import mrtjp.projectred.core.Configurator
 import mrtjp.projectred.fabrication.{
   BlockICMachine,
   FabricationProxy,
@@ -32,6 +33,8 @@ import net.minecraft.item.ItemStack
 )
 object ProjectRedFabrication {
 
+  def isEnabled = Configurator.module_Fabrication
+
   /** Blocks * */
   var icBlock: BlockICMachine = null
 
@@ -52,11 +55,13 @@ object ProjectRedFabrication {
 
   @Mod.EventHandler
   def init(event: FMLInitializationEvent) {
-    FabricationProxy.init()
+    if (isEnabled)
+      FabricationProxy.init()
   }
 
   @Mod.EventHandler
   def postInit(event: FMLPostInitializationEvent) {
-    FabricationProxy.postinit()
+    if (isEnabled)
+      FabricationProxy.postinit()
   }
 }

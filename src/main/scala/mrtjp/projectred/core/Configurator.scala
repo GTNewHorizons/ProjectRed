@@ -284,11 +284,6 @@ object Configurator extends ModConfig("ProjRed|Core") {
       module_Exploration,
       "Enable Exploration Module."
     )
-    module_Fabrication = modules.put(
-      "Fabrication Module",
-      module_Fabrication,
-      "Enable Fabrication Module."
-    )
 
   }
 }

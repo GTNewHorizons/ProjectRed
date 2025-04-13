@@ -254,7 +254,8 @@ class WireModelGen {
     i = addVerts(model, verts, i)
   }
 
-  private def generateSideInventoryModel(r: Int) = withBottom(generateStraight(r), 4, 4)
+  private def generateSideInventoryModel(r: Int) =
+    withBottom(generateStraight(r), 4, 4)
 
   private def generateStraight(r: Int) = {
     val verts = generateExtension(8)

@@ -261,9 +261,9 @@ abstract class WirePart
     val b = Seq.newBuilder[Cuboid6]
 
     // Include side collision boxes if connected.
-    for (connection <- 0 until 4)
-      if (maskConnects(connection))
-        b += WireBoxes.sBounds(getThickness)(side)(connection)
+    for (rotation <- 0 until 4)
+      if (maskConnects(rotation))
+        b += WireBoxes.sBounds(getThickness)(side)(rotation)
 
     // Include center collision box.
     b += WireBoxes.sBounds(getThickness)(side)(4)

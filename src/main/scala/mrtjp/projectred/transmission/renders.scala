@@ -73,7 +73,7 @@ object WireItemRenderer extends TWireItemRenderCommon {
       renderHue: Int,
       ops: IVertexOperation*
   ) {
-    RenderWire.renderInv(thickness, renderHue, ops: _*)
+    RenderWire.renderInventoryModel(thickness, renderHue, ops: _*)
   }
 }
 

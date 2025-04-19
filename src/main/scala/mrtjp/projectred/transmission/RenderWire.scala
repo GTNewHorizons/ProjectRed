@@ -17,7 +17,7 @@ object RenderWire {
   /** Array of all built models. Generated on demand.
     */
   val wireModels = new Array[CCModel](3 * 6 * 256)
-  val invModels = new Array[CCModel](3)
+  val inventoryModels = new Array[CCModel](3)
 
   /** Returns a tightly packed unique index for the specific model represented
     * by this wire. The mask is split into 3 sections the combination of
@@ -54,10 +54,10 @@ object RenderWire {
     }
     m
   }
-  def getOrGenerateInvModel(thickness: Int) = {
-    var m = invModels(thickness)
-    if (m == null) invModels(thickness) = {
-      m = WireModelGen.getThreadLocal().generateInvModel(thickness); m
+  def getOrGenerateInventoryModel(thickness: Int) = {
+    var m = inventoryModels(thickness)
+    if (m == null) inventoryModels(thickness) = {
+      m = WireModelGen.getThreadLocal().generateInventoryModel(thickness); m
     }
     m
   }
@@ -70,8 +70,8 @@ object RenderWire {
     )
   }
 
-  def renderInv(thickness: Int, hue: Int, ops: IVertexOperation*) {
-    getOrGenerateInvModel(thickness).render(
+  def renderInventoryModel(thickness: Int, hue: Int, ops: IVertexOperation*) {
+    getOrGenerateInventoryModel(thickness).render(
       ops :+ ColourMultiplier.instance(hue): _*
     )
   }
@@ -164,21 +164,21 @@ class WireModelGen {
   var connCount = 0
   var model: CCModel = null
   var i = 0
-  var inv = false
+  var isInventoryModel = false
 
   private def numFaces: Int = {
-    if (inv) return 22
+    if (isInventoryModel) return 22
     val conns = if (connCount < 2) 2 else connCount
     var faces = conns * 3 + 5
     for (i <- 0 until 4) if ((mask >> i & 0x11) == 1) faces += 1
     faces
   }
 
-  def generateInvModel(thickness: Int) =
+  def generateInventoryModel(thickness: Int) =
     generateModel(RenderWire.modelKey(0, thickness, 0xf0), true)
 
-  def generateModel(key: Int, inv: Boolean): CCModel = {
-    this.inv = inv
+  def generateModel(key: Int, isInventoryModel: Boolean): CCModel = {
+    this.isInventoryModel = isInventoryModel
     side = (key >> 8) % 6
     tw = (key >> 8) / 6 + 1
     w = tw / 16d
@@ -231,7 +231,7 @@ class WireModelGen {
         val uvt = new UVTranslation(16, 0)
         for (vert <- verts) vert.apply(uvt)
       }
-    if (inv) verts = withBottom(verts, 0, 4)
+    if (isInventoryModel) verts = withBottom(verts, 0, 4)
 
     i = addVerts(model, verts, i)
   }
@@ -240,7 +240,7 @@ class WireModelGen {
     val stype = (mask >> r) & 0x11
 
     val verts =
-      if (inv) generateSideInv(r)
+      if (isInventoryModel) generateSideInventoryModel(r)
       else
         connCount match {
           case 0 => if (r % 2 == 1) generateStub(r) else generateFlat(r)
@@ -254,7 +254,8 @@ class WireModelGen {
     i = addVerts(model, verts, i)
   }
 
-  private def generateSideInv(r: Int) = withBottom(generateStraight(r), 4, 4)
+  private def generateSideInventoryModel(r: Int) =
+    withBottom(generateStraight(r), 4, 4)
 
   private def generateStraight(r: Int) = {
     val verts = generateExtension(8)

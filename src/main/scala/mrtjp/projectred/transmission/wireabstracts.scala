@@ -257,9 +257,22 @@ abstract class WirePart
 
   override def getStrength(hit: MovingObjectPosition, player: EntityPlayer) = 4
 
-  override def getSubParts = Seq(
-    new IndexedCuboid6(0, WireBoxes.sBounds(getThickness)(side))
-  )
+  override def getCollisionBoxes = {
+    val b = Seq.newBuilder[Cuboid6]
+
+    // Include side collision boxes if connected.
+    for (rotation <- 0 until 4)
+      if (maskConnects(rotation))
+        b += WireBoxes.sBounds(getThickness)(side)(rotation)
+
+    // Include center collision box.
+    b += WireBoxes.sBounds(getThickness)(side)(4)
+
+    b.result()
+  }
+
+  override def getSubParts =
+    getCollisionBoxes.map(that => new IndexedCuboid6(0, that))
 
   override def getOcclusionBoxes = Seq(WireBoxes.oBounds(getThickness)(side))
 
@@ -472,18 +485,34 @@ abstract class FramedWirePart
 }
 
 object WireBoxes {
-  var sBounds = Array.ofDim[Cuboid6](3, 6)
+
+  /** Wire collision boxes for each thickness, side and rotation. */
+  var sBounds = Array.ofDim[Cuboid6](3, 6, 5)
   var oBounds = Array.ofDim[Cuboid6](3, 6)
 
-  for (t <- 0 until 3) {
-    val selection = new Cuboid6(0, 0, 0, 1, (t + 2) / 16d, 1).expand(-0.005)
+  for (thickness <- 0 until 3) {
+    val height = (thickness + 2.00) / 16.00
+    val centerSelection = new Cuboid6(0.25, 0.00, 0.25, 0.75, height, 0.75)
+    val sideSelection = new Cuboid6(0.25, 0.00, 0.75, 0.75, height, 1.00)
+
+    for (side <- 0 until 6) {
+      for (rotation <- 0 until 4) {
+        sBounds(thickness)(side)(rotation) = sideSelection
+          .copy()
+          .apply(Rotation.sideOrientation(side, rotation).at(Vector3.center))
+      }
+      sBounds(thickness)(side)(4) = centerSelection
+        .copy()
+        .apply(Rotation.sideOrientation(side, 0).at(Vector3.center))
+    }
+  }
+
+  for (thickness <- 0 until 3) {
     val occlusion =
-      new Cuboid6(2 / 8d, 0, 2 / 8d, 6 / 8d, (t + 2) / 16d, 6 / 8d)
-    for (s <- 0 until 6) {
-      sBounds(t)(s) =
-        selection.copy.apply(Rotation.sideRotations(s).at(Vector3.center))
-      oBounds(t)(s) =
-        occlusion.copy.apply(Rotation.sideRotations(s).at(Vector3.center))
+      new Cuboid6(2 / 8d, 0, 2 / 8d, 6 / 8d, (thickness + 2) / 16d, 6 / 8d)
+    for (side <- 0 until 6) {
+      oBounds(thickness)(side) =
+        occlusion.copy.apply(Rotation.sideRotations(side).at(Vector3.center))
     }
   }
 

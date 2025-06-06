@@ -95,7 +95,7 @@ abstract class OpGateCommons(meta: Int) extends CircuitOp {
     if (circuit.getPart(start) != null) return
 
     val t = orthoPartT(x, y, xSize, ySize, circuit.size, start.x, start.y)
-    doRender(t, findRot(circuit, start, end), 0)
+    doRender(t, rotation, configuration)
 
     renderHolo(
       x,

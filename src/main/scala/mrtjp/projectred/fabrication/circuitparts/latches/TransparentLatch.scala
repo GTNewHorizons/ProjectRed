@@ -37,7 +37,7 @@ class RenderTransparentLatch extends ICGateRenderer[ComboICGatePart] {
     Seq(new BaseComponentModel("TRANSLATCH")) ++ wires ++ torches
 
   override def prepareStatic(configuration: Int): Unit = {
-    reflect = false
+    reflect = configuration == 1
     wires(0).on = true
     wires(1).on = false
     wires(2).on = true

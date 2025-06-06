@@ -11,6 +11,12 @@ import mrtjp.projectred.fabrication.ICComponentStore.generateWireModels
 import mrtjp.projectred.fabrication.circuitparts.{ICGateRenderer, SequentialGateICPart, SequentialICGateLogic, TExtraStateLogic}
 import mrtjp.projectred.fabrication.{BaseComponentModel, PointerModel, RedChipModel, RedstoneTorchModel}
 
+object StateCell {
+  def cycleShape(shape: Int): Int = {
+    (shape + 1) % 2
+  }
+}
+
 
 class StateCell(gate: SequentialGateICPart)
   extends SequentialICGateLogic(gate)
@@ -29,7 +35,7 @@ class StateCell(gate: SequentialGateICPart)
   }
 
   override def cycleShape(gate: SequentialGateICPart) = {
-    gate.setShape((gate.shape + 1) % 2)
+    gate.setShape(StateCell.cycleShape(gate.shape))
     true
   }
 

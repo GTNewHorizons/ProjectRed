@@ -8,15 +8,11 @@ package mrtjp.projectred.fabrication
 import codechicken.lib.math.MathHelper
 import codechicken.lib.render.CCRenderState.IVertexOperation
 import codechicken.lib.render.uv.{IconTransformation, UVTransformation}
-import codechicken.lib.render.{
-  CCModel,
-  CCRenderState,
-  ColourMultiplier,
-  TextureUtils
-}
+import codechicken.lib.render.{CCModel, CCRenderState, ColourMultiplier, TextureUtils}
 import codechicken.lib.vec._
 import mrtjp.core.color.Colors
 import mrtjp.core.vec.Size
+import mrtjp.projectred.fabrication.circuitparts.ICGateRenderer
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.util.IIcon
 
@@ -82,7 +78,7 @@ object ICComponentStore {
     buttonOffIcon = register("button_off")
     buttonOnIcon = register("button_on")
 
-    RenderICGate.registerIcons(reg)
+    ICGateRenderer.registerIcons(reg)
 
     for (m <- WireModel.wireModels) m.icon = register("surface/" + m.iconPath)
     for (m <- BaseComponentModel.baseModels)

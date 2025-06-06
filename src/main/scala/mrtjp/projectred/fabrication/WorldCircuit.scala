@@ -68,7 +68,7 @@ trait NetWorldCircuit extends WorldCircuit {
 
     val part = getIC.getPart(x, y)
     partStream.writeByte(part.id)
-    partStream.writeByte(x).writeByte(y)
+    partStream.writeInt(x).writeInt(y)
 
     partStream
   }
@@ -83,7 +83,7 @@ trait NetWorldCircuit extends WorldCircuit {
     try {
       var id = in.readUByte()
       while (id != 255) {
-        val (x, y) = (in.readUByte(), in.readUByte())
+        val (x, y) = (in.readInt(), in.readInt())
         var part = getIC.getPart(x, y)
         if (part == null || part.id != id) {
           log.error("client part stream couldnt find part " + Point(x, y))

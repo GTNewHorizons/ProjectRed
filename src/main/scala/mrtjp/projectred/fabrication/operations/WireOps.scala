@@ -9,12 +9,12 @@ import codechicken.lib.data.{MCDataInput, MCDataOutput}
 import codechicken.lib.vec.{Transformation, Translation}
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.color.Colors
-import mrtjp.core.vec.Point
+import mrtjp.core.vec.{Point, Vec2}
 import mrtjp.projectred.fabrication.ICComponentStore._
 import mrtjp.projectred.fabrication._
+import mrtjp.projectred.fabrication.circuitparts.wire._
 import mrtjp.projectred.fabrication.circuitparts.{CircuitPart, CircuitPartDefs}
-import mrtjp.projectred.fabrication.circuitparts.wire.{BundledCableICPart, InsulatedWireICPart, RenderICAlloyWire, RenderICBundledCable, RenderICInsulatedWire}
-import mrtjp.projectred.fabrication.operations.CircuitOp.{isOnBorder, renderHolo}
+import mrtjp.projectred.fabrication.operations.CircuitOp.renderHolo
 
 
 abstract class OpWire extends CircuitOp {
@@ -31,90 +31,77 @@ abstract class OpWire extends CircuitOp {
       end: Point,
       out: MCDataOutput
   ) {
-    out.writeByte(start.x).writeByte(start.y)
-    out.writeByte(end.x).writeByte(end.y)
+    out.writeInt(start.x).writeInt(start.y)
+    out.writeInt(end.x).writeInt(end.y)
   }
 
   override def readOp(circuit: IntegratedCircuit, in: MCDataInput) {
-    val start = Point(in.readUByte(), in.readUByte())
-    val end = Point(in.readUByte(), in.readUByte())
-    val end2 = start + Point((end - start).vectorize.axialProject)
+    val start = Point(in.readInt(), in.readInt())
+    val end = Point(in.readInt(), in.readInt())
+    val corner = start + Point((end - start).vectorize.axialProject)
 
-    for (px <- math.min(start.x, end2.x) to math.max(start.x, end2.x))
-      for (py <- math.min(start.y, end2.y) to math.max(start.y, end2.y))
-        if (!isOnBorder(circuit.size, Point(px, py)))
-          if (circuit.getPart(px, py) == null)
-            circuit.setPart(px, py, createPart)
+    for(x <- math.min(start.x, corner.x) to math.max(start.x, corner.x)) {
+      for(y <- math.min(start.y, corner.y) to math.max(start.y, corner.y)) {
+        if(circuit.getPart(x, y) == null) {
+          circuit.setPart(x, y, createPart)
+        }
+      }
+    }
+    for(x <- math.min(corner.x, end.x) to math.max(corner.x, end.x)) {
+      for(y <- math.min(corner.y, end.y) to math.max(corner.y, end.y)) {
+        if(circuit.getPart(x, y) == null) {
+          circuit.setPart(x, y, createPart)
+        }
+      }
+    }
   }
 
   def createPart: CircuitPart
 
   @SideOnly(Side.CLIENT)
-  override def renderHover(
-      circuit: IntegratedCircuit,
-      point: Point,
-      x: Double,
-      y: Double,
-      xSize: Double,
-      ySize: Double
-  ) {
-    if (circuit.getPart(point) != null) return
-
-    renderHolo(
-      x,
-      y,
-      xSize,
-      ySize,
-      circuit.size,
-      point,
-      if (isOnBorder(circuit.size, point)) 0x33ff0000 else 0x33ffffff
-    )
-
-    val t = orthoPartT(x, y, xSize, ySize, circuit.size, point.x, point.y)
+  override def renderHover(position: Vec2, scale: Double, prefboardOffset: Vec2): Unit = {
+    val t = orthoPartT(position.subtract(prefboardOffset), scale)
     doRender(t, 0)
+    renderHolo(position.subtract(prefboardOffset), scale, 0x33ffffff)
   }
 
   @SideOnly(Side.CLIENT)
-  override def renderDrag(
-      circuit: IntegratedCircuit,
-      start: Point,
-      end: Point,
-      x: Double,
-      y: Double,
-      xSize: Double,
-      ySize: Double
-  ) {
-    if (circuit.getPart(start) != null) return
+  override def renderDrag(start: Vec2, end: Vec2, positionsWithParts: Seq[Vec2], scale: Double, prefboardOffset: Vec2): Unit = {
+    val corner = start + (end - start).axialProject
 
-    val end2 = start + Point((end - start).vectorize.axialProject)
-
-    for (px <- math.min(start.x, end2.x) to math.max(start.x, end2.x))
-      for (py <- math.min(start.y, end2.y) to math.max(start.y, end2.y)) {
-        val point = Point(px, py)
-        renderHolo(
-          x,
-          y,
-          xSize,
-          ySize,
-          circuit.size,
-          point,
-          if (isOnBorder(circuit.size, point)) 0x44ff0000 else 0x44ffffff
-        )
-
-        if (circuit.getPart(px, py) == null) {
-          val t = orthoPartT(x, y, xSize, ySize, circuit.size, px, py)
-          var m = 0
-          if (px > start.x) { m |= 8; if (px != end2.x) m |= 2 }
-          if (px < start.x) { m |= 2; if (px != end2.x) m |= 8 }
-          if (py > start.y) { m |= 1; if (py != end2.y) m |= 4 }
-          if (py < start.y) { m |= 4; if (py != end2.y) m |= 1 }
-          if (px == start.x && end2.x > start.x) m |= 2
-          if (px == start.x && end2.x < start.x) m |= 8
-          if (py == start.y && end2.y > start.y) m |= 4
-          if (py == start.y && end2.y < start.y) m |= 1
-          doRender(t, m)
+    for(x <- math.min(start.dx.toInt, corner.dx.toInt) to math.max(start.dx.toInt, corner.dx.toInt)) {
+      for(y <- math.min(start.dy.toInt, corner.dy.toInt) to math.max(start.dy.toInt, corner.dy.toInt)) {
+        if(!positionsWithParts.contains(Point(x, y))) {
+          val t = orthoPartT(Vec2(x, y) - prefboardOffset, scale)
+          doRender(t, 0)
         }
+        renderHolo(Vec2(x, y) - prefboardOffset, corner.subtract(prefboardOffset), scale, 0x44ffffff)
       }
+    }
+    for(x <- math.min(corner.dx.toInt, end.dx.toInt) to math.max(corner.dx.toInt, end.dx.toInt)) {
+      for(y <- math.min(corner.dy.toInt, end.dy.toInt) to math.max(corner.dy.toInt, end.dy.toInt)) {
+        if(!positionsWithParts.contains(Point(x, y))) {
+          val t = orthoPartT(Vec2(x, y) - prefboardOffset, scale)
+          doRender(t, 0)
+        }
+        renderHolo(Vec2(x, y) - prefboardOffset, corner.subtract(prefboardOffset), scale, 0x44ffffff)
+      }
+    }
+
+    // TODO Connections
+//    if (circuit.getPart(px, py) == null) {
+//      val t = orthoPartT(x, y, xSize, ySize, circuit.size, px, py)
+//      var m = 0
+//      if (px > start.x) { m |= 8; if (px != end2.x) m |= 2 }
+//      if (px < start.x) { m |= 2; if (px != end2.x) m |= 8 }
+//      if (py > start.y) { m |= 1; if (py != end2.y) m |= 4 }
+//      if (py < start.y) { m |= 4; if (py != end2.y) m |= 1 }
+//      if (px == start.x && end2.x > start.x) m |= 2
+//      if (px == start.x && end2.x < start.x) m |= 8
+//      if (py == start.y && end2.y > start.y) m |= 4
+//      if (py == start.y && end2.y < start.y) m |= 1
+//      doRender(t, m)
+//    }
   }
 
   @SideOnly(Side.CLIENT)

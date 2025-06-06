@@ -5,67 +5,63 @@
  */
 package mrtjp.projectred.fabrication
 
+import codechicken.lib.render.ColourMultiplier
+import codechicken.lib.render.uv.{UVScale, UVTranslation}
 import codechicken.lib.vec._
+import mrtjp.core.color.Colors
+import mrtjp.core.vec.{Point, Size, Vec2}
+import mrtjp.projectred.core.libmc.PRResources
+import mrtjp.projectred.fabrication.ICComponentStore.{dynamicIdx, faceModels, finishRender, orthoPartT, prepairRender}
 import mrtjp.projectred.fabrication.gui.PrefboardRenderer
+import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.texture.IIconRegister
-import org.lwjgl.opengl.GL11._
 
 
 object RenderCircuit {
+  val BASE_SCALE = 16
+
   def registerIcons(reg: IIconRegister) {
     ICComponentStore.registerIcons(reg)
   }
 
   def renderOrtho(
-      circuit: IntegratedCircuit,
-      x: Double,
-      y: Double,
-      xSize: Double,
-      ySize: Double,
-      frame: Float
+                   circuit: IntegratedCircuit,
+                   boardSize: Size,
+                   gridScale: Double,
+                   gridTranslation: Vec2
   ) {
-    val t =
-      ICComponentStore.orthoGridT(xSize, ySize) `with` new Translation(x, y, 0)
-    renderBoard(circuit, t, true)
-    renderCircuit(circuit, t, true, frame)
+    PrefboardRenderer.renderOrtho(boardSize, gridScale, gridTranslation)
+    renderCircuitOrtho(circuit, gridScale, gridTranslation)
   }
 
-  def renderDynamic(
-      circuit: IntegratedCircuit,
-      t: Transformation,
-      frame: Float
-  ) {
-    glDisable(GL_DEPTH_TEST)
-    renderBoard(circuit, t, true)
-    renderCircuit(circuit, t, true, frame)
-    glEnable(GL_DEPTH_TEST)
+  def renderErrors(circuit: IntegratedCircuit, gridScale: Double, gridTranslation: Vec2): Unit = {
+    if(Minecraft.getMinecraft.theWorld.getTotalWorldTime % 100 > 5 && circuit.errors.nonEmpty) {
+      prepairRender()
+      PRResources.guiPrototyper.bind()
+      for ((Point(x, y), (_, c)) <- circuit.errors) {
+        val t = orthoPartT(Vec2(x, y) - gridTranslation, gridScale)
+        faceModels(dynamicIdx(0, true)).render(
+          t,
+          new UVScale(64) `with` new UVTranslation(
+            330,
+            37
+          ) `with` new UVScale(1 / 512d),
+          ColourMultiplier.instance(Colors(c).rgba)
+        )
+      }
+      finishRender()
+    }
   }
 
-  def renderBoard(
-      circuit: IntegratedCircuit,
-      t: Transformation,
-      ortho: Boolean
-  ) {
-    PrefboardRenderer.render(circuit, t, ortho)
-  }
-
-  def renderCircuit(
-      circuit: IntegratedCircuit,
-      t: Transformation,
-      ortho: Boolean,
-      frame: Float
-  ) {
+  def renderCircuitOrtho(circuit: IntegratedCircuit, scale: Double, gridTranslation: Vec2): Unit = {
+    val t = ICComponentStore.orthoGridT(BASE_SCALE, BASE_SCALE)
     for (((x, y), part) <- circuit.parts) {
       val tlist = new TransformationList(
-        new Scale(1.0 / circuit.size.width, 1, 1.0 / circuit.size.height),
-        new Translation(
-          x * 1.0 / circuit.size.width,
-          0,
-          y * 1.0 / circuit.size.height
-        ),
+        new Scale(scale, 1, scale),
+        new Translation((x - gridTranslation.dx) * scale, 0, (y - gridTranslation.dy) * scale),
         t
       )
-      part.renderDynamic(tlist, ortho, frame)
+      part.renderDynamic(tlist, true, 1f)
     }
   }
 }

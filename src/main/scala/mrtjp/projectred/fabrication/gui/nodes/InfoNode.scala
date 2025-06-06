@@ -21,7 +21,7 @@ class InfoNode extends TNode {
 
   override def drawBack_Impl(mouse: Point, rframe: Float) {
     PRResources.guiPrototyper.bind()
-    if (!getTile.hasBP || getTile.getIC.isEmpty)
+    if (!getTile.hasBP)
       Gui.func_146110_a(
         position.x,
         position.y,
@@ -38,8 +38,6 @@ class InfoNode extends TNode {
     val text =
       if (!getTile.hasBP)
         "Lay down a blueprint on the workbench."
-      else if (getTile.getIC.isEmpty)
-        "Blueprint is empty. Redraw it."
       else ""
     if (text.nonEmpty && rayTest(mouse)) {
       translateToScreen()
@@ -50,7 +48,3 @@ class InfoNode extends TNode {
     }
   }
 }
-
-
-
-

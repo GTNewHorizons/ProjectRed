@@ -13,9 +13,9 @@ import mrtjp.core.gui._
 import mrtjp.core.vec.{Point, Size, Vec2}
 import mrtjp.core.world.WorldLib
 import mrtjp.projectred.core.libmc.PRResources
-import mrtjp.projectred.fabrication.gui.nodes.{ICToolsetNode, InfoNode, NewICNode, OpPreviewNode, PrefboardNode}
+import mrtjp.projectred.fabrication.gui.nodes._
 import mrtjp.projectred.fabrication.operations.{CircuitOpDefs, OpGate}
-import mrtjp.projectred.fabrication.{FabricationProxy, IntegratedCircuit, TileICWorkbench}
+import mrtjp.projectred.fabrication.{FabricationProxy, TileICWorkbench}
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Gui
 import net.minecraft.entity.player.EntityPlayer
@@ -27,7 +27,6 @@ import java.math.MathContext
 
 class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
   var pref: PrefboardNode = null
-  var pan: PanNode = null
   var toolSets = Seq[ICToolsetNode]()
 
   override def onAddedToParent_Impl() {
@@ -36,19 +35,12 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     clip.size = Size(252, 197)
     addChild(clip)
 
-    pan = new PanNode
-    pan.size = Size(252, 197)
-    pan.clampSlack = 35
-    pan.dragTestFunction = { () => Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) }
-    clip.addChild(pan)
-
     val opPreview = new OpPreviewNode()
-    opPreview.position = Point(269, 30)
+    opPreview.position = Point(269, 18)
     addChild(opPreview)
 
-    pref = new PrefboardNode(tile.circuit, op => {opPreview.updatePreview(op)})
-    pref.position = Point(pan.size / 2 - pref.size / 2)
-    pref.zPosition = -0.01 // Must be below pan/clip nodes
+    pref = new PrefboardNode(tile.circuit, tile.hasBP, op => {opPreview.updatePreview(op)})
+    pref.zPosition = -0.01 // Must be below clip nodes
     pref.opPickDelegate = { op =>
       if (op == null) {
         // Reset rotation and configuration of selected Gate
@@ -63,7 +55,13 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
       }
       toolSets.foreach(_.pickOp(op))
     }
-    pan.addChild(pref)
+    clip.addChild(pref)
+    if(tile.circuit.parts.nonEmpty) {
+      pref.scaleGuiToCircuit()
+    } else {
+      pref.offset = Vec2(0, 0)
+      pref.scale = 1.0d
+    }
 
     val toolbar = new TNode {}
 
@@ -132,6 +130,13 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     toolbar.position =
       Point(size.width / 2 - toolbar.calculateAccumulatedFrame.width / 2, 235)
 
+    val textbox = new SimpleTextboxNode()
+    textbox.position = Point(80, 4)
+    textbox.size = Size(150, 12)
+    textbox.text =  tile.circuit.name
+    textbox.textChangedDelegate = { () => tile.sendICNameToServer(textbox.text) }
+    addChild(textbox)
+
     val dminus = new MCButtonNode
     dminus.position = Point(269, 175)
     dminus.size = Size(10, 10)
@@ -160,25 +165,16 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     splus.clickDelegate = { () => pref.incScale() }
     addChild(splus)
 
-    val reqNew = new MCButtonNode
-    reqNew.position = Point(272, 133)
-    reqNew.size = Size(44, 12)
-    reqNew.text = "redraw"
-    reqNew.clickDelegate = { () =>
-      if (tile.hasBP) {
-        val nic = new NewICNode
-        nic.position = Point(size / 2) - Point(nic.size / 2)
-        nic.completionDelegate = { () =>
-          val ic = new IntegratedCircuit
-          ic.name = nic.getName
-          ic.size = nic.selectedBoardSize * 16
-          tile.sendNewICToServer(ic)
-        }
-        addChild(nic)
-        nic.pushZTo(5)
+    val resetView = new MCButtonNode
+    resetView.position = Point(265, 133)
+    resetView.size = Size(60, 12)
+    resetView.text = "Reset View"
+    resetView.clickDelegate = { () =>
+      if (tile.hasBP && tile.circuit.parts.nonEmpty) {
+        pref.scaleGuiToCircuit()
       }
     }
-    addChild(reqNew)
+    addChild(resetView)
 
     val info = new InfoNode
     info.position = Point(241, 18)
@@ -190,16 +186,16 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     import Keyboard._
     if (!consumed) keycode match {
       case KEY_W =>
-        pan.panChildren(Vec2(0, 10))
+        pref.offset += Vec2(0, -2 / pref.scale)
         true
       case KEY_A =>
-        pan.panChildren(Vec2(10, 0))
+        pref.offset += Vec2(-2 / pref.scale, 0)
         true
       case KEY_S =>
-        pan.panChildren(Vec2(0, -10))
-        true
+        pref.offset += Vec2(0, 2 / pref.scale)
+          true
       case KEY_D =>
-        pan.panChildren(Vec2(-10, 0))
+        pref.offset += Vec2(2 / pref.scale, 0)
         true
       case _ =>
         false

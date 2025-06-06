@@ -20,7 +20,7 @@ import mrtjp.projectred.fabrication.circuitparts.primitives._
 import mrtjp.projectred.fabrication.circuitparts.timing.{Repeater, Sequencer, StateCell}
 import mrtjp.projectred.fabrication.circuitparts.io.IOICGateLogic
 import mrtjp.projectred.fabrication.gui.{CircuitGui, IGuiCircuitPart}
-import mrtjp.projectred.fabrication.operations.{CircuitOp, CircuitOpDefs, OpGateCommons}
+import mrtjp.projectred.fabrication.operations.{CircuitOp, CircuitOpDefs, OpGate}
 import mrtjp.projectred.fabrication.{IntegratedCircuit, RenderCircuit}
 import net.minecraft.util.EnumChatFormatting
 import org.lwjgl.input.{Keyboard, Mouse}
@@ -267,7 +267,7 @@ class PrefboardNode(circuit: IntegratedCircuit, previewUpdateDelegate: (CircuitO
 
   def doRotate(): Unit = {
     currentOp match {
-      case op: OpGateCommons =>
+      case op: OpGate =>
         op.rotation += 1
         if (op.rotation == 4) op.rotation = 0
       case _ =>
@@ -276,7 +276,7 @@ class PrefboardNode(circuit: IntegratedCircuit, previewUpdateDelegate: (CircuitO
 
   def doConfigure(): Unit = {
     currentOp match {
-      case op: OpGateCommons =>
+      case op: OpGate =>
         op.getID match {
           case ICGateDefinition.OR.ordinal =>
             op.configuration = OR.cycleShape(op.configuration)

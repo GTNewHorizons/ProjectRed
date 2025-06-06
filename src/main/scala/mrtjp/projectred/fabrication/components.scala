@@ -41,6 +41,10 @@ object ICComponentStore {
   val bundledwireIcons = new Array[IIcon](16)
   var bundledColourIcon: IIcon = null
 
+  var arrowIn: IIcon = null
+  var arrowOut: IIcon = null
+  var arrowInOut: IIcon = null
+
   var ioBorder: IIcon = null
   var ioSig: IIcon = null
   var tLeverOnIcon: IIcon = null
@@ -83,6 +87,10 @@ object ICComponentStore {
     for (m <- WireModel.wireModels) m.icon = register("surface/" + m.iconPath)
     for (m <- BaseComponentModel.baseModels)
       m.icon = register("surface/" + m.iconPath + "/base")
+
+    arrowIn = register("in")
+    arrowOut = register("out")
+    arrowInOut = register("inout")
 
     ioBorder = register("io_freq")
     ioSig = register("io_sig")
@@ -255,6 +263,24 @@ class IOSigModel extends ICComponentModel {
       t0,
       new IconTransformation(ioSig),
       ColourMultiplier.instance(signalColour(if (on) 255.toByte else 0.toByte))
+    )
+  }
+}
+
+class ArrowModel extends ICComponentModel {
+  // 0: in, 1: out, 2: inout
+  var arrowDirection: Int = 0
+
+  override def renderModel(t: Transformation, orient: Int, ortho: Boolean): Unit = {
+    val m = faceModels(dynamicIdx(orient, ortho))
+    val t0 = dynamicT(orient) `with` t
+    m.render(
+      t0,
+      arrowDirection match {
+        case 0 => new IconTransformation(arrowIn)
+        case 1 => new IconTransformation(arrowOut)
+        case 2 => new IconTransformation(arrowInOut)
+      }
     )
   }
 }

@@ -14,7 +14,7 @@ import mrtjp.core.vec.{Point, Size}
 import mrtjp.core.world.WorldLib
 import mrtjp.projectred.core.libmc.PRResources
 import mrtjp.projectred.fabrication.gui.nodes.{ICToolsetNode, InfoNode, NewICNode, OpPreviewNode, PrefboardNode}
-import mrtjp.projectred.fabrication.operations.{CircuitOpDefs, OpGateCommons}
+import mrtjp.projectred.fabrication.operations.{CircuitOpDefs, OpGate}
 import mrtjp.projectred.fabrication.{FabricationProxy, IntegratedCircuit, TileICWorkbench}
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Gui
@@ -52,7 +52,7 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
       if (op == null) {
         // Reset rotation and configuration of selected Gate
         pref.currentOp match {
-          case op: OpGateCommons =>
+          case op: OpGate =>
             op.rotation = 0
             op.configuration = 0
           case _ =>

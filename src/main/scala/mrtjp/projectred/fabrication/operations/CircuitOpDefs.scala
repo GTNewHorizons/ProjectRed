@@ -61,9 +61,9 @@ object CircuitOpDefs extends Enum {
   val BlackBundledCable = OpDef(new OpBundledCable(15))
 
   // ios
-  val SimpleIO = OpDef(new OpIOGate(ICGateDefinition.IOSimple.ordinal))
-  val AnalogIO = OpDef(new OpIOGate(ICGateDefinition.IOAnalog.ordinal))
-  val BundledIO = OpDef(new OpIOGate(ICGateDefinition.IOBundled.ordinal))
+  val SimpleIO = OpDef(new OpGate(ICGateDefinition.IOSimple.ordinal))
+  val AnalogIO = OpDef(new OpGate(ICGateDefinition.IOAnalog.ordinal))
+  val BundledIO = OpDef(new OpGate(ICGateDefinition.IOBundled.ordinal))
 
   // gates
   val ORGate = OpDef(new OpGate(ICGateDefinition.OR.ordinal))

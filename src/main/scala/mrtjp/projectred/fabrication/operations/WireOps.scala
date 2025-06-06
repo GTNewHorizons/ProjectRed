@@ -21,12 +21,14 @@ abstract class OpWire extends CircuitOp {
   override def checkOp(circuit: IntegratedCircuit, start: Point, end: Point) =
     circuit.getPart(start.x, start.y) == null
 
+  override def getRotation(): Int = 0
+
+  override def getConfiguration(): Int = 0
+
   override def writeOp(
       circuit: IntegratedCircuit,
       start: Point,
       end: Point,
-      rotation: Int,
-      configuration: Int,
       out: MCDataOutput
   ) {
     out.writeByte(start.x).writeByte(start.y)
@@ -51,8 +53,6 @@ abstract class OpWire extends CircuitOp {
   override def renderHover(
       circuit: IntegratedCircuit,
       point: Point,
-      rot: Int,
-      configuration: Int,
       x: Double,
       y: Double,
       xSize: Double,

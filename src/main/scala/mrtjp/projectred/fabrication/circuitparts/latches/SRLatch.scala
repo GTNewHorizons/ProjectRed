@@ -119,8 +119,6 @@ class RenderSRLatch extends ICGateRenderer[SequentialGateICPart] {
   override def switchModels = if (shape == 0) m1 else m2
 
   override def prepareStatic(configuration: Int): Unit = {
-    reflect = false
-    shape = 0
     wires1(0).on = false
     wires1(1).on = true
     torches1(0).on = false

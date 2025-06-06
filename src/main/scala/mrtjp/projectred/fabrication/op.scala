@@ -157,6 +157,8 @@ trait CircuitOp {
       circuit: IntegratedCircuit,
       start: Point,
       end: Point,
+      rotation: Int,
+      configuration: Int,
       out: MCDataOutput
   )
   def readOp(circuit: IntegratedCircuit, in: MCDataInput)
@@ -167,6 +169,8 @@ trait CircuitOp {
   def renderHover(
       circuit: IntegratedCircuit,
       point: Point,
+      rot: Int,
+      configuration: Int,
       x: Double,
       y: Double,
       xSize: Double,
@@ -194,6 +198,8 @@ abstract class SimplePlacementOp extends CircuitOp {
       circuit: IntegratedCircuit,
       start: Point,
       end: Point,
+      rotation: Int,
+      configuration: Int,
       out: MCDataOutput
   ) {
     out.writeByte(end.x).writeByte(end.y)
@@ -220,6 +226,8 @@ abstract class SimplePlacementOp extends CircuitOp {
   override def renderHover(
       circuit: IntegratedCircuit,
       point: Point,
+      rot: Int,
+      configuration: Int,
       x: Double,
       y: Double,
       xSize: Double,

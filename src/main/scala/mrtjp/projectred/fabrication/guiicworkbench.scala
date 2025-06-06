@@ -31,6 +31,8 @@ import scala.collection.immutable.ListMap
 
 class PrefboardNode(circuit: IntegratedCircuit) extends TNode {
   var currentOp: CircuitOp = null
+  var currentOpRotation: Int = 0
+  var currentOpConfiguration: Int = 0
 
   /** 0 - off 1 - name only 2 - minor details 3 - all details
     */
@@ -87,16 +89,18 @@ class PrefboardNode(circuit: IntegratedCircuit) extends TNode {
       )
 
       if (currentOp != null) {
-        if (frame.contains(mouse) && rayTest(mouse) && !leftMouseDown)
+        if (frame.contains(mouse) && rayTest(mouse) && !leftMouseDown) {
           currentOp.renderHover(
             circuit,
             toGridPoint(mouse),
+            currentOpRotation,
+            currentOpConfiguration,
             f.x,
             f.y,
             size.width * scale,
             size.height * scale
           )
-        else if (leftMouseDown)
+        } else if (leftMouseDown)
           currentOp.renderDrag(
             circuit,
             mouseStart,
@@ -209,7 +213,7 @@ class PrefboardNode(circuit: IntegratedCircuit) extends TNode {
       leftMouseDown = false
       val mouseEnd = toGridPoint(p)
       val opUsed =
-        currentOp != null && circuit.sendOpUse(currentOp, mouseStart, mouseEnd)
+        currentOp != null && circuit.sendOpUse(currentOp, currentOpRotation, currentOpConfiguration, mouseStart, mouseEnd)
       if (!opUsed && mouseEnd == mouseStart) {
         val part = circuit.getPart(mouseEnd)
         if (part != null) part.onClicked()
@@ -243,8 +247,15 @@ class PrefboardNode(circuit: IntegratedCircuit) extends TNode {
       case KEY_ESCAPE if currentOp != null =>
         opPickDelegate(null)
         true
-      case _ if keycode == mcInst.gameSettings.keyBindPickBlock.getKeyCode =>
+      case KEY_Q =>
         doPickOp()
+        true
+      case KEY_R if currentOp != null =>
+        currentOpRotation += 1
+        if (currentOpRotation == 4) currentOpRotation = 0
+        true
+      case KEY_C if currentOp != null =>
+        currentOpConfiguration += 1
         true
       case _ if keycode == mcInst.gameSettings.keyBindInventory.getKeyCode =>
         opPickDelegate(CircuitOpDefs.Erase.getOp)
@@ -649,7 +660,10 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
         toolset.title = name
         toolset.opSet = opset.map(_.getOp)
         toolset.setup()
-        toolset.opSelectDelegate = { op => pref.currentOp = op }
+        toolset.opSelectDelegate = { op =>
+          pref.currentOp = op
+          pref.currentOpConfiguration = 0
+        }
         toolbar.addChild(toolset)
         toolSets :+= toolset
       }

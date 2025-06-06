@@ -31,9 +31,10 @@ abstract class GateICPart
   def shape = gateShape & 0xff
   def setShape(s: Int) { gateShape = s.toByte }
 
-  def preparePlacement(rot: Int, meta: Int) {
+  def preparePlacement(rot: Int, configuration: Int, meta: Int) {
     gateSubID = meta.toByte
     setRotation(rot)
+    gateShape = configuration.toByte
   }
 
   override def save(tag: NBTTagCompound) {
@@ -265,8 +266,8 @@ trait TComplexGateICPart extends GateICPart {
     case _ => super.read(packet, key)
   }
 
-  abstract override def preparePlacement(rot: Int, meta: Int) {
-    super.preparePlacement(rot, meta)
+  abstract override def preparePlacement(rotation: Int, configuration: Int, meta: Int) {
+    super.preparePlacement(rotation, configuration, meta)
     assertLogic()
   }
 }

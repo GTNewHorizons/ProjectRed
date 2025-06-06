@@ -59,9 +59,15 @@ object RenderICGate {
     r.renderDynamic(gate.rotationT `with` t, ortho)
   }
 
+  def renderWithConfiguration(configuration: Int, t: Transformation, id: Int): Unit = {
+    val r = renderers(id)
+    r.prepareStatic(configuration)
+    r.renderDynamic(t, true)
+  }
+
   def renderInv(t: Transformation, id: Int) {
     val r = renderers(id)
-    r.prepareInv()
+    r.prepareStatic(0)
     r.renderDynamic(t, true)
   }
 }
@@ -72,7 +78,7 @@ abstract class ICGateRenderer[T <: GateICPart] {
   def coreModels: Seq[ICComponentModel]
   def switchModels = Seq[ICComponentModel]()
 
-  def prepareInv() {}
+  def prepareStatic(configuration: Int)
   def prepareDynamic(gate: T, frame: Float) {}
 
   def renderDynamic(t: Transformation, ortho: Boolean) {
@@ -93,7 +99,7 @@ abstract class RenderIO extends ICGateRenderer[IOGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("IOSIMP")) ++ wires :+ iosig
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     wires(0).on = false
     iosig.on = false
     iosig.colour = invColour
@@ -138,14 +144,14 @@ class RenderOR extends ICGateRenderer[ComboGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("OR")) ++ wires ++ torches
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     wires(0).on = true
     wires(1).on = false
     wires(2).on = false
     wires(3).on = false
-    wires(1).disabled = false
-    wires(2).disabled = false
-    wires(3).disabled = false
+    wires(1).disabled = (configuration & 1) != 0
+    wires(2).disabled = (configuration & 2) != 0
+    wires(3).disabled = (configuration & 4) != 0
     torches(0).on = true
     torches(1).on = false
   }
@@ -169,14 +175,14 @@ class RenderNOR extends ICGateRenderer[ComboGateICPart] {
 
   override val coreModels = Seq(new BaseComponentModel("NOR")) ++ wires :+ torch
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     wires(0).on = true
     wires(1).on = false
     wires(2).on = false
     wires(3).on = false
-    wires(1).disabled = false
-    wires(2).disabled = false
-    wires(3).disabled = false
+    wires(1).disabled = (configuration & 1) != 0
+    wires(2).disabled = (configuration & 2) != 0
+    wires(3).disabled = (configuration & 4) != 0
     torch.on = true
   }
 
@@ -198,14 +204,14 @@ class RenderNOT extends ICGateRenderer[ComboGateICPart] {
 
   override val coreModels = Seq(new BaseComponentModel("NOT")) ++ wires :+ torch
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     wires(0).on = true
     wires(1).on = true
     wires(2).on = false
     wires(3).on = true
-    wires(0).disabled = false
-    wires(1).disabled = false
-    wires(3).disabled = false
+    wires(0).disabled = (configuration & 2) != 0
+    wires(1).disabled = (configuration & 1) != 0
+    wires(3).disabled = (configuration & 4) != 0
     torch.on = true
   }
 
@@ -233,17 +239,17 @@ class RenderAND extends ICGateRenderer[ComboGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("AND")) ++ wires ++ torches
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     wires(0).on = true
     wires(1).on = false
     wires(2).on = false
     wires(3).on = false
-    wires(1).disabled = false
-    wires(2).disabled = false
-    wires(3).disabled = false
-    torches(0).on = true
-    torches(1).on = true
-    torches(2).on = true
+    wires(3).disabled = (configuration & 1) != 0
+    wires(1).disabled = (configuration & 2) != 0
+    wires(2).disabled = (configuration & 4) != 0
+    torches(2).on = !wires(1).on && !wires(1).disabled
+    torches(0).on = !wires(2).on && !wires(2).disabled
+    torches(1).on = !wires(3).on && !wires(3).disabled
     torches(3).on = false
   }
 
@@ -273,17 +279,17 @@ class RenderNAND extends ICGateRenderer[ComboGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("NAND")) ++ wires ++ torches
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     wires(0).on = true
     wires(1).on = false
     wires(2).on = false
     wires(3).on = false
-    wires(1).disabled = false
-    wires(2).disabled = false
-    wires(3).disabled = false
-    torches(0).on = true
-    torches(1).on = true
-    torches(2).on = true
+    wires(3).disabled = (configuration & 1) != 0
+    wires(1).disabled = (configuration & 2) != 0
+    wires(2).disabled = (configuration & 4) != 0
+    torches(0).on = !wires(2).on && !wires(2).disabled
+    torches(1).on = !wires(3).on && !wires(3).disabled
+    torches(2).on = !wires(1).on && !wires(1).disabled
   }
 
   override def prepareDynamic(gate: ComboGateICPart, frame: Float) {
@@ -311,7 +317,7 @@ class RenderXOR extends ICGateRenderer[ComboGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("XOR")) ++ wires ++ torches
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     wires(0).on = false
     wires(3).on = false
     wires(2).on = false
@@ -344,7 +350,7 @@ class RenderXNOR extends ICGateRenderer[ComboGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("XNOR")) ++ wires ++ torches
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     wires(0).on = false
     wires(3).on = false
     wires(2).on = false
@@ -376,13 +382,13 @@ class RenderBuffer extends ICGateRenderer[ComboGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("BUFFER")) ++ wires ++ torches
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     wires(0).on = true
     wires(1).on = false
     wires(2).on = false
     wires(3).on = false
-    wires(1).disabled = false
-    wires(3).disabled = false
+    wires(1).disabled = (configuration & 1) != 0
+    wires(3).disabled = (configuration & 2) != 0
     torches(0).on = false
     torches(1).on = true
   }
@@ -411,7 +417,7 @@ class RenderMultiplexer extends ICGateRenderer[ComboGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("MULTIPLEXER")) ++ wires ++ torches
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     wires(0).on = false
     wires(1).on = true
     wires(2).on = true
@@ -449,7 +455,7 @@ class RenderPulse extends ICGateRenderer[ComboGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("PULSE")) ++ wires ++ torches
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     wires(0).on = true
     wires(1).on = false
     wires(2).on = false
@@ -490,11 +496,11 @@ class RenderRepeater extends ICGateRenderer[ComboGateICPart] {
 
   override def switchModels = Seq(varTorches(shape))
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     wires(0).on = true
     wires(1).on = false
     endTorch.on = false
-    shape = 0
+    shape = configuration % 8
     varTorches(0).on = true
   }
 
@@ -502,7 +508,7 @@ class RenderRepeater extends ICGateRenderer[ComboGateICPart] {
     wires(0).on = (gate.state & 0x10) == 0
     wires(1).on = (gate.state & 4) != 0
     endTorch.on = (gate.state & 0x10) != 0
-    shape = gate.shape
+    shape = gate.shape % 8
     varTorches(shape).on = (gate.state & 4) == 0
   }
 }
@@ -518,7 +524,7 @@ class RenderRandomizer extends ICGateRenderer[ComboGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("RAND")) ++ wires ++ chips
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     wires(0).on = false
     wires(1).on = false
     wires(2).on = false
@@ -526,12 +532,12 @@ class RenderRandomizer extends ICGateRenderer[ComboGateICPart] {
     wires(4).on = false
     wires(5).on = false
     wires(6).on = false
-    wires(0).disabled = false
-    wires(1).disabled = false
-    wires(3).disabled = false
-    wires(4).disabled = false
-    wires(5).disabled = false
-    wires(6).disabled = false
+    wires(1).disabled = (configuration & 1) != 0
+    wires(0).disabled = (configuration & 2) != 0
+    wires(3).disabled = (configuration & 4) != 0
+    wires(5).disabled = wires(1).disabled
+    wires(4).disabled = wires(0).disabled
+    wires(6).disabled = wires(3).disabled
     chips(0).on = false
     chips(1).on = false
     chips(2).on = false
@@ -575,7 +581,7 @@ class RenderSRLatch extends ICGateRenderer[SequentialGateICPart] {
   override val coreModels = Seq()
   override def switchModels = if (shape == 0) m1 else m2
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     reflect = false
     shape = 0
     wires1(0).on = false
@@ -613,7 +619,7 @@ class RenderToggleLatch extends ICGateRenderer[SequentialGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("TOGLATCH")) ++ wires ++ torches :+ lever
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     wires(0).on = false
     wires(1).on = false
     torches(0).on = true
@@ -643,7 +649,7 @@ class RenderTransparentLatch extends ICGateRenderer[ComboGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("TRANSLATCH")) ++ wires ++ torches
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     reflect = false
     wires(0).on = true
     wires(1).on = false
@@ -681,7 +687,7 @@ class RenderTimer extends ICGateRenderer[SequentialGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("TIME")) ++ wires ++ Seq(pointer) ++ torches
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     wires(0).on = false
     wires(1).on = false
     wires(2).on = false
@@ -715,7 +721,7 @@ class RenderSequencer extends ICGateRenderer[SequentialGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("SEQUENCER"), pointer) ++ torches
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     torches(1).on = true
     torches(2).on = false
     torches(3).on = false
@@ -752,7 +758,7 @@ class RenderCounter extends ICGateRenderer[SequentialGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("COUNT")) ++ wires ++ Seq(pointer) ++ torches
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     reflect = false
     wires(0).on = false
     wires(1).on = false
@@ -787,7 +793,7 @@ class RenderStateCell extends ICGateRenderer[SequentialGateICPart] {
     new BaseComponentModel("STATECELL")
   ) ++ wires ++ Seq(chip, pointer) ++ torches
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     reflect = false
     wires(0).on = false
     wires(1).on = false
@@ -829,7 +835,7 @@ class RenderSynchronizer extends ICGateRenderer[SequentialGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("SYNC")) ++ wires ++ chips ++ Seq(torch)
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     wires(0).on = true
     wires(1).on = true
     wires(2).on = false
@@ -872,15 +878,15 @@ class RenderDecRandomizer extends ICGateRenderer[ComboGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("DECRAND")) ++ wires ++ chips ++ torches
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     wires(0).on = false
     wires(1).on = false
     wires(2).on = false
     wires(3).on = false
     wires(4).on = true
     wires(5).on = true
-    wires(0).disabled = false
-    wires(3).disabled = false
+    wires(0).disabled = configuration != 0
+    wires(3).disabled = configuration != 0
     torches(0).on = true
     torches(1).on = false
     torches(2).on = false
@@ -917,7 +923,7 @@ class RenderNullCell extends ICGateRenderer[ArrayGateICPart] {
   override val coreModels =
     Seq(new BaseComponentModel("NULLCELL"), bottom, new CellStandModel, top)
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     bottom.signal = 0
     top.signal = 0
   }
@@ -938,7 +944,7 @@ class RenderInvertCell extends ICGateRenderer[ArrayGateICPart] {
     new BaseComponentModel("INVCELL")
   ) ++ wires ++ Seq(bottom, torch, new CellStandModel, top)
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     bottom.signal = 0
     top.signal = 255.toByte
     wires(0).on = false
@@ -966,7 +972,7 @@ class RenderBufferCell extends ICGateRenderer[ArrayGateICPart] {
       bottom
     ) ++ torches ++ Seq(new CellStandModel, top)
 
-  override def prepareInv() {
+  override def prepareStatic(configuration: Int): Unit = {
     bottom.signal = 0
     top.signal = 0
     wires(0).on = false

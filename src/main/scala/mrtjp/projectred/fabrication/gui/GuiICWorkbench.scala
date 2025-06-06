@@ -10,7 +10,7 @@ import codechicken.lib.gui.GuiDraw
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.color.Colors
 import mrtjp.core.gui._
-import mrtjp.core.vec.{Point, Size}
+import mrtjp.core.vec.{Point, Size, Vec2}
 import mrtjp.core.world.WorldLib
 import mrtjp.projectred.core.libmc.PRResources
 import mrtjp.projectred.fabrication.gui.nodes.{ICToolsetNode, InfoNode, NewICNode, OpPreviewNode, PrefboardNode}
@@ -27,6 +27,7 @@ import java.math.MathContext
 
 class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
   var pref: PrefboardNode = null
+  var pan: PanNode = null
   var toolSets = Seq[ICToolsetNode]()
 
   override def onAddedToParent_Impl() {
@@ -35,7 +36,7 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     clip.size = Size(252, 197)
     addChild(clip)
 
-    val pan = new PanNode
+    pan = new PanNode
     pan.size = Size(252, 197)
     pan.clampSlack = 35
     pan.dragTestFunction = { () => Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) }
@@ -183,6 +184,26 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     info.position = Point(241, 18)
     info.zPosition = 1
     addChild(info)
+  }
+
+  override def keyPressed_Impl(c: Char, keycode: Int, consumed: Boolean): Boolean = {
+    import Keyboard._
+    if (!consumed) keycode match {
+      case KEY_W =>
+        pan.panChildren(Vec2(0, 10))
+        true
+      case KEY_A =>
+        pan.panChildren(Vec2(10, 0))
+        true
+      case KEY_S =>
+        pan.panChildren(Vec2(0, -10))
+        true
+      case KEY_D =>
+        pan.panChildren(Vec2(-10, 0))
+        true
+      case _ =>
+        false
+    } else false
   }
 
   override def drawBack_Impl(mouse: Point, frame: Float) {

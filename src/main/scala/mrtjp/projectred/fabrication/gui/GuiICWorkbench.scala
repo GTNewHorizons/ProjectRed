@@ -13,8 +13,8 @@ import mrtjp.core.gui._
 import mrtjp.core.vec.{Point, Size}
 import mrtjp.core.world.WorldLib
 import mrtjp.projectred.core.libmc.PRResources
-import mrtjp.projectred.fabrication.gui.nodes.{ICToolsetNode, InfoNode, NewICNode, PrefboardNode}
-import mrtjp.projectred.fabrication.operations.CircuitOpDefs
+import mrtjp.projectred.fabrication.gui.nodes.{ICToolsetNode, InfoNode, NewICNode, OpPreviewNode, PrefboardNode}
+import mrtjp.projectred.fabrication.operations.{CircuitOpDefs, OpGateCommons}
 import mrtjp.projectred.fabrication.{FabricationProxy, IntegratedCircuit, TileICWorkbench}
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Gui
@@ -41,11 +41,25 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     pan.dragTestFunction = { () => Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) }
     clip.addChild(pan)
 
-    pref = new PrefboardNode(tile.circuit)
+    val opPreview = new OpPreviewNode()
+    opPreview.position = Point(269, 30)
+    addChild(opPreview)
+
+    pref = new PrefboardNode(tile.circuit, op => {opPreview.updatePreview(op)})
     pref.position = Point(pan.size / 2 - pref.size / 2)
     pref.zPosition = -0.01 // Must be below pan/clip nodes
     pref.opPickDelegate = { op =>
-      if (op == null) pref.currentOp = null
+      if (op == null) {
+        // Reset rotation and configuration of selected Gate
+        pref.currentOp match {
+          case op: OpGateCommons =>
+            op.rotation = 0
+            op.configuration = 0
+          case _ =>
+        }
+        pref.currentOp = null
+        pref.updatePreview()
+      }
       toolSets.foreach(_.pickOp(op))
     }
     pan.addChild(pref)
@@ -66,7 +80,7 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
         toolset.setup()
         toolset.opSelectDelegate = { op =>
           pref.currentOp = op
-          pref.currentOpConfiguration = 0
+          pref.updatePreview()
         }
         toolbar.addChild(toolset)
         toolSets :+= toolset

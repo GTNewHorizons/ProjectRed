@@ -17,12 +17,14 @@ trait CircuitOp {
 
   def checkOp(circuit: IntegratedCircuit, start: Point, end: Point): Boolean
 
+  def getRotation(): Int
+
+  def getConfiguration(): Int
+
   def writeOp(
                circuit: IntegratedCircuit,
                start: Point,
                end: Point,
-               rotation: Int,
-               configuration: Int,
                out: MCDataOutput
              )
 
@@ -35,8 +37,6 @@ trait CircuitOp {
   def renderHover(
                    circuit: IntegratedCircuit,
                    point: Point,
-                   rot: Int,
-                   configuration: Int,
                    x: Double,
                    y: Double,
                    xSize: Double,
@@ -54,8 +54,18 @@ trait CircuitOp {
                   ySize: Double
                 )
 
+  /**
+   * Render the part, that will be placed by this operation
+   */
   @SideOnly(Side.CLIENT)
   def renderImage(x: Double, y: Double, width: Double, height: Double)
+
+  /**
+   * Same as renderImage, however it ignores configuration and rotation (e.g. toolbar)
+   */
+  @SideOnly(Side.CLIENT)
+  def renderImageStatic(x: Double, y: Double, width: Double, height: Double): Unit =
+    renderImage(x, y ,width, height)
 }
 
 object CircuitOp {

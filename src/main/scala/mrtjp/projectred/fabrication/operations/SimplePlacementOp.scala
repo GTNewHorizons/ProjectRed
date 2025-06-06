@@ -6,7 +6,7 @@
 package mrtjp.projectred.fabrication.operations
 
 import codechicken.lib.data.{MCDataInput, MCDataOutput}
-import codechicken.lib.vec.{Transformation, Translation}
+import codechicken.lib.vec.{Rotation, Transformation, Translation}
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.vec.Point
 import mrtjp.projectred.fabrication.ICComponentStore.{orthoGridT, orthoPartT}
@@ -19,12 +19,14 @@ abstract class SimplePlacementOp extends CircuitOp {
   override def checkOp(circuit: IntegratedCircuit, start: Point, end: Point) =
     circuit.getPart(end.x, end.y) == null
 
+  override def getRotation(): Int = 0
+
+  override def getConfiguration(): Int = 0
+
   override def writeOp(
                         circuit: IntegratedCircuit,
                         start: Point,
                         end: Point,
-                        rotation: Int,
-                        configuration: Int,
                         out: MCDataOutput
                       ) {
     out.writeByte(end.x).writeByte(end.y)
@@ -42,7 +44,7 @@ abstract class SimplePlacementOp extends CircuitOp {
                             y: Double,
                             width: Double,
                             height: Double
-                          ) {
+                          ): Unit = {
     val t = orthoGridT(width, height) `with` new Translation(x, y, 0)
     doPartRender(t)
   }
@@ -51,8 +53,6 @@ abstract class SimplePlacementOp extends CircuitOp {
   override def renderHover(
                             circuit: IntegratedCircuit,
                             point: Point,
-                            rot: Int,
-                            configuration: Int,
                             x: Double,
                             y: Double,
                             xSize: Double,

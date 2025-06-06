@@ -48,7 +48,7 @@ class ICToolsetNode extends TNode {
     groupButton = new IconButtonNode {
       override def drawButton(mouseover: Boolean) = {
         val op = buttonOpMap(leadingButton)
-        op.renderImage(
+        op.renderImageStatic(
           position.x + 2,
           position.y + 2,
           size.width - 4,

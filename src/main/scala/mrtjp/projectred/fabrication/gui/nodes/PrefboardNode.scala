@@ -13,8 +13,9 @@ import mrtjp.core.gui.{ClipNode, TNode}
 import mrtjp.core.vec.{Point, Rect, Size}
 import mrtjp.projectred.core.libmc.PRResources
 import mrtjp.projectred.fabrication.ICComponentStore._
+import mrtjp.projectred.fabrication.circuitparts.ICGateDefinition
 import mrtjp.projectred.fabrication.gui.{CircuitGui, IGuiCircuitPart}
-import mrtjp.projectred.fabrication.operations.{CircuitOp, CircuitOpDefs}
+import mrtjp.projectred.fabrication.operations.{CircuitOp, CircuitOpDefs, OpGateCommons}
 import mrtjp.projectred.fabrication.{IntegratedCircuit, RenderCircuit}
 import net.minecraft.util.EnumChatFormatting
 import org.lwjgl.input.{Keyboard, Mouse}
@@ -22,10 +23,8 @@ import org.lwjgl.input.{Keyboard, Mouse}
 import scala.collection.JavaConversions._
 import scala.collection.convert.WrapAsJava
 
-class PrefboardNode(circuit: IntegratedCircuit) extends TNode {
+class PrefboardNode(circuit: IntegratedCircuit, previewUpdateDelegate: (CircuitOp) => Unit) extends TNode {
   var currentOp: CircuitOp = null
-  var currentOpRotation: Int = 0
-  var currentOpConfiguration: Int = 0
 
   /** 0 - off 1 - name only 2 - minor details 3 - all details
    */
@@ -34,6 +33,10 @@ class PrefboardNode(circuit: IntegratedCircuit) extends TNode {
   var sizeMult = 8
 
   def size = circuit.size * sizeMult
+
+  def updatePreview(): Unit = {
+    previewUpdateDelegate(currentOp)
+  }
 
   override def frame = Rect(
     position,
@@ -88,8 +91,6 @@ class PrefboardNode(circuit: IntegratedCircuit) extends TNode {
           currentOp.renderHover(
             circuit,
             toGridPoint(mouse),
-            currentOpRotation,
-            currentOpConfiguration,
             f.x,
             f.y,
             size.width * scale,
@@ -207,8 +208,7 @@ class PrefboardNode(circuit: IntegratedCircuit) extends TNode {
     if (leftMouseDown) {
       leftMouseDown = false
       val mouseEnd = toGridPoint(p)
-      val opUsed =
-        currentOp != null && circuit.sendOpUse(currentOp, currentOpRotation, currentOpConfiguration, mouseStart, mouseEnd)
+      val opUsed = currentOp != null && circuit.sendOpUse(currentOp, mouseStart, mouseEnd)
       if (!opUsed && mouseEnd == mouseStart) {
         val part = circuit.getPart(mouseEnd)
         if (part != null) part.onClicked()
@@ -234,6 +234,7 @@ class PrefboardNode(circuit: IntegratedCircuit) extends TNode {
   }
 
   override def keyPressed_Impl(c: Char, keycode: Int, consumed: Boolean) = {
+    updatePreview()
     import Keyboard._
     if (!consumed) keycode match {
       case KEY_ESCAPE if leftMouseDown =>
@@ -246,11 +247,10 @@ class PrefboardNode(circuit: IntegratedCircuit) extends TNode {
         doPickOp()
         true
       case KEY_R if currentOp != null =>
-        currentOpRotation += 1
-        if (currentOpRotation == 4) currentOpRotation = 0
+        doRotate()
         true
       case KEY_C if currentOp != null =>
-        currentOpConfiguration += 1
+        doConfigure()
         true
       case _ if keycode == mcInst.gameSettings.keyBindInventory.getKeyCode =>
         opPickDelegate(CircuitOpDefs.Erase.getOp)
@@ -258,6 +258,23 @@ class PrefboardNode(circuit: IntegratedCircuit) extends TNode {
       case _ => false
     }
     else false
+  }
+
+  def doRotate(): Unit = {
+    currentOp match {
+      case op: OpGateCommons =>
+        op.rotation += 1
+        if (op.rotation == 4) op.rotation = 0
+      case _ =>
+    }
+  }
+
+  def doConfigure(): Unit = {
+    currentOp match {
+      case op: OpGateCommons =>
+        op.configuration += 1
+      case _ =>
+    }
   }
 
   def doPickOp() {
@@ -270,6 +287,7 @@ class PrefboardNode(circuit: IntegratedCircuit) extends TNode {
     if (rayTest(pos)) {
       val part = circuit.getPart(toGridPoint(pos))
       opPickDelegate(if (part != null) part.getPickOp else null)
+      updatePreview()
     }
   }
 

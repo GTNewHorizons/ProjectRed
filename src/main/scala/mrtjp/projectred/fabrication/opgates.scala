@@ -13,6 +13,7 @@ import mrtjp.projectred.fabrication.CircuitOp._
 import mrtjp.projectred.fabrication.ICComponentStore._
 
 abstract class OpGateCommons(meta: Int) extends CircuitOp {
+
   def canPlace(circuit: IntegratedCircuit, point: Point): Boolean
   def findRot(circuit: IntegratedCircuit, start: Point, end: Point): Int
 
@@ -23,21 +24,25 @@ abstract class OpGateCommons(meta: Int) extends CircuitOp {
       circuit: IntegratedCircuit,
       start: Point,
       end: Point,
+      rotation: Int,
+      configuration: Int,
       out: MCDataOutput
   ) {
     out.writeByte(start.x).writeByte(start.y)
-    out.writeByte(findRot(circuit, start, end))
+    out.writeByte(rotation)
+    out.writeByte(configuration)
   }
 
   override def readOp(circuit: IntegratedCircuit, in: MCDataInput) {
     val point = Point(in.readByte(), in.readByte())
-    val r = in.readUByte()
+    val rotation = in.readUByte()
+    val configuration = in.readUByte()
 
     if (circuit.getPart(point) == null && canPlace(circuit, point)) {
       val part = CircuitPart
         .createPart(ICGateDefinition(meta).gateType)
         .asInstanceOf[GateICPart]
-      part.preparePlacement(r, meta)
+      part.preparePlacement(rotation, configuration, meta)
       circuit.setPart(point, part)
     }
   }
@@ -46,6 +51,8 @@ abstract class OpGateCommons(meta: Int) extends CircuitOp {
   override def renderHover(
       circuit: IntegratedCircuit,
       point: Point,
+      rot: Int,
+      configuration: Int,
       x: Double,
       y: Double,
       xSize: Double,
@@ -54,7 +61,7 @@ abstract class OpGateCommons(meta: Int) extends CircuitOp {
     if (circuit.getPart(point) != null) return
 
     val t = orthoPartT(x, y, xSize, ySize, circuit.size, point.x, point.y)
-    doRender(t, findRot(circuit, point, point))
+    doRender(t, rot, configuration)
 
     renderHolo(
       x,
@@ -80,7 +87,7 @@ abstract class OpGateCommons(meta: Int) extends CircuitOp {
     if (circuit.getPart(start) != null) return
 
     val t = orthoPartT(x, y, xSize, ySize, circuit.size, start.x, start.y)
-    doRender(t, findRot(circuit, start, end))
+    doRender(t, findRot(circuit, start, end), 0)
 
     renderHolo(
       x,
@@ -101,15 +108,12 @@ abstract class OpGateCommons(meta: Int) extends CircuitOp {
       height: Double
   ) {
     val t = orthoGridT(width, height) `with` new Translation(x, y, 0)
-    doRender(t, 0)
+    doRender(t, 0, 0)
   }
 
   @SideOnly(Side.CLIENT)
-  def doRender(t: Transformation, rot: Int) {
-    RenderICGate.renderInv(
-      Rotation.quarterRotations(rot).at(Vector3.center) `with` t,
-      meta
-    )
+  def doRender(t: Transformation, rot: Int, configuration: Int) {
+    RenderICGate.renderWithConfiguration(configuration, Rotation.quarterRotations(rot).at(Vector3.center) `with` t, meta)
   }
 
   @SideOnly(Side.CLIENT)

@@ -272,9 +272,9 @@ class IntegratedCircuit {
     network.getICStreamOf(2).writeByte(x).writeByte(y)
   }
 
-  def sendOpUse(op: CircuitOp, start: Point, end: Point) = {
+  def sendOpUse(op: CircuitOp, rotation: Int, configuration: Int, start: Point, end: Point) = {
     if (op.checkOp(this, start, end)) {
-      op.writeOp(this, start, end, network.getICStreamOf(3).writeByte(op.id))
+      op.writeOp(this, start, end, rotation, configuration, network.getICStreamOf(3).writeByte(op.id))
       true
     } else false
   }

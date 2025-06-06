@@ -21,6 +21,8 @@ abstract class OpWire extends CircuitOp {
       circuit: IntegratedCircuit,
       start: Point,
       end: Point,
+      rotation: Int,
+      configuration: Int,
       out: MCDataOutput
   ) {
     out.writeByte(start.x).writeByte(start.y)
@@ -45,6 +47,8 @@ abstract class OpWire extends CircuitOp {
   override def renderHover(
       circuit: IntegratedCircuit,
       point: Point,
+      rot: Int,
+      configuration: Int,
       x: Double,
       y: Double,
       xSize: Double,

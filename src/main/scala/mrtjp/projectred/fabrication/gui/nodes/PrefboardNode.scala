@@ -14,6 +14,11 @@ import mrtjp.core.vec.{Point, Rect, Size}
 import mrtjp.projectred.core.libmc.PRResources
 import mrtjp.projectred.fabrication.ICComponentStore._
 import mrtjp.projectred.fabrication.circuitparts.ICGateDefinition
+import mrtjp.projectred.fabrication.circuitparts.latches.{SRLatch, TransparentLatch}
+import mrtjp.projectred.fabrication.circuitparts.misc.{Counter, DecRandomizer, Randomizer}
+import mrtjp.projectred.fabrication.circuitparts.primitives._
+import mrtjp.projectred.fabrication.circuitparts.timing.{Repeater, Sequencer, StateCell}
+import mrtjp.projectred.fabrication.circuitparts.io.IOICGateLogic
 import mrtjp.projectred.fabrication.gui.{CircuitGui, IGuiCircuitPart}
 import mrtjp.projectred.fabrication.operations.{CircuitOp, CircuitOpDefs, OpGateCommons}
 import mrtjp.projectred.fabrication.{IntegratedCircuit, RenderCircuit}
@@ -272,7 +277,50 @@ class PrefboardNode(circuit: IntegratedCircuit, previewUpdateDelegate: (CircuitO
   def doConfigure(): Unit = {
     currentOp match {
       case op: OpGateCommons =>
-        op.configuration += 1
+        op.getID match {
+          case ICGateDefinition.OR.ordinal =>
+            op.configuration = OR.cycleShape(op.configuration)
+          case ICGateDefinition.NOR.ordinal =>
+            op.configuration = NOR.cycleShape(op.configuration)
+          case ICGateDefinition.NOT.ordinal =>
+            op.configuration = NOT.cycleShape(op.configuration)
+          case ICGateDefinition.AND.ordinal =>
+            op.configuration = AND.cycleShape(op.configuration)
+          case ICGateDefinition.NAND.ordinal =>
+            op.configuration = NAND.cycleShape(op.configuration)
+          case ICGateDefinition.XOR.ordinal =>
+            op.configuration = XOR.cycleShape(op.configuration)
+          case ICGateDefinition.XNOR.ordinal =>
+            op.configuration = XNOR.cycleShape(op.configuration)
+          case ICGateDefinition.Buffer.ordinal =>
+            op.configuration = Buffer.cycleShape(op.configuration)
+          case ICGateDefinition.Multiplexer.ordinal =>
+            op.configuration = Multiplexer.cycleShape(op.configuration)
+          case ICGateDefinition.Pulse.ordinal =>
+            op.configuration = Pulse.cycleShape(op.configuration)
+          case ICGateDefinition.Repeater.ordinal =>
+            op.configuration = Repeater.cycleShape(op.configuration)
+          case ICGateDefinition.Randomizer.ordinal =>
+            op.configuration = Randomizer.cycleShape(op.configuration)
+          case ICGateDefinition.TransparentLatch.ordinal =>
+            op.configuration = TransparentLatch.cycleShape(op.configuration)
+          case ICGateDefinition.DecRandomizer.ordinal =>
+            op.configuration = DecRandomizer.cycleShape(op.configuration)
+          case ICGateDefinition.IOAnalog.ordinal
+               | ICGateDefinition.IOSimple.ordinal
+               | ICGateDefinition.IOBundled.ordinal =>
+            op.configuration = IOICGateLogic.cycleShape(op.configuration)
+          case ICGateDefinition.Sequencer.ordinal =>
+            op.configuration = Sequencer.cycleShape(op.configuration)
+          case ICGateDefinition.StateCell.ordinal =>
+            op.configuration = StateCell.cycleShape(op.configuration)
+          case ICGateDefinition.SRLatch.ordinal =>
+            op.configuration = SRLatch.cycleShape(op.configuration)
+          case ICGateDefinition.Counter.ordinal =>
+            op.configuration = Counter.cycleShape(op.configuration)
+          case _ =>
+            op.configuration = 0
+        }
       case _ =>
     }
   }

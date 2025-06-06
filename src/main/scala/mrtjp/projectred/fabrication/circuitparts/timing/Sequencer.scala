@@ -16,6 +16,12 @@ import mrtjp.projectred.fabrication.{BaseComponentModel, PointerModel, RedstoneT
 import net.minecraft.nbt.NBTTagCompound
 
 
+object Sequencer {
+  def cycleShape(shape: Int): Int = {
+    shape ^ 1
+  }
+}
+
 class Sequencer(gate: SequentialGateICPart)
   extends SequentialICGateLogic(gate)
     with ITimerGuiLogic {
@@ -74,7 +80,7 @@ class Sequencer(gate: SequentialGateICPart)
   }
 
   override def cycleShape(gate: SequentialGateICPart) = {
-    gate.setShape(gate.shape ^ 1)
+    gate.setShape(Sequencer.cycleShape(gate.shape))
     true
   }
 

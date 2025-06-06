@@ -10,6 +10,11 @@ import mrtjp.projectred.fabrication.ICComponentStore.generateWireModels
 import mrtjp.projectred.fabrication.circuitparts.{ICGateRenderer, SequentialGateICPart, SequentialICGateLogic, TExtraStateLogic}
 import mrtjp.projectred.fabrication.{BaseComponentModel, RedstoneTorchModel}
 
+object SRLatch {
+  def cycleShape(shape: Int): Int = {
+    (shape + 1) % 4
+  }
+}
 
 class SRLatch(gate: SequentialGateICPart)
   extends SequentialICGateLogic(gate)
@@ -18,7 +23,7 @@ class SRLatch(gate: SequentialGateICPart)
   override def inputMask(shape: Int) = 0xa
 
   override def cycleShape(gate: SequentialGateICPart) = {
-    gate.setShape((gate.shape + 1) % 4)
+    gate.setShape(SRLatch.cycleShape(gate.shape))
     setState2(flipMaskZ(state2))
     gate.setState(flipMaskZ(gate.state))
     gate.onOutputChange(0xf)
@@ -119,10 +124,23 @@ class RenderSRLatch extends ICGateRenderer[SequentialGateICPart] {
   override def switchModels = if (shape == 0) m1 else m2
 
   override def prepareStatic(configuration: Int): Unit = {
-    wires1(0).on = false
-    wires1(1).on = true
-    torches1(0).on = false
-    torches1(1).on = true
+    reflect = (configuration & 1) != 0
+    shape = configuration >> 1
+    var state = Seq(96, 48, 64, 16)(configuration)
+    if (reflect) state = flipMaskZ(state >> 4) << 4 | flipMaskZ(state)
+    if (shape == 0) {
+      wires1(0).on = (state & 0x88) != 0
+      wires1(1).on = (state & 0x22) != 0
+      torches1(0).on = (state & 0x10) != 0
+      torches1(1).on = (state & 0x40) != 0
+    } else {
+      wires2(1).on = (state & 2) != 0
+      wires2(3).on = (state & 8) != 0
+      torches2(0).on = (state & 0x10) != 0
+      torches2(1).on = (state & 0x40) != 0
+      wires2(0).on = torches2(1).on
+      wires2(2).on = torches2(0).on
+    }
   }
 
   override def prepareDynamic(gate: SequentialGateICPart, frame: Float) {

@@ -6,10 +6,10 @@
 package mrtjp.projectred.fabrication
 
 import codechicken.lib.data.{MCDataInput, MCDataOutput}
-import mrtjp.core.vec.{Point, Size}
+import mrtjp.core.vec.{Point, Rect, Size}
 import mrtjp.projectred.ProjectRedCore.log
 import mrtjp.projectred.fabrication.circuitparts.io.TIOCircuitPart
-import mrtjp.projectred.fabrication.circuitparts.{CircuitPart, TErrorCircuitPart, TClientNetCircuitPart}
+import mrtjp.projectred.fabrication.circuitparts.{CircuitPart, TClientNetCircuitPart, TErrorCircuitPart}
 import mrtjp.projectred.fabrication.operations.CircuitOp
 import net.minecraft.nbt.{NBTTagCompound, NBTTagList}
 
@@ -19,7 +19,6 @@ class IntegratedCircuit {
   var network: WorldCircuit = null
 
   var name = "untitled"
-  var size = Size.zeroSize
 
   var parts = MMap[(Int, Int), CircuitPart]()
   var errors = Map.empty[Point, (String, Int)]
@@ -60,16 +59,14 @@ class IntegratedCircuit {
 
   def save(tag: NBTTagCompound) {
     tag.setString("name", name)
-    tag.setByte("sw", size.width.toByte)
-    tag.setByte("sh", size.height.toByte)
     tag.setIntArray("iost", iostate)
 
     val tagList = new NBTTagList
     for (part <- parts.values) {
       val partTag = new NBTTagCompound
       partTag.setByte("id", part.id.toByte)
-      partTag.setByte("xpos", part.x.toByte)
-      partTag.setByte("ypos", part.y.toByte)
+      partTag.setInteger("xpos", part.x)
+      partTag.setInteger("ypos", part.y)
       part.save(partTag)
       tagList.appendTag(partTag)
     }
@@ -81,7 +78,6 @@ class IntegratedCircuit {
   def load(tag: NBTTagCompound) {
     clear()
     name = tag.getString("name")
-    size = Size(tag.getByte("sw") & 0xff, tag.getByte("sh") & 0xff)
     val ta = tag.getIntArray("iost")
     for (i <- 0 until 4) iostate(i) = ta(i)
 
@@ -90,8 +86,8 @@ class IntegratedCircuit {
       val partTag = partList.getCompoundTagAt(i)
       val part = CircuitPart.createPart(partTag.getByte("id") & 0xff)
       setPart_do(
-        partTag.getByte("xpos") & 0xff,
-        partTag.getByte("ypos") & 0xff,
+        partTag.getInteger("xpos"),
+        partTag.getInteger("ypos"),
         part
       )
       part.load(partTag)
@@ -102,12 +98,11 @@ class IntegratedCircuit {
 
   def writeDesc(out: MCDataOutput) {
     out.writeString(name)
-    out.writeByte(size.width).writeByte(size.height)
     for (i <- 0 until 4) out.writeInt(iostate(i))
 
     for (((x, y), part) <- parts) {
       out.writeByte(part.id)
-      out.writeByte(x).writeByte(y)
+      out.writeInt(x).writeInt(y)
       part.writeDesc(out)
     }
     out.writeByte(255)
@@ -118,13 +113,12 @@ class IntegratedCircuit {
   def readDesc(in: MCDataInput) {
     clear()
     name = in.readString()
-    size = Size(in.readUByte(), in.readUByte())
     for (i <- 0 until 4) iostate(i) = in.readInt()
 
     var id = in.readUByte()
     while (id != 255) {
       val part = CircuitPart.createPart(id)
-      setPart_do(in.readUByte(), in.readUByte(), part)
+      setPart_do(in.readInt(), in.readInt(), part)
       part.readDesc(in)
       id = in.readUByte()
     }
@@ -135,12 +129,12 @@ class IntegratedCircuit {
     case 0 => readDesc(in)
     case 1 =>
       val part = CircuitPart.createPart(in.readUByte())
-      setPart_do(in.readUByte(), in.readUByte(), part)
+      setPart_do(in.readInt(), in.readInt(), part)
       part.readDesc(in)
-    case 2 => removePart(in.readUByte(), in.readUByte())
+    case 2 => removePart(in.readInt(), in.readInt())
     case 3 => CircuitOp.getOperation(in.readUByte()).readOp(this, in)
     case 4 =>
-      getPart(in.readUByte(), in.readUByte()) match {
+      getPart(in.readInt(), in.readInt()) match {
         case g: TClientNetCircuitPart => g.readClientPacket(in)
         case _ => log.error("Server IC stream received invalid client packet")
       }
@@ -153,12 +147,12 @@ class IntegratedCircuit {
   def sendPartAdded(part: CircuitPart) {
     val out = network.getICStreamOf(1)
     out.writeByte(part.id)
-    out.writeByte(part.x).writeByte(part.y)
+    out.writeInt(part.x).writeInt(part.y)
     part.writeDesc(out)
   }
 
   def sendRemovePart(x: Int, y: Int) {
-    network.getICStreamOf(2).writeByte(x).writeByte(y)
+    network.getICStreamOf(2).writeInt(x).writeInt(y)
   }
 
   def sendOpUse(op: CircuitOp, start: Point, end: Point) = {
@@ -172,7 +166,7 @@ class IntegratedCircuit {
                         part: TClientNetCircuitPart,
                         writer: MCDataOutput => Unit
                       ) {
-    val s = network.getICStreamOf(4).writeByte(part.x).writeByte(part.y)
+    val s = network.getICStreamOf(4).writeInt(part.x).writeInt(part.y)
     writer(s)
   }
 
@@ -195,19 +189,7 @@ class IntegratedCircuit {
     parts = MMap()
     scheduledTicks = MMap()
     name = "untitled"
-    size = Size.zeroSize
     for (i <- 0 until 4) iostate(i) = 0
-  }
-
-  def isEmpty = size == Size.zeroSize
-
-  def nonEmpty = !isEmpty
-
-  private def assertCoords(x: Int, y: Int) {
-    if (!(0 until size.width contains x) || !(0 until size.height contains y))
-      throw new IndexOutOfBoundsException(
-        "Circuit does not contain " + Point(x, y)
-      )
   }
 
   def tick() {
@@ -235,6 +217,17 @@ class IntegratedCircuit {
     errors = elist.result()
   }
 
+  def getPartsBoundingBox(): Rect = {
+    val keys = parts.keys
+    val ((x2, y2), (x1, y1)) = if(keys.nonEmpty) {
+      (keys.reduce((p1, p2) => (math.max(p1._1, p2._1), math.max(p1._2, p2._2))),
+      keys.reduce((p1, p2) => (math.min(p1._1, p2._1), math.min(p1._2, p2._2))))
+    } else {
+      ((1, 1), (0, 0))
+    }
+    Rect(Point(x1, y1), Size(x2 - x1, y2 - y1))
+  }
+
   def setPart(x: Int, y: Int, part: CircuitPart) {
     setPart_do(x, y, part)
     part.onAdded()
@@ -242,7 +235,6 @@ class IntegratedCircuit {
   }
 
   private def setPart_do(x: Int, y: Int, part: CircuitPart) {
-    assertCoords(x, y)
     part.bind(this, x, y)
     parts += (x, y) -> part
   }
@@ -250,7 +242,6 @@ class IntegratedCircuit {
   def getPart(x: Int, y: Int): CircuitPart = parts.getOrElse((x, y), null)
 
   def removePart(x: Int, y: Int) {
-    assertCoords(x, y)
     val part = getPart(x, y)
     if (part != null) {
       if (!network.isRemote) sendRemovePart(x, y)

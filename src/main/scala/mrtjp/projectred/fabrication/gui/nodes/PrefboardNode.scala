@@ -6,21 +6,16 @@
 package mrtjp.projectred.fabrication.gui.nodes
 
 import codechicken.lib.gui.GuiDraw
-import codechicken.lib.render.ColourMultiplier
-import codechicken.lib.render.uv.{UVScale, UVTranslation}
-import mrtjp.core.color.Colors
 import mrtjp.core.gui.{ClipNode, TNode}
-import mrtjp.core.vec.{Point, Rect, Size}
-import mrtjp.projectred.core.libmc.PRResources
-import mrtjp.projectred.fabrication.ICComponentStore._
+import mrtjp.core.vec.{Point, Rect, Vec2}
 import mrtjp.projectred.fabrication.circuitparts.ICGateDefinition
+import mrtjp.projectred.fabrication.circuitparts.io.IOICGateLogic
 import mrtjp.projectred.fabrication.circuitparts.latches.{SRLatch, TransparentLatch}
 import mrtjp.projectred.fabrication.circuitparts.misc.{Counter, DecRandomizer, Randomizer}
 import mrtjp.projectred.fabrication.circuitparts.primitives._
 import mrtjp.projectred.fabrication.circuitparts.timing.{Repeater, Sequencer, StateCell}
-import mrtjp.projectred.fabrication.circuitparts.io.IOICGateLogic
 import mrtjp.projectred.fabrication.gui.{CircuitGui, IGuiCircuitPart}
-import mrtjp.projectred.fabrication.operations.{CircuitOp, CircuitOpDefs, OpGate}
+import mrtjp.projectred.fabrication.operations._
 import mrtjp.projectred.fabrication.{IntegratedCircuit, RenderCircuit}
 import net.minecraft.util.EnumChatFormatting
 import org.lwjgl.input.{Keyboard, Mouse}
@@ -28,16 +23,15 @@ import org.lwjgl.input.{Keyboard, Mouse}
 import scala.collection.JavaConversions._
 import scala.collection.convert.WrapAsJava
 
-class PrefboardNode(circuit: IntegratedCircuit, previewUpdateDelegate: (CircuitOp) => Unit) extends TNode {
+class PrefboardNode(circuit: IntegratedCircuit, hasBlueprint: Boolean, previewUpdateDelegate: (CircuitOp) => Unit) extends TNode {
   var currentOp: CircuitOp = null
 
   /** 0 - off 1 - name only 2 - minor details 3 - all details
    */
   var detailLevel = 1
   var scale = 1.0
-  var sizeMult = 8
 
-  def size = circuit.size * sizeMult
+  var offset: Vec2 = Vec2(0, 0)
 
   def updatePreview(): Unit = {
     previewUpdateDelegate(currentOp)
@@ -45,7 +39,7 @@ class PrefboardNode(circuit: IntegratedCircuit, previewUpdateDelegate: (CircuitO
 
   override def frame = Rect(
     position,
-    Size((size.width * scale).toInt, (size.height * scale).toInt)
+    parent.frame.size
   )
 
   var opPickDelegate = { _: CircuitOp => () }
@@ -54,23 +48,29 @@ class PrefboardNode(circuit: IntegratedCircuit, previewUpdateDelegate: (CircuitO
   private var rightMouseDown = false
   private var mouseStart = Point(0, 0)
 
-  private def isCircuitValid = circuit.nonEmpty
 
-  private def toGridPoint(p: Point) = {
-    val f = frame
-    val rpos = p - position
+  /**
+   * Converts coordinates in the gui to coordinates in the circuit (with rounding)
+   */
+  private def toGridPoint(p: Vec2): Point = {
+    val circuitCoord = p / (RenderCircuit.BASE_SCALE * scale) + offset
     Point(
-      (rpos.x * circuit.size.width * 1.0 / f.width).toInt
-        .min(circuit.size.width - 1)
-        .max(0),
-      (rpos.y * circuit.size.height * 1.0 / f.height).toInt
-        .min(circuit.size.height - 1)
-        .max(0)
+      math.floor(circuitCoord.dx).round.toInt,
+      math.floor(circuitCoord.dy).round.toInt
     )
   }
 
+  private def toGridPoint(p: Point): Point = {
+    val circuitCoord = p.vectorize / (RenderCircuit.BASE_SCALE * scale) + offset
+    Point(
+      math.floor(circuitCoord.dx).round.toInt,
+      math.floor(circuitCoord.dy).round.toInt
+    )
+  }
+
+
   private def toCenteredGuiPoint(gridP: Point) = {
-    val dp = frame.size.vectorize / circuit.size.vectorize
+    val dp = frame.size.vectorize / 16
     Point(gridP.vectorize * dp + dp / 2)
   }
 
@@ -80,75 +80,42 @@ class PrefboardNode(circuit: IntegratedCircuit, previewUpdateDelegate: (CircuitO
   }
 
   override def drawBack_Impl(mouse: Point, rframe: Float) {
-    if (isCircuitValid) {
+    if(hasBlueprint) {
       val f = frame
       RenderCircuit.renderOrtho(
         circuit,
-        f.x,
-        f.y,
-        size.width * scale,
-        size.height * scale,
-        rframe
+        parent.frame.size,
+        scale,
+        offset
       )
 
       if (currentOp != null) {
-        if (frame.contains(mouse) && rayTest(mouse) && !leftMouseDown) {
-          currentOp.renderHover(
-            circuit,
-            toGridPoint(mouse),
-            f.x,
-            f.y,
-            size.width * scale,
-            size.height * scale
-          )
-        } else if (leftMouseDown)
+        if (rayTest(mouse) && !leftMouseDown) {
+          // Render: Erase always, other stuff only if there are no already placed parts under the cursor
+          currentOp match {
+            case _: OpGate | _: OpWire | _: SimplePlacementOp =>
+              if (circuit.getPart(toGridPoint(mouse.vectorize)) == null)
+                currentOp.renderHover(toGridPoint(mouse).vectorize, scale, offset)
+            case _: CircuitOpErase =>
+              currentOp.renderHover(toGridPoint(mouse).vectorize, scale, offset)
+          }
+        } else if (leftMouseDown) {
           currentOp.renderDrag(
-            circuit,
-            mouseStart,
-            toGridPoint(mouse),
-            f.x,
-            f.y,
-            size.width * scale,
-            size.height * scale
-          )
-      }
-
-      if (
-        mcInst.theWorld.getTotalWorldTime % 100 > 5 && circuit.errors.nonEmpty
-      ) {
-        prepairRender()
-        PRResources.guiPrototyper.bind()
-        for ((Point(x, y), (_, c)) <- circuit.errors) {
-          val t = orthoPartT(
-            f.x,
-            f.y,
-            size.width * scale,
-            size.height * scale,
-            circuit.size,
-            x,
-            y
-          )
-          faceModels(dynamicIdx(0, true)).render(
-            t,
-            new UVScale(64) `with` new UVTranslation(
-              330,
-              37
-            ) `with` new UVScale(1 / 512d),
-            ColourMultiplier.instance(Colors(c).rgba)
+            mouseStart.vectorize,
+            toGridPoint(mouse).vectorize,
+            CircuitOp.partsBetweenPoints(mouseStart.vectorize, toGridPoint(mouse).vectorize, circuit),
+            scale,
+            offset
           )
         }
-        finishRender()
       }
+      RenderCircuit.renderErrors(circuit, scale, offset)
     }
   }
 
   override def drawFront_Impl(mouse: Point, rframe: Float) {
-    if (
-      isCircuitValid && !leftMouseDown && frame.contains(mouse) && rayTest(
-        mouse
-      )
-    ) {
-      val point = toGridPoint(mouse)
+    if(!leftMouseDown && rayTest(mouse)) {
+      val point = toGridPoint(mouse.vectorize)
       val part = circuit.getPart(point)
       if (part != null) {
         val data = part.getRolloverData(detailLevel)
@@ -174,19 +141,33 @@ class PrefboardNode(circuit: IntegratedCircuit, previewUpdateDelegate: (CircuitO
     }
   }
 
+  private var mousePosition = Point(0, 0)
+  override def mouseDragged_Impl(p: Point, button: Int, time: Long, consumed: Boolean): Boolean = {
+    if(!consumed && rayTest(p) && currentOp == null) {
+      if(time > 10) {
+        offset = offset - (p - mousePosition).vectorize / (RenderCircuit.BASE_SCALE * scale)
+      }
+      mousePosition = p
+      true
+    } else {
+      mousePosition = p
+      false
+    }
+  }
+
   override def mouseClicked_Impl(
                                   p: Point,
                                   button: Int,
                                   consumed: Boolean
                                 ): Boolean = {
-    if (isCircuitValid && !consumed && rayTest(p)) button match {
+    if (!consumed && rayTest(p)) button match {
       case 0 =>
         leftMouseDown = true
-        mouseStart = toGridPoint(p)
+        mouseStart = toGridPoint(p.vectorize)
         return true
       case 1 =>
         rightMouseDown = true
-        val gridP = toGridPoint(p)
+        val gridP = toGridPoint(p.vectorize)
         circuit.getPart(gridP) match {
           case gp: IGuiCircuitPart =>
             val currentlyOpen = children.collect { case cg: CircuitGui => cg }
@@ -212,16 +193,20 @@ class PrefboardNode(circuit: IntegratedCircuit, previewUpdateDelegate: (CircuitO
   override def mouseReleased_Impl(p: Point, button: Int, consumed: Boolean) = {
     if (leftMouseDown) {
       leftMouseDown = false
-      val mouseEnd = toGridPoint(p)
-      val opUsed = currentOp != null && circuit.sendOpUse(currentOp, mouseStart, mouseEnd)
-      if (!opUsed && mouseEnd == mouseStart) {
+      val mouseEnd = toGridPoint(p.vectorize)
+      val opUsed = currentOp != null && circuit.sendOpUse(
+        currentOp,
+        mouseStart,
+        mouseEnd
+      )
+      if (!opUsed && mouseStart == mouseEnd) {
         val part = circuit.getPart(mouseEnd)
         if (part != null) part.onClicked()
       }
     }
     if (rightMouseDown) {
       rightMouseDown = false
-      val mouseEnd = toGridPoint(p)
+      val mouseEnd = toGridPoint(p.vectorize)
       if (mouseEnd == mouseStart) {
         val part = circuit.getPart(mouseEnd)
         if (part != null) part.onActivated()
@@ -232,8 +217,8 @@ class PrefboardNode(circuit: IntegratedCircuit, previewUpdateDelegate: (CircuitO
 
   override def mouseScrolled_Impl(p: Point, dir: Int, consumed: Boolean) = {
     if (!consumed && rayTest(p)) {
-      if (dir > 0) rescaleAt(p, math.min(scale + 0.1, 3.0))
-      else if (dir < 0) rescaleAt(p, math.max(scale - 0.1, 0.5))
+      if (dir > 0) rescaleAt(p, math.min(scale * 1.25, 3.0))
+      else if (dir < 0) rescaleAt(p, math.max(scale * 0.8, 0.5))
       true
     } else false
   }
@@ -256,9 +241,6 @@ class PrefboardNode(circuit: IntegratedCircuit, previewUpdateDelegate: (CircuitO
         true
       case KEY_C if currentOp != null =>
         doConfigure()
-        true
-      case _ if keycode == mcInst.gameSettings.keyBindInventory.getKeyCode =>
-        opPickDelegate(CircuitOpDefs.Erase.getOp)
         true
       case _ => false
     }
@@ -333,7 +315,7 @@ class PrefboardNode(circuit: IntegratedCircuit, previewUpdateDelegate: (CircuitO
 
     val pos = parent.convertPointFromScreen(absPos)
     if (rayTest(pos)) {
-      val part = circuit.getPart(toGridPoint(pos))
+      val part = circuit.getPart(toGridPoint(pos.vectorize))
       opPickDelegate(if (part != null) part.getPickOp else null)
       updatePreview()
     }
@@ -348,18 +330,32 @@ class PrefboardNode(circuit: IntegratedCircuit, previewUpdateDelegate: (CircuitO
   }
 
   def incScale() {
-    rescaleAt(frame.midPoint, math.min(scale + 0.2, 3.0))
+    rescaleAt(parent.frame.midPoint, math.min(scale + 0.2, 3.0))
   }
 
   def decScale() {
-    rescaleAt(frame.midPoint, math.max(scale - 0.2, 0.5))
+    rescaleAt(parent.frame.midPoint, math.max(scale - 0.2, 0.5))
   }
 
-  def rescaleAt(point: Point, newScale: Double) {
-    val p = parent.convertPointTo(point, this).vectorize
-    val newP = (p / scale) * newScale
-    val dp = newP - p
+  private def rescaleAt(point: Point, newScale: Double): Unit = {
+    val newP = (point.vectorize / scale) * newScale
+    val dp = (newP - point.vectorize) / (RenderCircuit.BASE_SCALE * scale)
+    offset = offset + dp
     scale = newScale
-    position -= Point(dp)
+  }
+
+  /**
+   * Scales the prefboard to the circuit with some border
+   */
+  def scaleGuiToCircuit() = {
+    val circuitBounds = circuit.getPartsBoundingBox()
+    val circuitBoundsWithPadding = circuitBounds.union(Rect(circuitBounds.origin.subtract(1, 1), circuitBounds.size.add(3)))
+    // Required scaling to fit whole circuit on the screen
+    val requiredScale = math.min(
+      (parent.frame.size.width / RenderCircuit.BASE_SCALE.toDouble) / circuitBoundsWithPadding.size.width,
+      (parent.frame.size.height / RenderCircuit.BASE_SCALE.toDouble) / circuitBoundsWithPadding.size.height
+    )
+    offset = circuitBoundsWithPadding.origin.vectorize
+    scale = requiredScale
   }
 }

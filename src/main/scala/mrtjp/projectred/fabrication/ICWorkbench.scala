@@ -134,9 +134,7 @@ class TileICWorkbench extends TileICMachine with NetWorldCircuit {
     case 2 => circuit.readDesc(in)
     case 3 => readPartStream(in)
     case 4 => readICStream(in)
-    case 5 =>
-      if (!hasBP) new IntegratedCircuit().readDesc(in)
-      else { circuit.readDesc(in); sendICDesc() }
+    case 5 => circuit.name = in.readString()
     case _ => super.read(in, key)
   }
 
@@ -155,9 +153,9 @@ class TileICWorkbench extends TileICMachine with NetWorldCircuit {
     }
   }
 
-  def sendNewICToServer(ic: IntegratedCircuit) {
+  def sendICNameToServer(name: String) {
     val stream = writeStream(5)
-    ic.writeDesc(stream)
+    stream.writeString(name)
     stream.sendToServer()
   }
 
@@ -205,7 +203,7 @@ class TileICWorkbench extends TileICMachine with NetWorldCircuit {
         sendHasBPUpdate()
       } else if (hasBP && player.isSneaking) {
         val stack = new ItemStack(ProjectRedFabrication.itemICBlueprint)
-        if (circuit.nonEmpty) {
+        if (circuit.parts.nonEmpty) {
           saveIC(circuit, stack)
           circuit.clear()
           sendICDesc()
@@ -241,7 +239,8 @@ class TileICWorkbench extends TileICMachine with NetWorldCircuit {
     super.onBlockRemoval()
     if (hasBP) {
       val stack = new ItemStack(ProjectRedFabrication.itemICBlueprint)
-      if (circuit.nonEmpty) saveIC(circuit, stack)
+      if (circuit.parts.nonEmpty)
+        saveIC(circuit, stack)
       WorldLib.dropItem(world, x, y, z, stack)
     }
   }

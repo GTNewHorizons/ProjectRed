@@ -11,7 +11,7 @@ import codechicken.lib.render.uv.{IconTransformation, UVTransformation}
 import codechicken.lib.render.{CCModel, CCRenderState, ColourMultiplier, TextureUtils}
 import codechicken.lib.vec._
 import mrtjp.core.color.Colors
-import mrtjp.core.vec.Size
+import mrtjp.core.vec.{Size, Vec2}
 import mrtjp.projectred.fabrication.circuitparts.ICGateRenderer
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.util.IIcon
@@ -135,6 +135,14 @@ object ICComponentStore {
       0,
       0
     )
+
+  def orthoPartT(position: Vec2, scale: Double): TransformationList = {
+    new TransformationList(
+      new Scale(RenderCircuit.BASE_SCALE * scale, 1, -RenderCircuit.BASE_SCALE * scale),
+      new Translation(position.dx * RenderCircuit.BASE_SCALE * scale, 0, -position.dy * RenderCircuit.BASE_SCALE * scale),
+      new Rotation(1.571, 1, 0, 0)
+    )
+  }
 
   def orthoPartT(
       x: Double,

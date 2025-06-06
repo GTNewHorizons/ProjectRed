@@ -12,7 +12,7 @@ import mrtjp.core.vec.{Point, Vec2}
 import mrtjp.projectred.fabrication.ICComponentStore._
 import mrtjp.projectred.fabrication._
 import mrtjp.projectred.fabrication.circuitparts.{CircuitPart, GateICPart, ICGateDefinition, ICGateRenderer}
-import mrtjp.projectred.fabrication.operations.CircuitOp.{isOnBorder, isOnEdge, renderHolo}
+import mrtjp.projectred.fabrication.operations.CircuitOp.renderHolo
 
 
 class OpGate(meta: Int) extends CircuitOp {
@@ -55,54 +55,18 @@ class OpGate(meta: Int) extends CircuitOp {
   }
 
   @SideOnly(Side.CLIENT)
-  override def renderHover(
-      circuit: IntegratedCircuit,
-      point: Point,
-      x: Double,
-      y: Double,
-      xSize: Double,
-      ySize: Double
-  ) {
-    if (circuit.getPart(point) != null) return
-
-    val t = orthoPartT(x, y, xSize, ySize, circuit.size, point.x, point.y)
+  override def renderHover(position: Vec2, scale: Double, prefboardOffset: Vec2): Unit = {
+    val t = orthoPartT(position.subtract(prefboardOffset), scale)
     doRender(t, rotation, configuration)
-
-    renderHolo(
-      x,
-      y,
-      xSize,
-      ySize,
-      circuit.size,
-      point,
-      0x33ffffff
-    )
+    renderHolo(position.subtract(prefboardOffset), scale, 0x33ffffff)
   }
 
   @SideOnly(Side.CLIENT)
-  override def renderDrag(
-      circuit: IntegratedCircuit,
-      start: Point,
-      end: Point,
-      x: Double,
-      y: Double,
-      xSize: Double,
-      ySize: Double
-  ) {
-    if (circuit.getPart(start) != null) return
-
-    val t = orthoPartT(x, y, xSize, ySize, circuit.size, start.x, start.y)
+  def renderDrag(start: Vec2, end: Vec2, positionsWithParts: Seq[Vec2], scale: Double, prefboardOffset: Vec2): Unit = {
+    // Gates can't be dragged, so only the first will be rendered
+    val t = orthoPartT(start - prefboardOffset, scale)
     doRender(t, rotation, configuration)
-
-    renderHolo(
-      x,
-      y,
-      xSize,
-      ySize,
-      circuit.size,
-      start,
-      0x44ffffff
-    )
+    renderHolo(start - prefboardOffset, scale, 0x44ffffff)
   }
 
   @SideOnly(Side.CLIENT)

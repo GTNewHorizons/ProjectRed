@@ -21,11 +21,11 @@ object CircuitPart {
  */
 abstract class CircuitPart {
   var world: IntegratedCircuit = null
-  var loc: (Byte, Byte) = null
+  var loc: (Int, Int) = null
 
   def bind(ic: IntegratedCircuit, x: Int, y: Int) {
     world = ic
-    loc = (x.toByte, y.toByte)
+    loc = (x, y)
   }
 
   def unbind() {
@@ -33,9 +33,9 @@ abstract class CircuitPart {
     loc = null
   }
 
-  def x = loc._1 & 0xff
+  def x = loc._1
 
-  def y = loc._2 & 0xff
+  def y = loc._2
 
   def id = getPartType.id
 

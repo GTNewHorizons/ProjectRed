@@ -5,12 +5,10 @@
  */
 package mrtjp.projectred.fabrication
 
-import java.util.{List => JList}
 import codechicken.lib.gui.GuiDraw
 import cpw.mods.fml.common.registry.GameRegistry
 import mrtjp.core.color.Colors
 import mrtjp.core.item.ItemCore
-import mrtjp.core.vec.{Point, Size}
 import mrtjp.projectred.core.libmc.PRResources
 import mrtjp.projectred.fabrication.circuitparts.io.TIOCircuitPart
 import mrtjp.projectred.fabrication.circuitparts.io.TIOCircuitPart._
@@ -28,6 +26,8 @@ import net.minecraft.world.World
 import net.minecraftforge.client.IItemRenderer
 import net.minecraftforge.client.IItemRenderer.{ItemRenderType, ItemRendererHelper}
 import org.lwjgl.opengl.GL11._
+
+import java.util.{List => JList}
 
 
 class ItemICBlueprint
@@ -68,9 +68,7 @@ class ItemICBlueprint
     val slist = list.asInstanceOf[JList[String]]
 
     if (ItemICBlueprint.hasICInside(stack)) {
-      val size = ItemICBlueprint.getICSize(stack)
       slist.add(GRAY + ItemICBlueprint.getICName(stack))
-      slist.add(GRAY + s"${size.width} x ${size.height}")
     } else slist.add(GRAY + "empty blueprint")
   }
 }
@@ -92,8 +90,6 @@ object ItemICBlueprint {
     ic.save(tag2)
     tag1.setTag("icdata", tag2)
     tag1.setString("icname", ic.name)
-    tag1.setByte("icw", ic.size.width.toByte)
-    tag1.setByte("ich", ic.size.height.toByte)
   }
 
   def loadIC(stack: ItemStack): IntegratedCircuit = {
@@ -110,11 +106,6 @@ object ItemICBlueprint {
 
   def getICName(stack: ItemStack) = {
     stack.getTagCompound.getString("icname")
-  }
-
-  def getICSize(stack: ItemStack) = {
-    val tag = stack.getTagCompound
-    Size(tag.getByte("icw"), tag.getByte("ich"))
   }
 
   def hasICInside(stack: ItemStack) = {
@@ -220,7 +211,7 @@ object ItemRenderICBlueprint extends IItemRenderer {
 
     if (ItemICBlueprint.hasICInside(stack)) {
       val ic = ItemICBlueprint.loadIC(stack)
-      if (ic.nonEmpty) overlayIC(ic)
+      overlayIC(ic)
     }
 
     glEnable(GL_LIGHTING)
@@ -241,10 +232,12 @@ object ItemRenderICBlueprint extends IItemRenderer {
   }
 
   private def overlayIC(ic: IntegratedCircuit) {
-    val sf = 128 / math.max(ic.size.width, ic.size.height)
-    val rs = ic.size * sf
-    val rp = Point(Size(128, 128) / 2 - rs / 2)
-    RenderCircuit.renderOrtho(ic, rp.x, rp.y, rs.width, rs.height, 0)
+    val boundingBox = ic.getPartsBoundingBox()
+    val scale = math.min(
+      8.0d / (boundingBox.width.toDouble + 1),
+      8.0d / (boundingBox.height.toDouble + 1)
+    )
+    RenderCircuit.renderCircuitOrtho(ic,scale, boundingBox.origin.vectorize)
 
     val name = ic.name
 

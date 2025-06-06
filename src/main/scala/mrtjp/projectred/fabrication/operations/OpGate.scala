@@ -15,18 +15,15 @@ import mrtjp.projectred.fabrication.circuitparts.{CircuitPart, GateICPart, ICGat
 import mrtjp.projectred.fabrication.operations.CircuitOp.{isOnBorder, isOnEdge, renderHolo}
 
 
-abstract class OpGateCommons(meta: Int) extends CircuitOp {
+class OpGate(meta: Int) extends CircuitOp {
 
   var rotation: Int = 0
   var configuration: Int = 0
 
   def getID: Int = meta
 
-  def canPlace(circuit: IntegratedCircuit, point: Point): Boolean
-  def findRot(circuit: IntegratedCircuit, start: Point, end: Point): Int
-
   override def checkOp(circuit: IntegratedCircuit, start: Point, end: Point) =
-    canPlace(circuit, start) && circuit.getPart(start) == null
+    circuit.getPart(start) == null
 
   override def getRotation(): Int = rotation
 
@@ -48,7 +45,7 @@ abstract class OpGateCommons(meta: Int) extends CircuitOp {
     rotation = in.readUByte()
     configuration = in.readUByte()
 
-    if (circuit.getPart(point) == null && canPlace(circuit, point)) {
+    if (circuit.getPart(point) == null) {
       val part = CircuitPart
         .createPart(ICGateDefinition(meta).gateType)
         .asInstanceOf[GateICPart]
@@ -78,7 +75,7 @@ abstract class OpGateCommons(meta: Int) extends CircuitOp {
       ySize,
       circuit.size,
       point,
-      if (canPlace(circuit, point)) 0x33ffffff else 0x33ff0000
+      0x33ffffff
     )
   }
 
@@ -104,7 +101,7 @@ abstract class OpGateCommons(meta: Int) extends CircuitOp {
       ySize,
       circuit.size,
       start,
-      if (canPlace(circuit, start)) 0x44ffffff else 0x44ff0000
+      0x44ffffff
     )
   }
 
@@ -131,36 +128,4 @@ abstract class OpGateCommons(meta: Int) extends CircuitOp {
 
   @SideOnly(Side.CLIENT)
   override def getOpName = ICGateDefinition(meta).unlocal
-}
-
-class OpGate(meta: Int) extends OpGateCommons(meta) {
-  override def findRot(circuit: IntegratedCircuit, start: Point, end: Point) = {
-    (end - start).vectorize.axialProject.normalize match {
-      case Vec2(0, -1) => 0
-      case Vec2(1, 0)  => 1
-      case Vec2(0, 1)  => 2
-      case Vec2(-1, 0) => 3
-      case _           => 0
-    }
-  }
-
-  override def canPlace(circuit: IntegratedCircuit, point: Point) =
-    !isOnBorder(circuit.size, point)
-}
-
-class OpIOGate(meta: Int) extends OpGateCommons(meta) {
-  override def canPlace(circuit: IntegratedCircuit, point: Point) =
-    isOnBorder(circuit.size, point) && !isOnEdge(circuit.size, point)
-
-  override def findRot(circuit: IntegratedCircuit, start: Point, end: Point) = {
-    val wm = circuit.size.width - 1
-    val hm = circuit.size.height - 1
-    start match {
-      case Point(_, 0)    => 0
-      case Point(`wm`, _) => 1
-      case Point(_, `hm`) => 2
-      case Point(0, _)    => 3
-      case _              => 0
-    }
-  }
 }

@@ -153,7 +153,3 @@ class ICPropagationRun {
 class ICPropagation(part: IWireICPart, from: CircuitPart, mode: Int) {
   def go() { part.updateAndPropagate(from, mode) }
 }
-
-
-
-

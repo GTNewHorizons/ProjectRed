@@ -6,7 +6,11 @@
 package mrtjp.projectred.fabrication.circuitparts.primitives
 
 import mrtjp.projectred.fabrication.ICComponentStore.generateWireModels
-import mrtjp.projectred.fabrication.circuitparts.{ComboICGateLogic, ComboICGatePart, ICGateRenderer}
+import mrtjp.projectred.fabrication.circuitparts.{
+  ComboICGateLogic,
+  ComboICGatePart,
+  ICGateRenderer
+}
 import mrtjp.projectred.fabrication.{BaseComponentModel, RedstoneTorchModel}
 
 object NAND extends ComboICGateLogic {

@@ -12,7 +12,7 @@ import mrtjp.projectred.fabrication.operations.CircuitOpDefs
 import net.minecraft.nbt.NBTTagCompound
 
 abstract class GateICPart
-  extends CircuitPart
+    extends CircuitPart
     with TConnectableICPart
     with TICOrient
     with TClientNetCircuitPart {
@@ -115,11 +115,11 @@ abstract class GateICPart
 
   def processScheduledDigital() {
     while (schedDigital && iter < 3) // recursion control
-    {
-      schedDigital = false
-      iter += 1
-      scheduledTick()
-    }
+      {
+        schedDigital = false
+        iter += 1
+        scheduledTick()
+      }
   }
 
   def onChange() {

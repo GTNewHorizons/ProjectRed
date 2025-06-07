@@ -10,13 +10,13 @@ import mrtjp.projectred.fabrication.circuitparts.wire.IICRedwireEmitter
 import net.minecraft.nbt.NBTTagCompound
 
 abstract class RedstoneGateICPart
-  extends GateICPart
+    extends GateICPart
     with TICRSAcquisitions
     with TPoweredCircuitPart {
 
   /** Mapped inputs and outputs of the gate. OOOO IIII High nybble is output.
-   * Low nybble is input
-   */
+    * Low nybble is input
+    */
   private var gateState: Byte = 0
 
   def state = gateState & 0xff
@@ -78,8 +78,8 @@ abstract class RedstoneGateICPart
   def getRedstoneInput(r: Int) = calcSignal(toAbsolute(r))
 
   override def resolveSignal(part: Any, r: Int) = part match {
-    case re: IICRedwireEmitter => re.getRedwireSignal(r)
+    case re: IICRedwireEmitter   => re.getRedwireSignal(r)
     case ip: TPoweredCircuitPart => ip.rsOutputLevel(r)
-    case _ => 0
+    case _                       => 0
   }
 }

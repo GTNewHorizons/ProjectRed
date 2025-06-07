@@ -8,9 +8,8 @@ package mrtjp.projectred.fabrication.circuitparts
 import mrtjp.projectred.fabrication.gui.nodes.configuration.ConfigurationRotation
 import mrtjp.projectred.fabrication.gui.nodes.{ConfigurationNode, TConfigurable}
 
-
 class ArrayGateICPart
-  extends RedstoneGateICPart
+    extends RedstoneGateICPart
     with TComplexGateICPart
     with TArrayGateICPart
     with TConfigurable {
@@ -24,5 +23,6 @@ class ArrayGateICPart
 
   override def getPartType = CircuitPartDefs.ArrayGate
 
-  override def createConfigurationNode: ConfigurationNode = new ConfigurationRotation(this)
+  override def createConfigurationNode: ConfigurationNode =
+    new ConfigurationRotation(this)
 }

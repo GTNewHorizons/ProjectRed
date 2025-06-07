@@ -6,12 +6,20 @@
 package mrtjp.projectred.fabrication.circuitparts.io
 
 import codechicken.lib.data.MCDataInput
-import mrtjp.projectred.fabrication.circuitparts.{CircuitPartDefs, RedstoneGateICPart, TComplexGateICPart}
-import mrtjp.projectred.fabrication.gui.nodes.configuration.{ConfigurationAnalogIO, ConfigurationBundledIO, ConfigurationSimpleIO}
+import mrtjp.projectred.fabrication.circuitparts.{
+  CircuitPartDefs,
+  RedstoneGateICPart,
+  TComplexGateICPart
+}
+import mrtjp.projectred.fabrication.gui.nodes.configuration.{
+  ConfigurationAnalogIO,
+  ConfigurationBundledIO,
+  ConfigurationSimpleIO
+}
 import mrtjp.projectred.fabrication.gui.nodes.{ConfigurationNode, TConfigurable}
 
 class IOGateICPart
-  extends RedstoneGateICPart
+    extends RedstoneGateICPart
     with TIOCircuitPart
     with TComplexGateICPart
     with TConfigurable {

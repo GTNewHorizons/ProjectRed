@@ -6,9 +6,12 @@
 package mrtjp.projectred.fabrication.circuitparts.latches
 
 import mrtjp.projectred.fabrication.ICComponentStore.generateWireModels
-import mrtjp.projectred.fabrication.circuitparts.{ComboICGateLogic, ComboICGatePart, ICGateRenderer}
+import mrtjp.projectred.fabrication.circuitparts.{
+  ComboICGateLogic,
+  ComboICGatePart,
+  ICGateRenderer
+}
 import mrtjp.projectred.fabrication.{BaseComponentModel, RedstoneTorchModel}
-
 
 object TransparentLatch extends ComboICGateLogic {
   override def outputMask(shape: Int) = if (shape == 0) 3 else 9

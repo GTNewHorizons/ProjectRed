@@ -29,7 +29,6 @@ class AlloyWireICPart extends RedwireICPart {
   override def getPickOp = CircuitOpDefs.AlloyWire.getOp
 }
 
-
 object RenderICAlloyWire {
   var connMap: Byte = 0
   var signal: Byte = 0

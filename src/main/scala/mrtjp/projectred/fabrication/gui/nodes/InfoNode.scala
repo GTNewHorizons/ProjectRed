@@ -12,7 +12,6 @@ import mrtjp.projectred.core.libmc.PRResources
 import mrtjp.projectred.fabrication.gui.GuiICWorkbench
 import net.minecraft.client.gui.Gui
 
-
 class InfoNode extends TNode {
   val size = Size(18, 18)
   override def frame = Rect(position, size)

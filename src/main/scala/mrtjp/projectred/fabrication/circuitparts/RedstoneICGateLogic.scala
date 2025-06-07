@@ -7,7 +7,6 @@ package mrtjp.projectred.fabrication.circuitparts
 
 import mrtjp.projectred.fabrication.circuitparts.wire.IICRedwireEmitter
 
-
 abstract class RedstoneICGateLogic[T <: RedstoneGateICPart]
     extends ICGateLogic[T] {
   override def canConnectTo(gate: T, part: CircuitPart, r: Int) = part match {

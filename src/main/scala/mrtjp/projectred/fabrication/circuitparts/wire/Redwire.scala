@@ -8,15 +8,16 @@ package mrtjp.projectred.fabrication.circuitparts.wire
 import codechicken.lib.data.{MCDataInput, MCDataOutput}
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.projectred.fabrication._
-import mrtjp.projectred.fabrication.circuitparts.{CircuitPart, TPoweredCircuitPart, TICRSAcquisitions, TRSPropagatingICPart}
+import mrtjp.projectred.fabrication.circuitparts.{
+  CircuitPart,
+  TPoweredCircuitPart,
+  TICRSAcquisitions,
+  TRSPropagatingICPart
+}
 import net.minecraft.nbt.NBTTagCompound
 
-
-
-
-
 abstract class RedwireICPart
-  extends WireICPart
+    extends WireICPart
     with TICRSAcquisitions
     with TRSPropagatingICPart
     with IRedwireICPart {
@@ -44,7 +45,7 @@ abstract class RedwireICPart
 
   override def read(in: MCDataInput, key: Int) = key match {
     case 10 => signal = in.readByte()
-    case _ => super.read(in, key)
+    case _  => super.read(in, key)
   }
 
   override def onSignalUpdate() {
@@ -54,7 +55,7 @@ abstract class RedwireICPart
 
   override def discoverOverride(r: Int, part: CircuitPart) = part match {
     case pow: TPoweredCircuitPart => pow.canConnectRS(rotFromStraight(r))
-    case _ => super.discoverOverride(r, part)
+    case _                        => super.discoverOverride(r, part)
   }
 
   override def canConnectRS(r: Int) = ICPropagator.redwiresConnectable
@@ -73,16 +74,16 @@ abstract class RedwireICPart
     else 0
 
   override def canConnectPart(part: CircuitPart, r: Int) = part match {
-    case re: IICRedwireEmitter => true
+    case re: IICRedwireEmitter   => true
     case pc: TPoweredCircuitPart => true
-    case _ => false
+    case _                       => false
   }
 
   override def resolveSignal(part: Any, r: Int) = part match {
     case t: IRedwireICPart if t.diminishOnSide(r) => t.getRedwireSignal(r) - 1
-    case t: IICRedwireEmitter => t.getRedwireSignal(r)
-    case t: TPoweredCircuitPart => t.rsOutputLevel(r)
-    case _ => 0
+    case t: IICRedwireEmitter                     => t.getRedwireSignal(r)
+    case t: TPoweredCircuitPart                   => t.rsOutputLevel(r)
+    case _                                        => 0
   }
 
   override def calculateSignal = {

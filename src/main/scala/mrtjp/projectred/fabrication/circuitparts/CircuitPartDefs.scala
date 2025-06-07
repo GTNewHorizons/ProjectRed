@@ -9,7 +9,6 @@ import mrtjp.core.util.Enum
 import mrtjp.projectred.fabrication.circuitparts.io.IOGateICPart
 import mrtjp.projectred.fabrication.circuitparts.wire._
 
-
 object CircuitPartDefs extends Enum {
   type EnumVal = CircuitPartDef
 

@@ -11,7 +11,8 @@ import mrtjp.core.vec.{Point, Size}
 import mrtjp.projectred.fabrication.circuitparts.io.IOGateICPart
 import mrtjp.projectred.fabrication.{ArrowModel, ICComponentStore}
 
-class ConfigurationSimpleIO(gate: IOGateICPart) extends ConfigurationRotation(gate) {
+class ConfigurationSimpleIO(gate: IOGateICPart)
+    extends ConfigurationRotation(gate) {
 
   val arrowModel = new ArrowModel
 
@@ -23,8 +24,8 @@ class ConfigurationSimpleIO(gate: IOGateICPart) extends ConfigurationRotation(ga
 
   in.position = Point(5, 80)
   in.size = Size(20, 15)
-  in.clickDelegate = {
-    () => gate.sendClientPacket(_.writeByte(1))
+  in.clickDelegate = { () =>
+    gate.sendClientPacket(_.writeByte(1))
   }
   addChild(in)
 

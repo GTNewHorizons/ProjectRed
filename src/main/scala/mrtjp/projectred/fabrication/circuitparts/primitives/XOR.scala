@@ -7,8 +7,11 @@ package mrtjp.projectred.fabrication.circuitparts.primitives
 
 import mrtjp.projectred.fabrication.ICComponentStore._
 import mrtjp.projectred.fabrication._
-import mrtjp.projectred.fabrication.circuitparts.{ComboICGateLogic, ComboICGatePart, ICGateRenderer}
-
+import mrtjp.projectred.fabrication.circuitparts.{
+  ComboICGateLogic,
+  ComboICGatePart,
+  ICGateRenderer
+}
 
 object XOR extends ComboICGateLogic {
   override def outputMask(shape: Int) = 1

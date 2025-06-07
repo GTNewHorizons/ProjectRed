@@ -7,13 +7,15 @@ package mrtjp.projectred.fabrication.circuitparts.cells
 
 import mrtjp.projectred.fabrication.ICComponentStore.generateWireModels
 import mrtjp.projectred.fabrication._
-import mrtjp.projectred.fabrication.circuitparts.{ArrayGateICLogicCrossing, ArrayGateICPart, ICGateRenderer}
-
+import mrtjp.projectred.fabrication.circuitparts.{
+  ArrayGateICLogicCrossing,
+  ArrayGateICPart,
+  ICGateRenderer
+}
 
 class BufferCell(gate: ArrayGateICPart) extends ArrayGateICLogicCrossing(gate) {
   override def powerUp = (gate.state & 2) == 0
 }
-
 
 class RenderBufferCell extends ICGateRenderer[ArrayGateICPart] {
   val wires = generateWireModels("BUFFCELL", 2)

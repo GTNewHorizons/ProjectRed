@@ -7,15 +7,50 @@ package mrtjp.projectred.fabrication.circuitparts
 
 import codechicken.lib.vec.Transformation
 import mrtjp.projectred.fabrication.ICComponentModel
-import mrtjp.projectred.fabrication.ICComponentStore.{finishRender, prepairRender}
-import mrtjp.projectred.fabrication.circuitparts.cells.{RenderBufferCell, RenderInvertCell, RenderNullCell}
-import mrtjp.projectred.fabrication.circuitparts.io.{RenderAnalogIO, RenderBundledIO, RenderSimpleIO}
-import mrtjp.projectred.fabrication.circuitparts.latches.{RenderSRLatch, RenderToggleLatch, RenderTransparentLatch}
-import mrtjp.projectred.fabrication.circuitparts.misc.{RenderCounter, RenderDecRandomizer, RenderRandomizer, RenderSynchronizer}
-import mrtjp.projectred.fabrication.circuitparts.primitives.{RenderAND, RenderBuffer, RenderMultiplexer, RenderNAND, RenderNOR, RenderNOT, RenderOR, RenderXNOR, RenderXOR}
-import mrtjp.projectred.fabrication.circuitparts.timing.{RenderPulse, RenderRepeater, RenderSequencer, RenderStateCell, RenderTimer}
+import mrtjp.projectred.fabrication.ICComponentStore.{
+  finishRender,
+  prepairRender
+}
+import mrtjp.projectred.fabrication.circuitparts.cells.{
+  RenderBufferCell,
+  RenderInvertCell,
+  RenderNullCell
+}
+import mrtjp.projectred.fabrication.circuitparts.io.{
+  RenderAnalogIO,
+  RenderBundledIO,
+  RenderSimpleIO
+}
+import mrtjp.projectred.fabrication.circuitparts.latches.{
+  RenderSRLatch,
+  RenderToggleLatch,
+  RenderTransparentLatch
+}
+import mrtjp.projectred.fabrication.circuitparts.misc.{
+  RenderCounter,
+  RenderDecRandomizer,
+  RenderRandomizer,
+  RenderSynchronizer
+}
+import mrtjp.projectred.fabrication.circuitparts.primitives.{
+  RenderAND,
+  RenderBuffer,
+  RenderMultiplexer,
+  RenderNAND,
+  RenderNOR,
+  RenderNOT,
+  RenderOR,
+  RenderXNOR,
+  RenderXOR
+}
+import mrtjp.projectred.fabrication.circuitparts.timing.{
+  RenderPulse,
+  RenderRepeater,
+  RenderSequencer,
+  RenderStateCell,
+  RenderTimer
+}
 import net.minecraft.client.renderer.texture.IIconRegister
-
 
 object ICGateRenderer {
   var renderers = buildRenders()
@@ -53,17 +88,21 @@ object ICGateRenderer {
   def registerIcons(reg: IIconRegister) {}
 
   def renderDynamic(
-                     gate: GateICPart,
-                     t: Transformation,
-                     ortho: Boolean,
-                     frame: Float
-                   ) {
+      gate: GateICPart,
+      t: Transformation,
+      ortho: Boolean,
+      frame: Float
+  ) {
     val r = renderers(gate.subID).asInstanceOf[ICGateRenderer[GateICPart]]
     r.prepareDynamic(gate, frame)
     r.renderDynamic(gate.rotationT `with` t, ortho)
   }
 
-  def renderWithConfiguration(configuration: Int, t: Transformation, id: Int): Unit = {
+  def renderWithConfiguration(
+      configuration: Int,
+      t: Transformation,
+      id: Int
+  ): Unit = {
     val r = renderers(id)
     r.prepareStatic(configuration)
     r.renderDynamic(t, true)
@@ -75,7 +114,6 @@ object ICGateRenderer {
     r.renderDynamic(t, true)
   }
 }
-
 
 abstract class ICGateRenderer[T <: GateICPart] {
   var reflect = false

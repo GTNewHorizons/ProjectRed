@@ -10,7 +10,7 @@ import IWireICPart.FORCED
 import mrtjp.projectred.fabrication.ICPropagator
 
 trait TPropagatingICPart
-  extends CircuitPart
+    extends CircuitPart
     with TConnectableICPart
     with IWireICPart {
   var propagationMask = 0xf
@@ -28,11 +28,11 @@ trait TPropagatingICPart
   def propagateOther(mode: Int) {}
 
   def propagateExternal(
-                         to: CircuitPart,
-                         at: Point,
-                         from: CircuitPart,
-                         mode: Int
-                       ) {
+      to: CircuitPart,
+      at: Point,
+      from: CircuitPart,
+      mode: Int
+  ) {
     if (to != null) {
       if (to == from) return
       if (propagateTo(to, mode)) return

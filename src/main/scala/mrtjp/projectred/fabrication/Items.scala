@@ -24,11 +24,13 @@ import net.minecraft.util.EnumChatFormatting._
 import net.minecraft.util.{EnumChatFormatting, IIcon}
 import net.minecraft.world.World
 import net.minecraftforge.client.IItemRenderer
-import net.minecraftforge.client.IItemRenderer.{ItemRenderType, ItemRendererHelper}
+import net.minecraftforge.client.IItemRenderer.{
+  ItemRenderType,
+  ItemRendererHelper
+}
 import org.lwjgl.opengl.GL11._
 
 import java.util.{List => JList}
-
 
 class ItemICBlueprint
     extends ItemMap // extend ItemMap so minecraft will handle the FP render for us
@@ -237,7 +239,7 @@ object ItemRenderICBlueprint extends IItemRenderer {
       8.0d / (boundingBox.width.toDouble + 1),
       8.0d / (boundingBox.height.toDouble + 1)
     )
-    RenderCircuit.renderCircuitOrtho(ic,scale, boundingBox.origin.vectorize)
+    RenderCircuit.renderCircuitOrtho(ic, scale, boundingBox.origin.vectorize)
 
     val name = ic.name
 

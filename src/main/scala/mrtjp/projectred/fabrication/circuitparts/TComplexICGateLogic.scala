@@ -18,6 +18,6 @@ trait TComplexICGateLogic[T <: TComplexGateICPart] extends ICGateLogic[T] {
   def writeDesc(packet: MCDataOutput) {}
 
   /** Allocated keys > 10
-   */
+    */
   def read(packet: MCDataInput, key: Int) {}
 }

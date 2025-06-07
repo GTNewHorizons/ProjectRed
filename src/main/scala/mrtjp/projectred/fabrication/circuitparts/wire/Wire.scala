@@ -9,16 +9,20 @@ import codechicken.lib.data.{MCDataInput, MCDataOutput}
 import mrtjp.core.color.Colors
 import mrtjp.projectred.fabrication.circuitparts.IWireICPart._
 import mrtjp.projectred.fabrication._
-import mrtjp.projectred.fabrication.circuitparts.{CircuitPart, TErrorCircuitPart, IWireICPart, TConnectableICPart, TPropagatingICPart}
+import mrtjp.projectred.fabrication.circuitparts.{
+  CircuitPart,
+  TErrorCircuitPart,
+  IWireICPart,
+  TConnectableICPart,
+  TPropagatingICPart
+}
 import net.minecraft.nbt.NBTTagCompound
-
 
 trait IRedwireICPart extends IWireICPart with IICRedwireEmitter
 
 trait IICRedwireEmitter {
   def getRedwireSignal(r: Int): Int
 }
-
 
 abstract class WireICPart
     extends CircuitPart

@@ -11,9 +11,13 @@ import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.vec.{Point, Vec2}
 import mrtjp.projectred.fabrication.ICComponentStore._
 import mrtjp.projectred.fabrication._
-import mrtjp.projectred.fabrication.circuitparts.{CircuitPart, GateICPart, ICGateDefinition, ICGateRenderer}
+import mrtjp.projectred.fabrication.circuitparts.{
+  CircuitPart,
+  GateICPart,
+  ICGateDefinition,
+  ICGateRenderer
+}
 import mrtjp.projectred.fabrication.operations.CircuitOp.renderHolo
-
 
 class OpGate(meta: Int) extends CircuitOp {
 
@@ -55,14 +59,24 @@ class OpGate(meta: Int) extends CircuitOp {
   }
 
   @SideOnly(Side.CLIENT)
-  override def renderHover(position: Vec2, scale: Double, prefboardOffset: Vec2): Unit = {
+  override def renderHover(
+      position: Vec2,
+      scale: Double,
+      prefboardOffset: Vec2
+  ): Unit = {
     val t = orthoPartT(position.subtract(prefboardOffset), scale)
     doRender(t, rotation, configuration)
     renderHolo(position.subtract(prefboardOffset), scale, 0x33ffffff)
   }
 
   @SideOnly(Side.CLIENT)
-  def renderDrag(start: Vec2, end: Vec2, positionsWithParts: Seq[Vec2], scale: Double, prefboardOffset: Vec2): Unit = {
+  def renderDrag(
+      start: Vec2,
+      end: Vec2,
+      positionsWithParts: Seq[Vec2],
+      scale: Double,
+      prefboardOffset: Vec2
+  ): Unit = {
     // Gates can't be dragged, so only the first will be rendered
     val t = orthoPartT(start - prefboardOffset, scale)
     doRender(t, rotation, configuration)
@@ -80,14 +94,23 @@ class OpGate(meta: Int) extends CircuitOp {
     doRender(t, rotation, configuration)
   }
 
-  override def renderImageStatic(x: Double, y: Double, width: Double, height: Double): Unit = {
+  override def renderImageStatic(
+      x: Double,
+      y: Double,
+      width: Double,
+      height: Double
+  ): Unit = {
     val t = orthoGridT(width, height) `with` new Translation(x, y, 0)
     doRender(t, 0, 0)
   }
 
   @SideOnly(Side.CLIENT)
   def doRender(t: Transformation, rot: Int, configuration: Int) {
-    ICGateRenderer.renderWithConfiguration(configuration, Rotation.quarterRotations(rot).at(Vector3.center) `with` t, meta)
+    ICGateRenderer.renderWithConfiguration(
+      configuration,
+      Rotation.quarterRotations(rot).at(Vector3.center) `with` t,
+      meta
+    )
   }
 
   @SideOnly(Side.CLIENT)

@@ -12,11 +12,15 @@ import mrtjp.core.gui.SimpleTextboxNode
 import mrtjp.core.vec.{Point, Size}
 import mrtjp.projectred.fabrication.ICComponentStore
 import mrtjp.projectred.fabrication.circuitparts.timing.ITimerGuiLogic
-import mrtjp.projectred.fabrication.circuitparts.{ICGateRenderer, SequentialGateICPart}
+import mrtjp.projectred.fabrication.circuitparts.{
+  ICGateRenderer,
+  SequentialGateICPart
+}
 
 import scala.util.Try
 
-class ConfigurationTimer(gate: SequentialGateICPart) extends ConfigurationRotation(gate) {
+class ConfigurationTimer(gate: SequentialGateICPart)
+    extends ConfigurationRotation(gate) {
   private val timerLogic = gate.getLogicPrimitive.asInstanceOf[ITimerGuiLogic]
 
   val text = new SimpleTextboxNode
@@ -26,7 +30,9 @@ class ConfigurationTimer(gate: SequentialGateICPart) extends ConfigurationRotati
   text.text = "%.2f".format(timerLogic.getTimerMax * 0.05)
   text.textChangedDelegate = () => {
     val time = Try(text.text.replaceAll(",", ".").toDouble)
-    gate.sendClientPacket(_.writeByte(3).writeShort((time.getOrElse(1d) * 20).toInt))
+    gate.sendClientPacket(
+      _.writeByte(3).writeShort((time.getOrElse(1d) * 20).toInt)
+    )
   }
   addChild(text)
 
@@ -36,7 +42,10 @@ class ConfigurationTimer(gate: SequentialGateICPart) extends ConfigurationRotati
     val pos_state = position.add(13, 82)
     GuiDraw.drawString(
       "Interval:",
-      pos_state.x, pos_state.y, Colors.GREY.argb, false
+      pos_state.x,
+      pos_state.y,
+      Colors.GREY.argb,
+      false
     )
   }
 }

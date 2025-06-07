@@ -62,19 +62,31 @@ class CircuitOpErase extends CircuitOp {
   }
 
   @SideOnly(Side.CLIENT)
-  override def renderHover(position: Vec2, scale: Double, prefboardOffset: Vec2): Unit = {
+  override def renderHover(
+      position: Vec2,
+      scale: Double,
+      prefboardOffset: Vec2
+  ): Unit = {
     CircuitOp.renderHolo(position - prefboardOffset, scale, 0x33ff0000)
   }
 
   @SideOnly(Side.CLIENT)
-  override def renderDrag(start: Vec2, end: Vec2, positionsWithParts: Seq[Vec2], scale: Double, prefboardOffset: Vec2): Unit = {
+  override def renderDrag(
+      start: Vec2,
+      end: Vec2,
+      positionsWithParts: Seq[Vec2],
+      scale: Double,
+      prefboardOffset: Vec2
+  ): Unit = {
     var (topLeft, bottomRight) = (
-      Vec2(math.min(start.dx, end.dx), math.min(start.dy, end.dy)).subtract(prefboardOffset),
-      Vec2(math.max(start.dx, end.dx), math.max(start.dy, end.dy)).subtract(prefboardOffset)
+      Vec2(math.min(start.dx, end.dx), math.min(start.dy, end.dy))
+        .subtract(prefboardOffset),
+      Vec2(math.max(start.dx, end.dx), math.max(start.dy, end.dy))
+        .subtract(prefboardOffset)
     )
     bottomRight = bottomRight.add(1, 1)
     CircuitOp.renderHolo(topLeft, bottomRight, scale, 0x44ffffff)
-    for(posWithPart <- positionsWithParts) {
+    for (posWithPart <- positionsWithParts) {
       CircuitOp.renderHolo(posWithPart - prefboardOffset, scale, 0x44ff0000)
     }
   }

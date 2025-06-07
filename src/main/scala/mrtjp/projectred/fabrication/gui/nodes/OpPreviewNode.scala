@@ -9,7 +9,6 @@ import mrtjp.core.gui.TNode
 import mrtjp.core.vec.Point
 import mrtjp.projectred.fabrication.operations.CircuitOp
 
-
 class OpPreviewNode extends TNode {
 
   var currentOp: CircuitOp = null

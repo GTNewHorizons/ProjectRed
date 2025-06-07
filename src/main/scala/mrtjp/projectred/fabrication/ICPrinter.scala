@@ -8,7 +8,11 @@ package mrtjp.projectred.fabrication
 import java.util.{ArrayList => JAList, List => JList}
 import codechicken.lib.data.{MCDataInput, MCDataOutput}
 import codechicken.lib.gui.GuiDraw
-import codechicken.lib.render.uv.{IconTransformation, MultiIconTransformation, UVTransformation}
+import codechicken.lib.render.uv.{
+  IconTransformation,
+  MultiIconTransformation,
+  UVTransformation
+}
 import codechicken.lib.render.{CCModel, CCRenderState, TextureUtils}
 import codechicken.lib.vec._
 import cpw.mods.fml.relauncher.{Side, SideOnly}
@@ -23,7 +27,14 @@ import mrtjp.projectred.ProjectRedCore.log
 import mrtjp.projectred.core.PartDefs
 import mrtjp.projectred.core.libmc.PRResources
 import mrtjp.projectred.fabrication.circuitparts.GateICPart
-import mrtjp.projectred.fabrication.circuitparts.wire.{AlloyWireICPart, BundledCableICPart, ButtonICPart, InsulatedWireICPart, LeverICPart, TorchICPart}
+import mrtjp.projectred.fabrication.circuitparts.wire.{
+  AlloyWireICPart,
+  BundledCableICPart,
+  ButtonICPart,
+  InsulatedWireICPart,
+  LeverICPart,
+  TorchICPart
+}
 import mrtjp.projectred.integration.ComponentStore
 import mrtjp.projectred.transmission.WireDef
 import net.minecraft.client.renderer.RenderBlocks
@@ -32,7 +43,12 @@ import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.init.{Blocks, Items}
 import net.minecraft.item.ItemStack
-import net.minecraft.item.crafting.{CraftingManager, IRecipe, ShapedRecipes, ShapelessRecipes}
+import net.minecraft.item.crafting.{
+  CraftingManager,
+  IRecipe,
+  ShapedRecipes,
+  ShapelessRecipes
+}
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.util.{IIcon, ResourceLocation}

@@ -8,7 +8,6 @@ package mrtjp.projectred.fabrication.circuitparts
 import mrtjp.core.util.Enum
 import mrtjp.projectred.integration.GateDefinition.GateDef
 
-
 object ICGateDefinition extends Enum {
   type EnumVal = ICGateDef
 

@@ -6,12 +6,20 @@
 package mrtjp.projectred.fabrication.circuitparts.latches
 
 import mrtjp.projectred.fabrication.ICComponentStore.generateWireModels
-import mrtjp.projectred.fabrication.circuitparts.{ICGateRenderer, SequentialGateICPart, SequentialICGateLogic, TExtraStateLogic}
-import mrtjp.projectred.fabrication.{BaseComponentModel, LeverModel, RedstoneTorchModel}
-
+import mrtjp.projectred.fabrication.circuitparts.{
+  ICGateRenderer,
+  SequentialGateICPart,
+  SequentialICGateLogic,
+  TExtraStateLogic
+}
+import mrtjp.projectred.fabrication.{
+  BaseComponentModel,
+  LeverModel,
+  RedstoneTorchModel
+}
 
 class ToggleLatch(gate: SequentialGateICPart)
-  extends SequentialICGateLogic(gate)
+    extends SequentialICGateLogic(gate)
     with TExtraStateLogic {
   override def outputMask(shape: Int) = 5
   override def inputMask(shape: Int) = 0xa
@@ -55,7 +63,6 @@ class ToggleLatch(gate: SequentialGateICPart)
     gate.scheduleTick(0)
   }
 }
-
 
 class RenderToggleLatch extends ICGateRenderer[SequentialGateICPart] {
   val wires = generateWireModels("TOGLATCH", 2)

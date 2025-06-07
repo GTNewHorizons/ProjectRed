@@ -11,11 +11,16 @@ import codechicken.lib.vec._
 import mrtjp.core.color.Colors
 import mrtjp.core.vec.{Point, Size, Vec2}
 import mrtjp.projectred.core.libmc.PRResources
-import mrtjp.projectred.fabrication.ICComponentStore.{dynamicIdx, faceModels, finishRender, orthoPartT, prepairRender}
+import mrtjp.projectred.fabrication.ICComponentStore.{
+  dynamicIdx,
+  faceModels,
+  finishRender,
+  orthoPartT,
+  prepairRender
+}
 import mrtjp.projectred.fabrication.gui.PrefboardRenderer
 import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.texture.IIconRegister
-
 
 object RenderCircuit {
   val BASE_SCALE = 16
@@ -25,17 +30,23 @@ object RenderCircuit {
   }
 
   def renderOrtho(
-                   circuit: IntegratedCircuit,
-                   boardSize: Size,
-                   gridScale: Double,
-                   gridTranslation: Vec2
+      circuit: IntegratedCircuit,
+      boardSize: Size,
+      gridScale: Double,
+      gridTranslation: Vec2
   ) {
     PrefboardRenderer.renderOrtho(boardSize, gridScale, gridTranslation)
     renderCircuitOrtho(circuit, gridScale, gridTranslation)
   }
 
-  def renderErrors(circuit: IntegratedCircuit, gridScale: Double, gridTranslation: Vec2): Unit = {
-    if(Minecraft.getMinecraft.theWorld.getTotalWorldTime % 100 > 5 && circuit.errors.nonEmpty) {
+  def renderErrors(
+      circuit: IntegratedCircuit,
+      gridScale: Double,
+      gridTranslation: Vec2
+  ): Unit = {
+    if (
+      Minecraft.getMinecraft.theWorld.getTotalWorldTime % 100 > 5 && circuit.errors.nonEmpty
+    ) {
       prepairRender()
       PRResources.guiPrototyper.bind()
       for ((Point(x, y), (_, c)) <- circuit.errors) {
@@ -53,12 +64,20 @@ object RenderCircuit {
     }
   }
 
-  def renderCircuitOrtho(circuit: IntegratedCircuit, scale: Double, gridTranslation: Vec2): Unit = {
+  def renderCircuitOrtho(
+      circuit: IntegratedCircuit,
+      scale: Double,
+      gridTranslation: Vec2
+  ): Unit = {
     val t = ICComponentStore.orthoGridT(BASE_SCALE, BASE_SCALE)
     for (((x, y), part) <- circuit.parts) {
       val tlist = new TransformationList(
         new Scale(scale, 1, scale),
-        new Translation((x - gridTranslation.dx) * scale, 0, (y - gridTranslation.dy) * scale),
+        new Translation(
+          (x - gridTranslation.dx) * scale,
+          0,
+          (y - gridTranslation.dy) * scale
+        ),
         t
       )
       part.renderDynamic(tlist, true, 1f)

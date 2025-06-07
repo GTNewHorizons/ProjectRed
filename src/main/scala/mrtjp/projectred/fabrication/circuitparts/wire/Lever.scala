@@ -11,11 +11,16 @@ import codechicken.lib.vec.Transformation
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.projectred.fabrication.ICComponentStore._
 import mrtjp.projectred.fabrication._
-import mrtjp.projectred.fabrication.circuitparts.{CircuitPart, CircuitPartDefs, TPoweredCircuitPart, TClientNetCircuitPart, TICAcquisitions}
+import mrtjp.projectred.fabrication.circuitparts.{
+  CircuitPart,
+  CircuitPartDefs,
+  TPoweredCircuitPart,
+  TClientNetCircuitPart,
+  TICAcquisitions
+}
 import mrtjp.projectred.fabrication.operations.CircuitOpDefs
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.util.EnumChatFormatting
-
 
 class LeverICPart
     extends CircuitPart
@@ -101,7 +106,6 @@ class LeverICPart
     RenderICLever.render(t, ortho)
   }
 }
-
 
 object RenderICLever {
   var on = false

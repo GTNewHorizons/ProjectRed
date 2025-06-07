@@ -9,7 +9,11 @@ import codechicken.lib.vec.Translation
 import mrtjp.core.gui.TNode
 import mrtjp.core.vec.Point
 import mrtjp.projectred.fabrication.ICComponentStore
-import mrtjp.projectred.fabrication.circuitparts.{GateICPart, ICGateRenderer, TClientNetCircuitPart}
+import mrtjp.projectred.fabrication.circuitparts.{
+  GateICPart,
+  ICGateRenderer,
+  TClientNetCircuitPart
+}
 
 trait TConfigurable extends TClientNetCircuitPart {
   def createConfigurationNode: ConfigurationNode

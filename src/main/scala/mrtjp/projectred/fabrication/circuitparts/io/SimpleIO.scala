@@ -7,9 +7,8 @@ package mrtjp.projectred.fabrication.circuitparts.io
 
 import mrtjp.projectred.fabrication.ICComponentStore.signalColour
 
-
 class SimpleIOICGateLogic(gate: IOGateICPart)
-  extends IOICGateLogic(gate)
+    extends IOICGateLogic(gate)
     with TRSIOICGateLogic {
   override def getConnMode(gate: IOGateICPart) = TIOCircuitPart.Simple
 

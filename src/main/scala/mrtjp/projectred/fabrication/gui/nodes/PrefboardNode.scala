@@ -10,10 +10,21 @@ import mrtjp.core.gui.{ClipNode, TNode}
 import mrtjp.core.vec.{Point, Rect, Vec2}
 import mrtjp.projectred.fabrication.circuitparts.ICGateDefinition
 import mrtjp.projectred.fabrication.circuitparts.io.IOICGateLogic
-import mrtjp.projectred.fabrication.circuitparts.latches.{SRLatch, TransparentLatch}
-import mrtjp.projectred.fabrication.circuitparts.misc.{Counter, DecRandomizer, Randomizer}
+import mrtjp.projectred.fabrication.circuitparts.latches.{
+  SRLatch,
+  TransparentLatch
+}
+import mrtjp.projectred.fabrication.circuitparts.misc.{
+  Counter,
+  DecRandomizer,
+  Randomizer
+}
 import mrtjp.projectred.fabrication.circuitparts.primitives._
-import mrtjp.projectred.fabrication.circuitparts.timing.{Repeater, Sequencer, StateCell}
+import mrtjp.projectred.fabrication.circuitparts.timing.{
+  Repeater,
+  Sequencer,
+  StateCell
+}
 import mrtjp.projectred.fabrication.gui.{CircuitGui, IGuiCircuitPart}
 import mrtjp.projectred.fabrication.operations._
 import mrtjp.projectred.fabrication.{IntegratedCircuit, RenderCircuit}
@@ -23,11 +34,16 @@ import org.lwjgl.input.{Keyboard, Mouse}
 import scala.collection.JavaConversions._
 import scala.collection.convert.WrapAsJava
 
-class PrefboardNode(circuit: IntegratedCircuit, hasBlueprint: Boolean, previewUpdateDelegate: CircuitOp => Unit, setConfigNode: TNode => Unit) extends TNode {
+class PrefboardNode(
+    circuit: IntegratedCircuit,
+    hasBlueprint: Boolean,
+    previewUpdateDelegate: CircuitOp => Unit,
+    setConfigNode: TNode => Unit
+) extends TNode {
   var currentOp: CircuitOp = null
 
   /** 0 - off 1 - name only 2 - minor details 3 - all details
-   */
+    */
   var detailLevel = 1
   var scale = 1.0
 
@@ -48,10 +64,9 @@ class PrefboardNode(circuit: IntegratedCircuit, hasBlueprint: Boolean, previewUp
   private var rightMouseDown = false
   private var mouseStart = Point(0, 0)
 
-
-  /**
-   * Converts coordinates in the gui to coordinates in the circuit (with rounding)
-   */
+  /** Converts coordinates in the gui to coordinates in the circuit (with
+    * rounding)
+    */
   private def toGridPoint(p: Vec2): Point = {
     val circuitCoord = p / (RenderCircuit.BASE_SCALE * scale) + offset
     Point(
@@ -68,7 +83,6 @@ class PrefboardNode(circuit: IntegratedCircuit, hasBlueprint: Boolean, previewUp
     )
   }
 
-
   private def toCenteredGuiPoint(gridP: Point) = {
     val dp = frame.size.vectorize / 16
     Point(gridP.vectorize * dp + dp / 2)
@@ -80,7 +94,7 @@ class PrefboardNode(circuit: IntegratedCircuit, hasBlueprint: Boolean, previewUp
   }
 
   override def drawBack_Impl(mouse: Point, rframe: Float) {
-    if(hasBlueprint) {
+    if (hasBlueprint) {
       val f = frame
       RenderCircuit.renderOrtho(
         circuit,
@@ -95,7 +109,11 @@ class PrefboardNode(circuit: IntegratedCircuit, hasBlueprint: Boolean, previewUp
           currentOp match {
             case _: OpGate | _: OpWire | _: SimplePlacementOp =>
               if (circuit.getPart(toGridPoint(mouse.vectorize)) == null)
-                currentOp.renderHover(toGridPoint(mouse).vectorize, scale, offset)
+                currentOp.renderHover(
+                  toGridPoint(mouse).vectorize,
+                  scale,
+                  offset
+                )
             case _: CircuitOpErase =>
               currentOp.renderHover(toGridPoint(mouse).vectorize, scale, offset)
           }
@@ -103,7 +121,11 @@ class PrefboardNode(circuit: IntegratedCircuit, hasBlueprint: Boolean, previewUp
           currentOp.renderDrag(
             mouseStart.vectorize,
             toGridPoint(mouse).vectorize,
-            CircuitOp.partsBetweenPoints(mouseStart.vectorize, toGridPoint(mouse).vectorize, circuit),
+            CircuitOp.partsBetweenPoints(
+              mouseStart.vectorize,
+              toGridPoint(mouse).vectorize,
+              circuit
+            ),
             scale,
             offset
           )
@@ -114,7 +136,7 @@ class PrefboardNode(circuit: IntegratedCircuit, hasBlueprint: Boolean, previewUp
   }
 
   override def drawFront_Impl(mouse: Point, rframe: Float) {
-    if(!leftMouseDown && rayTest(mouse)) {
+    if (!leftMouseDown && rayTest(mouse)) {
       val point = toGridPoint(mouse.vectorize)
       val part = circuit.getPart(point)
       if (part != null) {
@@ -142,10 +164,16 @@ class PrefboardNode(circuit: IntegratedCircuit, hasBlueprint: Boolean, previewUp
   }
 
   private var mousePosition = Point(0, 0)
-  override def mouseDragged_Impl(p: Point, button: Int, time: Long, consumed: Boolean): Boolean = {
-    if(!consumed && rayTest(p) && button == 0 && currentOp == null) {
-      if(time > 20) {
-        offset = offset - (p - mousePosition).vectorize / (RenderCircuit.BASE_SCALE * scale)
+  override def mouseDragged_Impl(
+      p: Point,
+      button: Int,
+      time: Long,
+      consumed: Boolean
+  ): Boolean = {
+    if (!consumed && rayTest(p) && button == 0 && currentOp == null) {
+      if (time > 20) {
+        offset =
+          offset - (p - mousePosition).vectorize / (RenderCircuit.BASE_SCALE * scale)
       }
       mousePosition = p
       true
@@ -156,10 +184,10 @@ class PrefboardNode(circuit: IntegratedCircuit, hasBlueprint: Boolean, previewUp
   }
 
   override def mouseClicked_Impl(
-                                  p: Point,
-                                  button: Int,
-                                  consumed: Boolean
-                                ): Boolean = {
+      p: Point,
+      button: Int,
+      consumed: Boolean
+  ): Boolean = {
     if (!consumed && rayTest(p)) button match {
       case 0 =>
         leftMouseDown = true
@@ -280,9 +308,9 @@ class PrefboardNode(circuit: IntegratedCircuit, hasBlueprint: Boolean, previewUp
             op.configuration = TransparentLatch.cycleShape(op.configuration)
           case ICGateDefinition.DecRandomizer.ordinal =>
             op.configuration = DecRandomizer.cycleShape(op.configuration)
-          case ICGateDefinition.IOAnalog.ordinal
-               | ICGateDefinition.IOSimple.ordinal
-               | ICGateDefinition.IOBundled.ordinal =>
+          case ICGateDefinition.IOAnalog.ordinal |
+              ICGateDefinition.IOSimple.ordinal |
+              ICGateDefinition.IOBundled.ordinal =>
             op.configuration = IOICGateLogic.cycleShape(op.configuration)
           case ICGateDefinition.Sequencer.ordinal =>
             op.configuration = Sequencer.cycleShape(op.configuration)
@@ -339,12 +367,13 @@ class PrefboardNode(circuit: IntegratedCircuit, hasBlueprint: Boolean, previewUp
     scale = newScale
   }
 
-  /**
-   * Scales the prefboard to the circuit with some border
-   */
+  /** Scales the prefboard to the circuit with some border
+    */
   def scaleGuiToCircuit() = {
     val circuitBounds = circuit.getPartsBoundingBox()
-    val circuitBoundsWithPadding = circuitBounds.union(Rect(circuitBounds.origin.subtract(1, 1), circuitBounds.size.add(3)))
+    val circuitBoundsWithPadding = circuitBounds.union(
+      Rect(circuitBounds.origin.subtract(1, 1), circuitBounds.size.add(3))
+    )
     // Required scaling to fit whole circuit on the screen
     val requiredScale = math.min(
       (parent.frame.size.width / RenderCircuit.BASE_SCALE.toDouble) / circuitBoundsWithPadding.size.width,

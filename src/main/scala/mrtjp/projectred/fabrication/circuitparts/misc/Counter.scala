@@ -10,10 +10,18 @@ import codechicken.lib.math.MathHelper
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.projectred.core.TFaceOrient.flipMaskZ
 import mrtjp.projectred.fabrication.ICComponentStore.generateWireModels
-import mrtjp.projectred.fabrication.circuitparts.{GateICPart, ICGateRenderer, SequentialGateICPart, SequentialICGateLogic}
-import mrtjp.projectred.fabrication.{BaseComponentModel, PointerModel, RedstoneTorchModel}
+import mrtjp.projectred.fabrication.circuitparts.{
+  GateICPart,
+  ICGateRenderer,
+  SequentialGateICPart,
+  SequentialICGateLogic
+}
+import mrtjp.projectred.fabrication.{
+  BaseComponentModel,
+  PointerModel,
+  RedstoneTorchModel
+}
 import net.minecraft.nbt.NBTTagCompound
-
 
 trait ICounterGuiLogic {
   def getCounterMax: Int
@@ -35,9 +43,8 @@ object Counter {
   }
 }
 
-
 class Counter(gate: SequentialGateICPart)
-  extends SequentialICGateLogic(gate)
+    extends SequentialICGateLogic(gate)
     with ICounterGuiLogic {
   var value = 0
   var max = 10
@@ -168,7 +175,6 @@ class Counter(gate: SequentialGateICPart)
     super.getRolloverData(gate, detailLevel) ++ data.result()
   }
 }
-
 
 class RenderCounter extends ICGateRenderer[SequentialGateICPart] {
   val wires = generateWireModels("COUNT", 2)

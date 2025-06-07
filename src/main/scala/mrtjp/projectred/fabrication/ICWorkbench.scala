@@ -9,7 +9,12 @@ import codechicken.lib.data.{MCDataInput, MCDataOutput}
 import codechicken.lib.packet.PacketCustom
 import codechicken.lib.render.uv.MultiIconTransformation
 import codechicken.lib.vec.{Rotation, Vector3}
-import mrtjp.core.block.{InstancedBlock, InstancedBlockTile, TInstancedBlockRender, TTileOrient}
+import mrtjp.core.block.{
+  InstancedBlock,
+  InstancedBlockTile,
+  TInstancedBlockRender,
+  TTileOrient
+}
 import mrtjp.core.gui.NodeContainer
 import mrtjp.core.render.TCubeMapRender
 import mrtjp.core.world.WorldLib

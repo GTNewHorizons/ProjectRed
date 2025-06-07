@@ -10,7 +10,7 @@ import cpw.mods.fml.relauncher.{Side, SideOnly}
 import net.minecraft.nbt.NBTTagCompound
 
 abstract class ArrayGateICLogicCrossing(gate: ArrayGateICPart)
-  extends ArrayGateICLogic(gate) {
+    extends ArrayGateICLogic(gate) {
   var signal1: Byte = 0
   var signal2: Byte = 0
 

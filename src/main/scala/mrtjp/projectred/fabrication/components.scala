@@ -8,7 +8,12 @@ package mrtjp.projectred.fabrication
 import codechicken.lib.math.MathHelper
 import codechicken.lib.render.CCRenderState.IVertexOperation
 import codechicken.lib.render.uv.{IconTransformation, UVTransformation}
-import codechicken.lib.render.{CCModel, CCRenderState, ColourMultiplier, TextureUtils}
+import codechicken.lib.render.{
+  CCModel,
+  CCRenderState,
+  ColourMultiplier,
+  TextureUtils
+}
 import codechicken.lib.vec._
 import mrtjp.core.color.Colors
 import mrtjp.core.vec.{Size, Vec2}
@@ -138,8 +143,16 @@ object ICComponentStore {
 
   def orthoPartT(position: Vec2, scale: Double): TransformationList = {
     new TransformationList(
-      new Scale(RenderCircuit.BASE_SCALE * scale, 1, -RenderCircuit.BASE_SCALE * scale),
-      new Translation(position.dx * RenderCircuit.BASE_SCALE * scale, 0, -position.dy * RenderCircuit.BASE_SCALE * scale),
+      new Scale(
+        RenderCircuit.BASE_SCALE * scale,
+        1,
+        -RenderCircuit.BASE_SCALE * scale
+      ),
+      new Translation(
+        position.dx * RenderCircuit.BASE_SCALE * scale,
+        0,
+        -position.dy * RenderCircuit.BASE_SCALE * scale
+      ),
       new Rotation(1.571, 1, 0, 0)
     )
   }
@@ -279,7 +292,11 @@ class ArrowModel extends ICComponentModel {
   // 0: in, 1: out, 2: inout
   var arrowDirection: Int = 0
 
-  override def renderModel(t: Transformation, orient: Int, ortho: Boolean): Unit = {
+  override def renderModel(
+      t: Transformation,
+      orient: Int,
+      ortho: Boolean
+  ): Unit = {
     val m = faceModels(dynamicIdx(orient, ortho))
     val t0 = dynamicT(orient) `with` t
     m.render(

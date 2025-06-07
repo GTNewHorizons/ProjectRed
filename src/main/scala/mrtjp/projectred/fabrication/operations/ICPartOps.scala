@@ -8,8 +8,11 @@ package mrtjp.projectred.fabrication.operations
 import codechicken.lib.vec.Transformation
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.projectred.fabrication.circuitparts.CircuitPartDefs
-import mrtjp.projectred.fabrication.circuitparts.wire.{RenderICButton, RenderICLever, RenderICTorch}
-
+import mrtjp.projectred.fabrication.circuitparts.wire.{
+  RenderICButton,
+  RenderICLever,
+  RenderICTorch
+}
 
 class CircuitOpTorch extends SimplePlacementOp {
   override def doPartRender(t: Transformation) = RenderICTorch.render(t, true)
@@ -19,7 +22,6 @@ class CircuitOpTorch extends SimplePlacementOp {
   @SideOnly(Side.CLIENT)
   override def getOpName = "Torch"
 }
-
 
 class CircuitOpButton extends SimplePlacementOp {
   override def doPartRender(t: Transformation) {
@@ -32,7 +34,6 @@ class CircuitOpButton extends SimplePlacementOp {
   @SideOnly(Side.CLIENT)
   override def getOpName = "Button"
 }
-
 
 class CircuitOpLever extends SimplePlacementOp {
   override def doPartRender(t: Transformation) {

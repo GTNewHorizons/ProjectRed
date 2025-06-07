@@ -14,11 +14,19 @@ import mrtjp.core.color.Colors
 import mrtjp.projectred.fabrication.ICComponentStore._
 import mrtjp.projectred.fabrication.circuitparts.IWireICPart._
 import mrtjp.projectred.fabrication._
-import mrtjp.projectred.fabrication.circuitparts.{CircuitPart, CircuitPartDefs, IWireICPart, TICBundledAcquisitions}
+import mrtjp.projectred.fabrication.circuitparts.{
+  CircuitPart,
+  CircuitPartDefs,
+  IWireICPart,
+  TICBundledAcquisitions
+}
 import mrtjp.projectred.fabrication.operations.CircuitOpDefs
-import mrtjp.projectred.transmission.BundledCommons.{packDigital, raiseSignal, unpackDigital}
+import mrtjp.projectred.transmission.BundledCommons.{
+  packDigital,
+  raiseSignal,
+  unpackDigital
+}
 import net.minecraft.nbt.NBTTagCompound
-
 
 trait IBundledCableICPart extends IWireICPart with IICBundledEmitter {
   def getBundledSignal: Array[Byte]
@@ -28,14 +36,12 @@ trait IBundledCableICPart extends IWireICPart with IICBundledEmitter {
   def getBundledColour: Int
 }
 
-
 trait IICBundledEmitter {
   def getBundledSignal(r: Int): Array[Byte]
 }
 
-
 class BundledCableICPart
-  extends WireICPart
+    extends WireICPart
     with TICBundledAcquisitions
     with IBundledCableICPart {
   var signal = new Array[Byte](16)
@@ -67,7 +73,7 @@ class BundledCableICPart
 
   override def read(in: MCDataInput, key: Int) = key match {
     case 10 => signal = unpackDigital(signal, in.readUShort())
-    case _ => super.read(in, key)
+    case _  => super.read(in, key)
   }
 
   override def onSignalUpdate() {
@@ -81,8 +87,8 @@ class BundledCableICPart
     case b: IBundledCableICPart =>
       b.getBundledColour == -1 || colour == -1 || b.getBundledColour == colour
     case ins: IInsulatedRedwireICPart => true
-    case be: IICBundledEmitter => true
-    case _ => false
+    case be: IICBundledEmitter        => true
+    case _                            => false
   }
 
   protected var propagatingMask = 0xffff
@@ -137,7 +143,7 @@ class BundledCableICPart
         if (s > (tmpSignal(i.getInsulatedColour) & 0xff))
           tmpSignal(i.getInsulatedColour) = s.toByte
       case b: IICBundledEmitter => raiseSignal(tmpSignal, b.getBundledSignal(r))
-      case _ =>
+      case _                    =>
     }
     tmpSignal
   }
@@ -185,7 +191,7 @@ class BundledCableICPart
 
   @SideOnly(Side.CLIENT)
   override def getPartName = (if (colour != -1) Colors(colour & 0xff).name + " "
-  else "") + "Bundled cable"
+                              else "") + "Bundled cable"
 
   @SideOnly(Side.CLIENT)
   override def getPickOp = CircuitOpDefs
@@ -205,7 +211,6 @@ class BundledCableICPart
     super.getRolloverData(detailLevel) ++ data.result()
   }
 }
-
 
 object RenderICBundledCable {
   var connMap: Byte = 0

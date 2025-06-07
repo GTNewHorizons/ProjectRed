@@ -24,7 +24,6 @@ import org.lwjgl.opengl.GL11
 
 import java.math.MathContext
 
-
 class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
   var pref: PrefboardNode = null
   var toolSets = Seq[ICToolsetNode]()
@@ -41,19 +40,21 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     addChild(opPreview)
 
     pref = new PrefboardNode(
-      tile.circuit, tile.hasBP,
-      op => {opPreview.updatePreview(op)},
+      tile.circuit,
+      tile.hasBP,
+      op => { opPreview.updatePreview(op) },
       node => {
-        if(configurationNode != null) {
+        if (configurationNode != null) {
           configurationNode.removeFromParent()
           configurationNode = null
         }
         configurationNode = node
-        if(configurationNode != null) {
+        if (configurationNode != null) {
           configurationNode.position = Point(260, 17)
           addChild(configurationNode)
         }
-      })
+      }
+    )
     pref.zPosition = -0.01 // Must be below clip nodes
     pref.opPickDelegate = { op =>
       if (op == null) {
@@ -70,7 +71,7 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
       toolSets.foreach(_.pickOp(op))
     }
     clip.addChild(pref)
-    if(tile.circuit.parts.nonEmpty) {
+    if (tile.circuit.parts.nonEmpty) {
       pref.scaleGuiToCircuit()
     } else {
       pref.offset = Vec2(0, 0)
@@ -94,7 +95,7 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
         toolset.opSelectDelegate = { op =>
           pref.currentOp = op
           pref.updatePreview()
-          if(configurationNode != null) {
+          if (configurationNode != null) {
             configurationNode.removeFromParent()
             configurationNode = null
           }
@@ -151,8 +152,10 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     val textboxICName = new SimpleTextboxNode()
     textboxICName.position = Point(80, 4)
     textboxICName.size = Size(115, 11)
-    textboxICName.text =  tile.circuit.name
-    textboxICName.textChangedDelegate = { () => tile.sendICNameToServer(textboxICName.text) }
+    textboxICName.text = tile.circuit.name
+    textboxICName.textChangedDelegate = { () =>
+      tile.sendICNameToServer(textboxICName.text)
+    }
     addChild(textboxICName)
 
     val dminus = new MCButtonNode
@@ -200,7 +203,11 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     addChild(info)
   }
 
-  override def keyPressed_Impl(c: Char, keycode: Int, consumed: Boolean): Boolean = {
+  override def keyPressed_Impl(
+      c: Char,
+      keycode: Int,
+      consumed: Boolean
+  ): Boolean = {
     import Keyboard._
     if (!consumed) keycode match {
       case KEY_W =>
@@ -211,13 +218,14 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
         true
       case KEY_S =>
         pref.offset += Vec2(0, 2 / pref.scale)
-          true
+        true
       case KEY_D =>
         pref.offset += Vec2(2 / pref.scale, 0)
         true
       case _ =>
         false
-    } else false
+    }
+    else false
   }
 
   override def drawBack_Impl(mouse: Point, frame: Float) {

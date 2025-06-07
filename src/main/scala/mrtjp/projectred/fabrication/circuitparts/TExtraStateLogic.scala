@@ -41,7 +41,7 @@ trait TExtraStateLogic extends SequentialICGateLogic {
 
   abstract override def read(packet: MCDataInput, key: Int) = key match {
     case 11 => lState2 = packet.readByte()
-    case _ => super.read(packet, key)
+    case _  => super.read(packet, key)
   }
 
   def sendState2Update() {

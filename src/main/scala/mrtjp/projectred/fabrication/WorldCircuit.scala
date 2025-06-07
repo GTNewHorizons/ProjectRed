@@ -30,7 +30,6 @@ trait WorldCircuit {
   def markSave()
 }
 
-
 object DummyMCIO extends MCDataOutput {
   override def writeVarInt(i: Int) = this
   override def writeCoord(x: Int, y: Int, z: Int) = this
@@ -126,4 +125,3 @@ trait NetWorldCircuit extends WorldCircuit {
     }
   }
 }
-

@@ -6,12 +6,15 @@
 package mrtjp.projectred.fabrication.circuitparts
 
 import mrtjp.projectred.fabrication.circuitparts.latches.TransparentLatch
-import mrtjp.projectred.fabrication.circuitparts.misc.{DecRandomizer, Randomizer}
+import mrtjp.projectred.fabrication.circuitparts.misc.{
+  DecRandomizer,
+  Randomizer
+}
 import mrtjp.projectred.fabrication.circuitparts.primitives._
 import mrtjp.projectred.fabrication.circuitparts.timing.Repeater
 
 abstract class ComboICGateLogic
-  extends RedstoneICGateLogic[ComboICGatePart]
+    extends RedstoneICGateLogic[ComboICGatePart]
     with TSimpleRSICGateLogic[ComboICGatePart] {
   override def cycleShape(gate: ComboICGatePart) = {
     val oldShape = gate.shape

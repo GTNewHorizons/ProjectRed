@@ -7,7 +7,6 @@ package mrtjp.projectred.fabrication.circuitparts
 
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 
-
 trait TSimpleRSICGateLogic[T <: RedstoneGateICPart]
     extends RedstoneICGateLogic[T] {
   def getDelay(shape: Int) = 0

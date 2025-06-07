@@ -7,11 +7,14 @@ package mrtjp.projectred.fabrication.circuitparts.misc
 
 import mrtjp.projectred.core.TFaceOrient
 import mrtjp.projectred.fabrication.ICComponentStore.generateWireModels
-import mrtjp.projectred.fabrication.circuitparts.{ComboICGateLogic, ComboICGatePart, ICGateRenderer}
+import mrtjp.projectred.fabrication.circuitparts.{
+  ComboICGateLogic,
+  ComboICGatePart,
+  ICGateRenderer
+}
 import mrtjp.projectred.fabrication.{BaseComponentModel, YellowChipModel}
 
 import java.util.Random
-
 
 object Randomizer extends ComboICGateLogic {
   val rand = new Random

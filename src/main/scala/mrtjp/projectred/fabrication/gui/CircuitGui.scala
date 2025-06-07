@@ -20,7 +20,6 @@ trait IGuiCircuitPart extends TClientNetCircuitPart {
   def createGui: CircuitGui
 }
 
-
 class CircuitGui(val part: IGuiCircuitPart) extends Gui with TNode {
   var size = Size.zeroSize
 
@@ -71,10 +70,10 @@ class CircuitGui(val part: IGuiCircuitPart) extends Gui with TNode {
   }
 
   override def mouseClicked_Impl(
-                                  p: Point,
-                                  button: Int,
-                                  consumed: Boolean
-                                ): Boolean = {
+      p: Point,
+      button: Int,
+      consumed: Boolean
+  ): Boolean = {
     if (parent == null)
       false // we cant check for consume here, so manually check if closed
     else

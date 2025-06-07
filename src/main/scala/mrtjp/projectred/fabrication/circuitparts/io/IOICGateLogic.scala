@@ -6,13 +6,17 @@
 package mrtjp.projectred.fabrication.circuitparts.io
 
 import cpw.mods.fml.relauncher.{Side, SideOnly}
-import mrtjp.projectred.fabrication.circuitparts.{ICGateDefinition, RedstoneICGateLogic, TComplexICGateLogic, TICOrient}
-
+import mrtjp.projectred.fabrication.circuitparts.{
+  ICGateDefinition,
+  RedstoneICGateLogic,
+  TComplexICGateLogic,
+  TICOrient
+}
 
 object IOICGateLogic {
   def create(gate: IOGateICPart, subID: Int) = subID match {
-    case ICGateDefinition.IOSimple.ordinal => new SimpleIOICGateLogic(gate)
-    case ICGateDefinition.IOAnalog.ordinal => new AnalogIOICGateLogic(gate)
+    case ICGateDefinition.IOSimple.ordinal  => new SimpleIOICGateLogic(gate)
+    case ICGateDefinition.IOAnalog.ordinal  => new AnalogIOICGateLogic(gate)
     case ICGateDefinition.IOBundled.ordinal => new BundledIOICGateLogic(gate)
     case _ => throw new IllegalArgumentException("Invalid gate subID: " + subID)
   }
@@ -23,7 +27,7 @@ object IOICGateLogic {
 }
 
 abstract class IOICGateLogic(val gate: IOGateICPart)
-  extends RedstoneICGateLogic[IOGateICPart]
+    extends RedstoneICGateLogic[IOGateICPart]
     with TComplexICGateLogic[IOGateICPart] {
 
   import TIOCircuitPart._

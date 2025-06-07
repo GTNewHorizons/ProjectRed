@@ -6,7 +6,10 @@
 package mrtjp.projectred.fabrication.circuitparts.timing
 
 import mrtjp.projectred.fabrication.ICComponentStore.generateWireModels
-import mrtjp.projectred.fabrication.circuitparts.{ComboICGatePart, ICGateRenderer}
+import mrtjp.projectred.fabrication.circuitparts.{
+  ComboICGatePart,
+  ICGateRenderer
+}
 import mrtjp.projectred.fabrication.{BaseComponentModel, RedstoneTorchModel}
 
 class RenderPulse extends ICGateRenderer[ComboICGatePart] {

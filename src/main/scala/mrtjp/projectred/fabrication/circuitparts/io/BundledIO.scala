@@ -7,9 +7,8 @@ package mrtjp.projectred.fabrication.circuitparts.io
 
 import mrtjp.core.color.Colors
 
-
 class BundledIOICGateLogic(gate: IOGateICPart)
-  extends IOICGateLogic(gate)
+    extends IOICGateLogic(gate)
     with TFreqIOICGateLogic {
   override def getConnMode(gate: IOGateICPart) = TIOCircuitPart.Bundled
 

@@ -7,7 +7,12 @@ package mrtjp.projectred.fabrication.circuitparts.latches
 
 import mrtjp.projectred.core.TFaceOrient.{flipMaskZ, shiftMask}
 import mrtjp.projectred.fabrication.ICComponentStore.generateWireModels
-import mrtjp.projectred.fabrication.circuitparts.{ICGateRenderer, SequentialGateICPart, SequentialICGateLogic, TExtraStateLogic}
+import mrtjp.projectred.fabrication.circuitparts.{
+  ICGateRenderer,
+  SequentialGateICPart,
+  SequentialICGateLogic,
+  TExtraStateLogic
+}
 import mrtjp.projectred.fabrication.{BaseComponentModel, RedstoneTorchModel}
 
 object SRLatch {
@@ -17,7 +22,7 @@ object SRLatch {
 }
 
 class SRLatch(gate: SequentialGateICPart)
-  extends SequentialICGateLogic(gate)
+    extends SequentialICGateLogic(gate)
     with TExtraStateLogic {
   override def outputMask(shape: Int) = if ((shape >> 1) == 0) 0xf else 5
   override def inputMask(shape: Int) = 0xa
@@ -47,12 +52,12 @@ class SRLatch(gate: SequentialGateICPart)
       if (
         stateInput != 0xa && newInput != 0 && newInput != stateInput
       ) // state needs changing
-      {
-        gate.setState(newInput)
-        setState2(newInput)
-        gate.onOutputChange(oldOutput) // always going low
-        gate.scheduleTick(0)
-      } else {
+        {
+          gate.setState(newInput)
+          setState2(newInput)
+          gate.onOutputChange(oldOutput) // always going low
+          gate.scheduleTick(0)
+        } else {
         gate.setState(oldOutput << 4 | newInput)
         gate.onInputChange()
       }
@@ -74,27 +79,27 @@ class SRLatch(gate: SequentialGateICPart)
     var stateInput = state2
 
     if ((gate.shape & 1) != 0) // reverse
-    {
-      input = flipMaskZ(input)
-      stateInput = flipMaskZ(stateInput)
-    }
-
-    if (stateInput == 0xa) // disabled
-    {
-      if (input == 0xa) {
-        gate.scheduleTick(0)
-        return 0
+      {
+        input = flipMaskZ(input)
+        stateInput = flipMaskZ(stateInput)
       }
 
-      stateInput =
-        if (input == 0)
-          if (gate.world.network.getWorld.rand.nextBoolean()) 2 else 8
-        else input
+    if (stateInput == 0xa) // disabled
+      {
+        if (input == 0xa) {
+          gate.scheduleTick(0)
+          return 0
+        }
 
-      setState2(
-        if ((gate.shape & 1) != 0) flipMaskZ(stateInput) else stateInput
-      )
-    }
+        stateInput =
+          if (input == 0)
+            if (gate.world.network.getWorld.rand.nextBoolean()) 2 else 8
+          else input
+
+        setState2(
+          if ((gate.shape & 1) != 0) flipMaskZ(stateInput) else stateInput
+        )
+      }
 
     var output = shiftMask(stateInput, 1)
     if ((gate.shape & 2) == 0) output |= stateInput
@@ -102,7 +107,6 @@ class SRLatch(gate: SequentialGateICPart)
     output
   }
 }
-
 
 class RenderSRLatch extends ICGateRenderer[SequentialGateICPart] {
   val wires1 = generateWireModels("RSLATCH", 2)

@@ -10,8 +10,17 @@ import codechicken.lib.gui.GuiDraw
 import codechicken.lib.render.{CCRenderState, TextureUtils}
 import codechicken.lib.vec._
 import mrtjp.core.math.MathLib
-import mrtjp.projectred.fabrication.ItemICBlueprint.{getConnModes, getICName, hasICInside}
-import mrtjp.projectred.fabrication.circuitparts.io.TIOCircuitPart.{Analog, Bundled, NoConn, Simple}
+import mrtjp.projectred.fabrication.ItemICBlueprint.{
+  getConnModes,
+  getICName,
+  hasICInside
+}
+import mrtjp.projectred.fabrication.circuitparts.io.TIOCircuitPart.{
+  Analog,
+  Bundled,
+  NoConn,
+  Simple
+}
 import mrtjp.projectred.integration
 import mrtjp.projectred.integration._
 import mrtjp.projectred.transmission.BundledCommons._
@@ -19,7 +28,6 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
 import org.lwjgl.opengl.GL11
-
 
 class CircuitGatePart
     extends RedstoneGatePart

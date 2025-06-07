@@ -5,14 +5,21 @@
  */
 package mrtjp.projectred.fabrication.circuitparts.cells
 
-import mrtjp.projectred.fabrication.circuitparts.{ArrayGateICLogicCrossing, ArrayGateICPart, ICGateRenderer}
-import mrtjp.projectred.fabrication.{BaseComponentModel, CellStandModel, CellTopWireModel, NullCellBottomWireModel}
-
+import mrtjp.projectred.fabrication.circuitparts.{
+  ArrayGateICLogicCrossing,
+  ArrayGateICPart,
+  ICGateRenderer
+}
+import mrtjp.projectred.fabrication.{
+  BaseComponentModel,
+  CellStandModel,
+  CellTopWireModel,
+  NullCellBottomWireModel
+}
 
 class NullCell(gate: ArrayGateICPart) extends ArrayGateICLogicCrossing(gate) {
   override def powerUp = false
 }
-
 
 class RenderNullCell extends ICGateRenderer[ArrayGateICPart] {
   val top = new CellTopWireModel

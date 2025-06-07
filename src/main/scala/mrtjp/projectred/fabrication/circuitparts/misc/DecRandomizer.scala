@@ -6,11 +6,19 @@
 package mrtjp.projectred.fabrication.circuitparts.misc
 
 import mrtjp.projectred.fabrication.ICComponentStore.generateWireModels
-import mrtjp.projectred.fabrication.circuitparts.{ComboICGateLogic, ComboICGatePart, ICGateRenderer}
-import mrtjp.projectred.fabrication.{BaseComponentModel, RedChipModel, RedstoneTorchModel, YellowChipModel}
+import mrtjp.projectred.fabrication.circuitparts.{
+  ComboICGateLogic,
+  ComboICGatePart,
+  ICGateRenderer
+}
+import mrtjp.projectred.fabrication.{
+  BaseComponentModel,
+  RedChipModel,
+  RedstoneTorchModel,
+  YellowChipModel
+}
 
 import java.util.Random
-
 
 object DecRandomizer extends ComboICGateLogic {
   val rand = new Random
@@ -33,7 +41,6 @@ object DecRandomizer extends ComboICGateLogic {
     if ((gate.state & 4) != 0) gate.scheduleTick(2)
   }
 }
-
 
 class RenderDecRandomizer extends ICGateRenderer[ComboICGatePart] {
   val wires = generateWireModels("DECRAND", 6)

@@ -10,9 +10,13 @@ import codechicken.lib.vec.Transformation
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.projectred.fabrication.ICComponentStore._
 import mrtjp.projectred.fabrication._
-import mrtjp.projectred.fabrication.circuitparts.{CircuitPart, CircuitPartDefs, TPoweredCircuitPart, TICAcquisitions}
+import mrtjp.projectred.fabrication.circuitparts.{
+  CircuitPart,
+  CircuitPartDefs,
+  TPoweredCircuitPart,
+  TICAcquisitions
+}
 import mrtjp.projectred.fabrication.operations.CircuitOpDefs
-
 
 class TorchICPart
     extends CircuitPart
@@ -46,7 +50,6 @@ class TorchICPart
     RenderICTorch.render(t, ortho)
   }
 }
-
 
 object RenderICTorch {
   def render(t: Transformation, ortho: Boolean) {

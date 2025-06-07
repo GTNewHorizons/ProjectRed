@@ -13,7 +13,6 @@ import mrtjp.projectred.fabrication.operations.CircuitOp
 import scala.collection.immutable.ListMap
 import scala.collection.JavaConversions._
 
-
 class ICToolsetNode extends TNode {
   var opSet = Seq.empty[CircuitOp]
   var title = ""
@@ -124,7 +123,7 @@ class ICToolsetNode extends TNode {
     setUnfocused()
     buttonOpMap.find(_._2 == op) match {
       case Some((b, _)) => b.clickDelegate()
-      case _ =>
+      case _            =>
     }
   }
 

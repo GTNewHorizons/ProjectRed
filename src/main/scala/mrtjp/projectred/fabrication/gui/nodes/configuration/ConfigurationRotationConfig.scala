@@ -9,7 +9,8 @@ import mrtjp.core.gui.MCButtonNode
 import mrtjp.core.vec.{Point, Size}
 import mrtjp.projectred.fabrication.circuitparts.GateICPart
 
-class ConfigurationRotationConfig(gate: GateICPart) extends ConfigurationRotation(gate) {
+class ConfigurationRotationConfig(gate: GateICPart)
+    extends ConfigurationRotation(gate) {
 
   val conf = new MCButtonNode
   conf.position = Point(8, 80)

@@ -16,9 +16,8 @@ object CircuitPart {
   def createPart(id: Int) = CircuitPartDefs(id).createPart
 }
 
-/**
- * Base Class for all Gates, that are displayed in the IC Workbench
- */
+/** Base Class for all Gates, that are displayed in the IC Workbench
+  */
 abstract class CircuitPart {
   var world: IntegratedCircuit = null
   var loc: (Int, Int) = null

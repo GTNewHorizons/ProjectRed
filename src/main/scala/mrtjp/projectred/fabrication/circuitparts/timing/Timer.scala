@@ -11,19 +11,26 @@ import codechicken.multipart.handler.MultipartSaveLoad
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.projectred.core.Configurator
 import mrtjp.projectred.fabrication.ICComponentStore.generateWireModels
-import mrtjp.projectred.fabrication.circuitparts.{GateICPart, ICGateRenderer, SequentialGateICPart, SequentialICGateLogic}
-import mrtjp.projectred.fabrication.{BaseComponentModel, PointerModel, RedstoneTorchModel}
+import mrtjp.projectred.fabrication.circuitparts.{
+  GateICPart,
+  ICGateRenderer,
+  SequentialGateICPart,
+  SequentialICGateLogic
+}
+import mrtjp.projectred.fabrication.{
+  BaseComponentModel,
+  PointerModel,
+  RedstoneTorchModel
+}
 import net.minecraft.nbt.NBTTagCompound
-
 
 trait ITimerGuiLogic {
   def getTimerMax: Int
   def setTimerMax(gate: GateICPart, t: Int)
 }
 
-
 class Timer(gate: SequentialGateICPart)
-  extends SequentialICGateLogic(gate)
+    extends SequentialICGateLogic(gate)
     with TTimerGateLogic {
   override def outputMask(shape: Int) = 0xb
   override def inputMask(shape: Int) = 0xe
@@ -58,7 +65,6 @@ class Timer(gate: SequentialGateICPart)
     }
   }
 }
-
 
 trait TTimerGateLogic extends SequentialICGateLogic with ITimerGuiLogic {
   var pointer_max = 38
@@ -104,14 +110,14 @@ trait TTimerGateLogic extends SequentialICGateLogic with ITimerGuiLogic {
   }
 
   def getTotalTime = // client-side safe version of getTotalWorldTime (workaround for no client world)
-  {
-    if (gate.world.network == null)
-      saveTime // ic was loaded directly from stack, possibly for in-hand render
-    else if (gate.world.network.getWorld == null)
-      MultipartSaveLoad.loadingWorld.getTotalWorldTime // ic is being loaded with a workbench tile or gate
-    else
-      gate.world.network.getWorld.getTotalWorldTime // normal access during operation
-  }
+    {
+      if (gate.world.network == null)
+        saveTime // ic was loaded directly from stack, possibly for in-hand render
+      else if (gate.world.network.getWorld == null)
+        MultipartSaveLoad.loadingWorld.getTotalWorldTime // ic is being loaded with a workbench tile or gate
+      else
+        gate.world.network.getWorld.getTotalWorldTime // normal access during operation
+    }
 
   def pointerValue =
     if (pointer_start < 0) 0 else (getTotalTime - pointer_start).toInt
@@ -168,7 +174,6 @@ trait TTimerGateLogic extends SequentialICGateLogic with ITimerGuiLogic {
     super.getRolloverData(gate, detailLevel) ++ data.result()
   }
 }
-
 
 class RenderTimer extends ICGateRenderer[SequentialGateICPart] {
   val wires = generateWireModels("TIME", 3)

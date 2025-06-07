@@ -14,18 +14,24 @@ import mrtjp.projectred.fabrication.circuitparts.misc.ICounterGuiLogic
 
 import scala.util.Try
 
-class ConfigurationCounter(gate: SequentialGateICPart) extends ConfigurationRotationConfig(gate) {
-  private val counterLogic = gate.getLogicPrimitive.asInstanceOf[ICounterGuiLogic]
+class ConfigurationCounter(gate: SequentialGateICPart)
+    extends ConfigurationRotationConfig(gate) {
+  private val counterLogic =
+    gate.getLogicPrimitive.asInstanceOf[ICounterGuiLogic]
 
   val max = new SimpleTextboxNode()
   max.position = Point(30, 118)
   max.size = Size(30, 12)
   max.text = counterLogic.getCounterMax.toString
   max.allowedcharacters = "0123456789"
-  max.textChangedDelegate = { () => {
-    val num = Try(max.text.toInt)
-    gate.sendClientPacket(_.writeByte(4).writeByte(0).writeShort(num.getOrElse(1)))
-  } }
+  max.textChangedDelegate = { () =>
+    {
+      val num = Try(max.text.toInt)
+      gate.sendClientPacket(
+        _.writeByte(4).writeByte(0).writeShort(num.getOrElse(1))
+      )
+    }
+  }
   addChild(max)
 
   val inc = new SimpleTextboxNode()
@@ -33,10 +39,14 @@ class ConfigurationCounter(gate: SequentialGateICPart) extends ConfigurationRota
   inc.size = Size(30, 12)
   inc.text = counterLogic.getCounterIncr.toString
   inc.allowedcharacters = "0123456789"
-  inc.textChangedDelegate = { () => {
-    val num = Try(inc.text.toInt)
-    gate.sendClientPacket(_.writeByte(4).writeByte(1).writeShort(num.getOrElse(1)))
-  } }
+  inc.textChangedDelegate = { () =>
+    {
+      val num = Try(inc.text.toInt)
+      gate.sendClientPacket(
+        _.writeByte(4).writeByte(1).writeShort(num.getOrElse(1))
+      )
+    }
+  }
   addChild(inc)
 
   val dec = new SimpleTextboxNode()
@@ -44,10 +54,14 @@ class ConfigurationCounter(gate: SequentialGateICPart) extends ConfigurationRota
   dec.size = Size(30, 12)
   dec.text = counterLogic.getCounterDecr.toString
   dec.allowedcharacters = "0123456789"
-  dec.textChangedDelegate = { () => {
-    val num = Try(dec.text.toInt)
-    gate.sendClientPacket(_.writeByte(4).writeByte(2).writeShort(num.getOrElse(1)))
-  } }
+  dec.textChangedDelegate = { () =>
+    {
+      val num = Try(dec.text.toInt)
+      gate.sendClientPacket(
+        _.writeByte(4).writeByte(2).writeShort(num.getOrElse(1))
+      )
+    }
+  }
   addChild(dec)
 
   override def drawBack_Impl(mouse: Point, rframe: Float): Unit = {
@@ -56,7 +70,10 @@ class ConfigurationCounter(gate: SequentialGateICPart) extends ConfigurationRota
     val pos_state = position.add(5, 102)
     GuiDraw.drawString(
       "State: " + counterLogic.getCounterValue.toString,
-      pos_state.x, pos_state.y, Colors.GREY.argb, false
+      pos_state.x,
+      pos_state.y,
+      Colors.GREY.argb,
+      false
     )
 
     val pos_max = position.add(5, 120)

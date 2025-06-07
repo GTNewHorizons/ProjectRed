@@ -8,13 +8,23 @@ package mrtjp.projectred.fabrication.circuitparts
 import codechicken.lib.data.MCDataInput
 import mrtjp.projectred.ProjectRedCore.log
 import mrtjp.projectred.fabrication.circuitparts.latches.{SRLatch, ToggleLatch}
-import mrtjp.projectred.fabrication.circuitparts.misc.{ICounterGuiLogic, Synchronizer}
+import mrtjp.projectred.fabrication.circuitparts.misc.{
+  ICounterGuiLogic,
+  Synchronizer
+}
 import mrtjp.projectred.fabrication.circuitparts.timing.ITimerGuiLogic
-import mrtjp.projectred.fabrication.gui.nodes.configuration.{ConfigurationCounter, ConfigurationRotation, ConfigurationRotationConfig, ConfigurationTimer}
+import mrtjp.projectred.fabrication.gui.nodes.configuration.{
+  ConfigurationCounter,
+  ConfigurationRotation,
+  ConfigurationRotationConfig,
+  ConfigurationTimer
+}
 import mrtjp.projectred.fabrication.gui.nodes.{ConfigurationNode, TConfigurable}
 
-
-class SequentialGateICPart extends RedstoneGateICPart with TComplexGateICPart with TConfigurable {
+class SequentialGateICPart
+    extends RedstoneGateICPart
+    with TComplexGateICPart
+    with TConfigurable {
   var logic: SequentialICGateLogic = null
 
   override def assertLogic() {
@@ -59,7 +69,7 @@ class SequentialGateICPart extends RedstoneGateICPart with TComplexGateICPart wi
   override def createConfigurationNode: ConfigurationNode = {
     getLogicPrimitive match {
       case _: ICounterGuiLogic => new ConfigurationCounter(this)
-      case _: ITimerGuiLogic => new ConfigurationTimer(this)
+      case _: ITimerGuiLogic   => new ConfigurationTimer(this)
       case _ =>
         new ConfigurationRotationConfig(this)
     }

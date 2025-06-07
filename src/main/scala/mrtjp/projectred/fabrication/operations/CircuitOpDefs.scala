@@ -8,7 +8,6 @@ package mrtjp.projectred.fabrication.operations
 import mrtjp.core.util.Enum
 import mrtjp.projectred.fabrication.circuitparts.ICGateDefinition
 
-
 object CircuitOpDefs extends Enum {
   type EnumVal = OpDef
 
@@ -109,6 +108,3 @@ object CircuitOpDefs extends Enum {
     def getOp = op
   }
 }
-
-
-

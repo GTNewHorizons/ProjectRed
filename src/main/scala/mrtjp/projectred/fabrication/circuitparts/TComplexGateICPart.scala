@@ -42,7 +42,11 @@ trait TComplexGateICPart extends GateICPart {
     case _ => super.read(packet, key)
   }
 
-  abstract override def preparePlacement(rotation: Int, configuration: Int, meta: Int) {
+  abstract override def preparePlacement(
+      rotation: Int,
+      configuration: Int,
+      meta: Int
+  ) {
     super.preparePlacement(rotation, configuration, meta)
     assertLogic()
   }

@@ -16,7 +16,6 @@ import mrtjp.projectred.fabrication.circuitparts.wire._
 import mrtjp.projectred.fabrication.circuitparts.{CircuitPart, CircuitPartDefs}
 import mrtjp.projectred.fabrication.operations.CircuitOp.renderHolo
 
-
 abstract class OpWire extends CircuitOp {
   override def checkOp(circuit: IntegratedCircuit, start: Point, end: Point) =
     circuit.getPart(start.x, start.y) == null
@@ -40,16 +39,16 @@ abstract class OpWire extends CircuitOp {
     val end = Point(in.readInt(), in.readInt())
     val corner = start + Point((end - start).vectorize.axialProject)
 
-    for(x <- math.min(start.x, corner.x) to math.max(start.x, corner.x)) {
-      for(y <- math.min(start.y, corner.y) to math.max(start.y, corner.y)) {
-        if(circuit.getPart(x, y) == null) {
+    for (x <- math.min(start.x, corner.x) to math.max(start.x, corner.x)) {
+      for (y <- math.min(start.y, corner.y) to math.max(start.y, corner.y)) {
+        if (circuit.getPart(x, y) == null) {
           circuit.setPart(x, y, createPart)
         }
       }
     }
-    for(x <- math.min(corner.x, end.x) to math.max(corner.x, end.x)) {
-      for(y <- math.min(corner.y, end.y) to math.max(corner.y, end.y)) {
-        if(circuit.getPart(x, y) == null) {
+    for (x <- math.min(corner.x, end.x) to math.max(corner.x, end.x)) {
+      for (y <- math.min(corner.y, end.y) to math.max(corner.y, end.y)) {
+        if (circuit.getPart(x, y) == null) {
           circuit.setPart(x, y, createPart)
         }
       }
@@ -59,32 +58,72 @@ abstract class OpWire extends CircuitOp {
   def createPart: CircuitPart
 
   @SideOnly(Side.CLIENT)
-  override def renderHover(position: Vec2, scale: Double, prefboardOffset: Vec2): Unit = {
+  override def renderHover(
+      position: Vec2,
+      scale: Double,
+      prefboardOffset: Vec2
+  ): Unit = {
     val t = orthoPartT(position.subtract(prefboardOffset), scale)
     doRender(t, 0)
     renderHolo(position.subtract(prefboardOffset), scale, 0x33ffffff)
   }
 
   @SideOnly(Side.CLIENT)
-  override def renderDrag(start: Vec2, end: Vec2, positionsWithParts: Seq[Vec2], scale: Double, prefboardOffset: Vec2): Unit = {
+  override def renderDrag(
+      start: Vec2,
+      end: Vec2,
+      positionsWithParts: Seq[Vec2],
+      scale: Double,
+      prefboardOffset: Vec2
+  ): Unit = {
     val corner = start + (end - start).axialProject
 
-    for(x <- math.min(start.dx.toInt, corner.dx.toInt) to math.max(start.dx.toInt, corner.dx.toInt)) {
-      for(y <- math.min(start.dy.toInt, corner.dy.toInt) to math.max(start.dy.toInt, corner.dy.toInt)) {
-        if(!positionsWithParts.contains(Point(x, y))) {
+    for (
+      x <- math.min(start.dx.toInt, corner.dx.toInt) to math.max(
+        start.dx.toInt,
+        corner.dx.toInt
+      )
+    ) {
+      for (
+        y <- math.min(start.dy.toInt, corner.dy.toInt) to math.max(
+          start.dy.toInt,
+          corner.dy.toInt
+        )
+      ) {
+        if (!positionsWithParts.contains(Point(x, y))) {
           val t = orthoPartT(Vec2(x, y) - prefboardOffset, scale)
           doRender(t, 0)
         }
-        renderHolo(Vec2(x, y) - prefboardOffset, corner.subtract(prefboardOffset), scale, 0x44ffffff)
+        renderHolo(
+          Vec2(x, y) - prefboardOffset,
+          corner.subtract(prefboardOffset),
+          scale,
+          0x44ffffff
+        )
       }
     }
-    for(x <- math.min(corner.dx.toInt, end.dx.toInt) to math.max(corner.dx.toInt, end.dx.toInt)) {
-      for(y <- math.min(corner.dy.toInt, end.dy.toInt) to math.max(corner.dy.toInt, end.dy.toInt)) {
-        if(!positionsWithParts.contains(Point(x, y))) {
+    for (
+      x <- math.min(corner.dx.toInt, end.dx.toInt) to math.max(
+        corner.dx.toInt,
+        end.dx.toInt
+      )
+    ) {
+      for (
+        y <- math.min(corner.dy.toInt, end.dy.toInt) to math.max(
+          corner.dy.toInt,
+          end.dy.toInt
+        )
+      ) {
+        if (!positionsWithParts.contains(Point(x, y))) {
           val t = orthoPartT(Vec2(x, y) - prefboardOffset, scale)
           doRender(t, 0)
         }
-        renderHolo(Vec2(x, y) - prefboardOffset, corner.subtract(prefboardOffset), scale, 0x44ffffff)
+        renderHolo(
+          Vec2(x, y) - prefboardOffset,
+          corner.subtract(prefboardOffset),
+          scale,
+          0x44ffffff
+        )
       }
     }
 

@@ -7,9 +7,12 @@ package mrtjp.projectred.fabrication.circuitparts.timing
 
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.projectred.fabrication.ICComponentStore.generateWireModels
-import mrtjp.projectred.fabrication.circuitparts.{ComboICGateLogic, ComboICGatePart, ICGateRenderer}
+import mrtjp.projectred.fabrication.circuitparts.{
+  ComboICGateLogic,
+  ComboICGatePart,
+  ICGateRenderer
+}
 import mrtjp.projectred.fabrication.{BaseComponentModel, RedstoneTorchModel}
-
 
 object Repeater extends ComboICGateLogic {
   val delays = Array(2, 4, 6, 8, 16, 32, 64, 128, 256)

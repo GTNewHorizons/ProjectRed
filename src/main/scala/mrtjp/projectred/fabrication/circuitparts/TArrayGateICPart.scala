@@ -11,7 +11,7 @@ import mrtjp.projectred.fabrication.circuitparts.wire.IRedwireICPart
 import mrtjp.projectred.transmission.IWirePart
 
 trait TArrayGateICPart
-  extends RedstoneGateICPart
+    extends RedstoneGateICPart
     with IRedwireICPart
     with TRSPropagatingICPart {
   def getLogicArray = getLogic[TArrayICGateLogic[TArrayGateICPart]]
@@ -48,8 +48,8 @@ trait TArrayGateICPart
     val there = Point(part.x, part.y)
     there - here match {
       case Point(0, -1) => 1 << 0
-      case Point(1, 0) => 1 << 1
-      case Point(0, 1) => 1 << 2
+      case Point(1, 0)  => 1 << 1
+      case Point(0, 1)  => 1 << 2
       case Point(-1, 0) => 1 << 3
       case _ =>
         throw new RuntimeException(

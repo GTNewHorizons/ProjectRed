@@ -5,9 +5,7 @@
  */
 package mrtjp.projectred.fabrication.circuitparts.io
 
-import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.projectred.fabrication.ICComponentStore.signalColour
-import mrtjp.projectred.fabrication.gui.{CircuitGui, ICIOGateGui}
 
 
 class SimpleIOICGateLogic(gate: IOGateICPart)
@@ -32,9 +30,6 @@ class SimpleIOICGateLogic(gate: IOGateICPart)
       if ((gate.world.iostate(gate.rotation) & 0x8000) != 0) 1 else 0x8000
     )
   }
-
-  @SideOnly(Side.CLIENT)
-  override def createGui(gate: IOGateICPart): CircuitGui = new ICIOGateGui(gate)
 }
 
 class RenderSimpleIO extends RenderIO {

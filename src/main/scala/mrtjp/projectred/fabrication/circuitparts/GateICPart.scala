@@ -8,7 +8,6 @@ package mrtjp.projectred.fabrication.circuitparts
 import codechicken.lib.data.{MCDataInput, MCDataOutput}
 import codechicken.lib.vec.Transformation
 import cpw.mods.fml.relauncher.{Side, SideOnly}
-import mrtjp.projectred.fabrication.gui.IGuiCircuitPart
 import mrtjp.projectred.fabrication.operations.CircuitOpDefs
 import net.minecraft.nbt.NBTTagCompound
 
@@ -16,7 +15,7 @@ abstract class GateICPart
   extends CircuitPart
     with TConnectableICPart
     with TICOrient
-    with IGuiCircuitPart {
+    with TClientNetCircuitPart {
   private var gateSubID: Byte = 0
   private var gateShape: Byte = 0
 
@@ -201,9 +200,6 @@ abstract class GateICPart
     s ++= getLogicPrimitive.getRolloverData(this, detailLevel)
     super.getRolloverData(detailLevel) ++ s.result().map(GRAY + _)
   }
-
-  @SideOnly(Side.CLIENT)
-  override def createGui = getLogicPrimitive.createGui(this)
 
   @SideOnly(Side.CLIENT)
   override def onClicked() {

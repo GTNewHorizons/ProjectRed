@@ -11,7 +11,6 @@ import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.projectred.core.Configurator
 import mrtjp.projectred.core.TFaceOrient.flipMaskZ
 import mrtjp.projectred.fabrication.circuitparts.{GateICPart, ICGateRenderer, SequentialGateICPart, SequentialICGateLogic}
-import mrtjp.projectred.fabrication.gui.{CircuitGui, ICTimerGateGui}
 import mrtjp.projectred.fabrication.{BaseComponentModel, PointerModel, RedstoneTorchModel}
 import net.minecraft.nbt.NBTTagCompound
 
@@ -83,10 +82,6 @@ class Sequencer(gate: SequentialGateICPart)
     gate.setShape(Sequencer.cycleShape(gate.shape))
     true
   }
-
-  @SideOnly(Side.CLIENT)
-  override def createGui(gate: SequentialGateICPart): CircuitGui =
-    new ICTimerGateGui(gate)
 
   @SideOnly(Side.CLIENT)
   override def getRolloverData(gate: SequentialGateICPart, detailLevel: Int) = {

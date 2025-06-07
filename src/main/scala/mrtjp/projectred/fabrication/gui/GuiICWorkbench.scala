@@ -28,6 +28,7 @@ import java.math.MathContext
 class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
   var pref: PrefboardNode = null
   var toolSets = Seq[ICToolsetNode]()
+  var configurationNode: TNode = null
 
   override def onAddedToParent_Impl() {
     val clip = new ClipNode
@@ -39,7 +40,20 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     opPreview.position = Point(269, 18)
     addChild(opPreview)
 
-    pref = new PrefboardNode(tile.circuit, tile.hasBP, op => {opPreview.updatePreview(op)})
+    pref = new PrefboardNode(
+      tile.circuit, tile.hasBP,
+      op => {opPreview.updatePreview(op)},
+      node => {
+        if(configurationNode != null) {
+          configurationNode.removeFromParent()
+          configurationNode = null
+        }
+        configurationNode = node
+        if(configurationNode != null) {
+          configurationNode.position = Point(260, 17)
+          addChild(configurationNode)
+        }
+      })
     pref.zPosition = -0.01 // Must be below clip nodes
     pref.opPickDelegate = { op =>
       if (op == null) {
@@ -80,6 +94,10 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
         toolset.opSelectDelegate = { op =>
           pref.currentOp = op
           pref.updatePreview()
+          if(configurationNode != null) {
+            configurationNode.removeFromParent()
+            configurationNode = null
+          }
         }
         toolbar.addChild(toolset)
         toolSets :+= toolset
@@ -130,43 +148,43 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     toolbar.position =
       Point(size.width / 2 - toolbar.calculateAccumulatedFrame.width / 2, 235)
 
-    val textbox = new SimpleTextboxNode()
-    textbox.position = Point(80, 4)
-    textbox.size = Size(150, 12)
-    textbox.text =  tile.circuit.name
-    textbox.textChangedDelegate = { () => tile.sendICNameToServer(textbox.text) }
-    addChild(textbox)
+    val textboxICName = new SimpleTextboxNode()
+    textboxICName.position = Point(80, 4)
+    textboxICName.size = Size(115, 11)
+    textboxICName.text =  tile.circuit.name
+    textboxICName.textChangedDelegate = { () => tile.sendICNameToServer(textboxICName.text) }
+    addChild(textboxICName)
 
     val dminus = new MCButtonNode
-    dminus.position = Point(269, 175)
+    dminus.position = Point(269, 200)
     dminus.size = Size(10, 10)
     dminus.text = "-"
     dminus.clickDelegate = { () => pref.decDetail() }
     addChild(dminus)
 
     val dplus = new MCButtonNode
-    dplus.position = Point(309, 175)
+    dplus.position = Point(309, 200)
     dplus.size = Size(10, 10)
     dplus.text = "+"
     dplus.clickDelegate = { () => pref.incDetail() }
     addChild(dplus)
 
     val sminus = new MCButtonNode
-    sminus.position = Point(269, 207)
+    sminus.position = Point(268, 4)
     sminus.size = Size(10, 10)
     sminus.text = "-"
     sminus.clickDelegate = { () => pref.decScale() }
     addChild(sminus)
 
     val splus = new MCButtonNode
-    splus.position = Point(309, 207)
+    splus.position = Point(308, 4)
     splus.size = Size(10, 10)
     splus.text = "+"
     splus.clickDelegate = { () => pref.incScale() }
     addChild(splus)
 
     val resetView = new MCButtonNode
-    resetView.position = Point(265, 133)
+    resetView.position = Point(200, 3)
     resetView.size = Size(60, 12)
     resetView.text = "Reset View"
     resetView.clickDelegate = { () =>
@@ -209,22 +227,21 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
 
     GuiDraw.drawString("IC Workbench", 8, 6, Colors.GREY.argb, false)
 
-    GuiDraw.drawStringC("detail", 273, 162, 42, 14, Colors.GREY.argb, false)
+    GuiDraw.drawStringC("detail", 273, 190, 42, 14, Colors.GREY.argb, false)
     GuiDraw.drawStringC(
       pref.detailLevel + "",
       279,
-      175,
+      200,
       30,
       10,
       Colors.GREY.argb,
       false
     )
 
-    GuiDraw.drawStringC("scale", 273, 193, 42, 14, Colors.GREY.argb, false)
     GuiDraw.drawStringC(
       BigDecimal(pref.scale, new MathContext(2)) + "",
-      279,
-      207,
+      278,
+      4,
       30,
       10,
       Colors.GREY.argb,

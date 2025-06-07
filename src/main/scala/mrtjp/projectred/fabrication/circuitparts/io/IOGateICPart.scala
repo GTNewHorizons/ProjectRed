@@ -7,11 +7,14 @@ package mrtjp.projectred.fabrication.circuitparts.io
 
 import codechicken.lib.data.MCDataInput
 import mrtjp.projectred.fabrication.circuitparts.{CircuitPartDefs, RedstoneGateICPart, TComplexGateICPart}
+import mrtjp.projectred.fabrication.gui.nodes.configuration.{ConfigurationAnalogIO, ConfigurationBundledIO, ConfigurationSimpleIO}
+import mrtjp.projectred.fabrication.gui.nodes.{ConfigurationNode, TConfigurable}
 
 class IOGateICPart
   extends RedstoneGateICPart
     with TIOCircuitPart
-    with TComplexGateICPart {
+    with TComplexGateICPart
+    with TConfigurable {
   private var logic: IOICGateLogic = null
 
   override def getLogic[T] = logic.asInstanceOf[T]
@@ -25,15 +28,17 @@ class IOGateICPart
   override def readClientPacket(in: MCDataInput, key: Int) = key match {
     case 5 =>
       getLogicIO match {
-        case f: TFreqIOICGateLogic => f.freqUp()
-        case _ =>
-      }
-    case 6 =>
-      getLogicIO match {
-        case f: TFreqIOICGateLogic => f.freqDown()
+        case f: TFreqIOICGateLogic =>
+          f.freq = in.readByte()
+          f.sendFreqUpdate()
+          f.gate.onChange()
         case _ =>
       }
     case _ => super.readClientPacket(in, key)
+  }
+
+  def sendFrequency(color: Int): Unit = {
+    sendClientPacket(_.writeByte(5).writeByte(color))
   }
 
   override def getPartType = CircuitPartDefs.IOGate
@@ -64,6 +69,17 @@ class IOGateICPart
       getLogicIO.setWorldOutput((state & 0x10) != 0)
       val newOutput = world.iostate(rotation) >>> 16
       if (oldOutput != newOutput) world.onOutputChanged(1 << rotation)
+    }
+  }
+
+  override def createConfigurationNode: ConfigurationNode = {
+    getLogicIO match {
+      case _: BundledIOICGateLogic =>
+        new ConfigurationBundledIO(this)
+      case _: SimpleIOICGateLogic =>
+        new ConfigurationSimpleIO(this)
+      case _: AnalogIOICGateLogic =>
+        new ConfigurationAnalogIO(this)
     }
   }
 }

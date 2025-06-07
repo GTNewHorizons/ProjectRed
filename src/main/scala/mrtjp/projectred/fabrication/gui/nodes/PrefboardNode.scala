@@ -23,7 +23,7 @@ import org.lwjgl.input.{Keyboard, Mouse}
 import scala.collection.JavaConversions._
 import scala.collection.convert.WrapAsJava
 
-class PrefboardNode(circuit: IntegratedCircuit, hasBlueprint: Boolean, previewUpdateDelegate: (CircuitOp) => Unit) extends TNode {
+class PrefboardNode(circuit: IntegratedCircuit, hasBlueprint: Boolean, previewUpdateDelegate: CircuitOp => Unit, setConfigNode: TNode => Unit) extends TNode {
   var currentOp: CircuitOp = null
 
   /** 0 - off 1 - name only 2 - minor details 3 - all details
@@ -143,8 +143,8 @@ class PrefboardNode(circuit: IntegratedCircuit, hasBlueprint: Boolean, previewUp
 
   private var mousePosition = Point(0, 0)
   override def mouseDragged_Impl(p: Point, button: Int, time: Long, consumed: Boolean): Boolean = {
-    if(!consumed && rayTest(p) && currentOp == null) {
-      if(time > 10) {
+    if(!consumed && rayTest(p) && button == 0 && currentOp == null) {
+      if(time > 20) {
         offset = offset - (p - mousePosition).vectorize / (RenderCircuit.BASE_SCALE * scale)
       }
       mousePosition = p
@@ -169,16 +169,8 @@ class PrefboardNode(circuit: IntegratedCircuit, hasBlueprint: Boolean, previewUp
         rightMouseDown = true
         val gridP = toGridPoint(p.vectorize)
         circuit.getPart(gridP) match {
-          case gp: IGuiCircuitPart =>
-            val currentlyOpen = children.collect { case cg: CircuitGui => cg }
-            if (!currentlyOpen.exists(_.part == gp)) {
-              val gui = gp.createGui
-              gui.position =
-                convertPointFrom(Point(4, 4) * (currentlyOpen.size + 1), parent)
-              gui.linePointerCalc = () => toCenteredGuiPoint(gridP)
-              addChild(gui)
-              gui.pushZTo(currentlyOpen.size * 0.1)
-            }
+          case gp: TConfigurable =>
+            setConfigNode(gp.createConfigurationNode)
           case _ =>
         }
         return true
@@ -316,7 +308,10 @@ class PrefboardNode(circuit: IntegratedCircuit, hasBlueprint: Boolean, previewUp
     val pos = parent.convertPointFromScreen(absPos)
     if (rayTest(pos)) {
       val part = circuit.getPart(toGridPoint(pos.vectorize))
-      opPickDelegate(if (part != null) part.getPickOp else null)
+      opPickDelegate(if (part != null) {
+        setConfigNode(null)
+        part.getPickOp
+      } else null)
       updatePreview()
     }
   }

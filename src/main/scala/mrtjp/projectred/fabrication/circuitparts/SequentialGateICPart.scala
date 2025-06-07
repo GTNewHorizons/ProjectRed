@@ -7,11 +7,14 @@ package mrtjp.projectred.fabrication.circuitparts
 
 import codechicken.lib.data.MCDataInput
 import mrtjp.projectred.ProjectRedCore.log
-import mrtjp.projectred.fabrication.circuitparts.misc.ICounterGuiLogic
+import mrtjp.projectred.fabrication.circuitparts.latches.{SRLatch, ToggleLatch}
+import mrtjp.projectred.fabrication.circuitparts.misc.{ICounterGuiLogic, Synchronizer}
 import mrtjp.projectred.fabrication.circuitparts.timing.ITimerGuiLogic
+import mrtjp.projectred.fabrication.gui.nodes.configuration.{ConfigurationCounter, ConfigurationRotation, ConfigurationRotationConfig, ConfigurationTimer}
+import mrtjp.projectred.fabrication.gui.nodes.{ConfigurationNode, TConfigurable}
 
 
-class SequentialGateICPart extends RedstoneGateICPart with TComplexGateICPart {
+class SequentialGateICPart extends RedstoneGateICPart with TComplexGateICPart with TConfigurable {
   var logic: SequentialICGateLogic = null
 
   override def assertLogic() {
@@ -26,7 +29,7 @@ class SequentialGateICPart extends RedstoneGateICPart with TComplexGateICPart {
     case 3 =>
       getLogicPrimitive match {
         case t: ITimerGuiLogic =>
-          t.setTimerMax(this, t.getTimerMax + in.readShort())
+          t.setTimerMax(this, in.readShort())
         case _ =>
           log.error(
             "Server IC stream received client packet for incorrect gate type"
@@ -51,5 +54,14 @@ class SequentialGateICPart extends RedstoneGateICPart with TComplexGateICPart {
           )
       }
     case _ => super.readClientPacket(in, key)
+  }
+
+  override def createConfigurationNode: ConfigurationNode = {
+    getLogicPrimitive match {
+      case _: ICounterGuiLogic => new ConfigurationCounter(this)
+      case _: ITimerGuiLogic => new ConfigurationTimer(this)
+      case _ =>
+        new ConfigurationRotationConfig(this)
+    }
   }
 }

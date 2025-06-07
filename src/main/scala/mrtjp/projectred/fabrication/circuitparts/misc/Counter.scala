@@ -11,7 +11,6 @@ import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.projectred.core.TFaceOrient.flipMaskZ
 import mrtjp.projectred.fabrication.ICComponentStore.generateWireModels
 import mrtjp.projectred.fabrication.circuitparts.{GateICPart, ICGateRenderer, SequentialGateICPart, SequentialICGateLogic}
-import mrtjp.projectred.fabrication.gui.{CircuitGui, ICCounterGateGui}
 import mrtjp.projectred.fabrication.{BaseComponentModel, PointerModel, RedstoneTorchModel}
 import net.minecraft.nbt.NBTTagCompound
 
@@ -154,10 +153,6 @@ class Counter(gate: SequentialGateICPart)
     if (newOutput != oldOutput) gate.setState(gate.state & 0xf | newOutput << 4)
     if (newOutput != oldOutput) gate.onOutputChange(5)
   }
-
-  @SideOnly(Side.CLIENT)
-  override def createGui(gate: SequentialGateICPart): CircuitGui =
-    new ICCounterGateGui(gate)
 
   @SideOnly(Side.CLIENT)
   override def getRolloverData(gate: SequentialGateICPart, detailLevel: Int) = {

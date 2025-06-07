@@ -6,8 +6,6 @@
 package mrtjp.projectred.fabrication.circuitparts.io
 
 import codechicken.lib.data.{MCDataInput, MCDataOutput}
-import cpw.mods.fml.relauncher.{Side, SideOnly}
-import mrtjp.projectred.fabrication.gui.{CircuitGui, ICIOFreqGateGui}
 import net.minecraft.nbt.NBTTagCompound
 
 trait TFreqIOICGateLogic extends IOICGateLogic {
@@ -74,9 +72,4 @@ trait TFreqIOICGateLogic extends IOICGateLogic {
         0) << freq
     gate.world.setOutput(gate.rotation, s)
   }
-
-  @SideOnly(Side.CLIENT)
-  override def createGui(gate: IOGateICPart): CircuitGui = new ICIOFreqGateGui(
-    gate
-  )
 }

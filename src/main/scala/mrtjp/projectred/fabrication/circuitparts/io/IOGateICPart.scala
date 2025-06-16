@@ -42,6 +42,14 @@ class IOGateICPart
           f.gate.onChange()
         case _ =>
       }
+    case 6 =>
+      getLogicIO match {
+        case f: IOICGateLogic =>
+          f.gate.setShape(in.readByte())
+          this.sendShapeUpdate()
+          f.gate.onChange()
+        case _ =>
+      }
     case _ => super.readClientPacket(in, key)
   }
 

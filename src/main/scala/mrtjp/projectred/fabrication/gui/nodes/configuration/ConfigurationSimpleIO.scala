@@ -25,7 +25,7 @@ class ConfigurationSimpleIO(gate: IOGateICPart)
   in.position = Point(5, 80)
   in.size = Size(20, 15)
   in.clickDelegate = { () =>
-    gate.sendClientPacket(_.writeByte(1))
+    gate.sendClientPacket(_.writeByte(6).writeByte(0))
   }
   addChild(in)
 
@@ -35,7 +35,9 @@ class ConfigurationSimpleIO(gate: IOGateICPart)
   }
   out.position = Point(25, 80)
   out.size = Size(20, 15)
-  out.clickDelegate = { () => gate.sendClientPacket(_.writeByte(1)) }
+  out.clickDelegate = { () =>
+    gate.sendClientPacket(_.writeByte(6).writeByte(1))
+  }
   addChild(out)
 
   val inout = new IconButtonNode {
@@ -44,7 +46,9 @@ class ConfigurationSimpleIO(gate: IOGateICPart)
   }
   inout.position = Point(45, 80)
   inout.size = Size(20, 15)
-  inout.clickDelegate = { () => gate.sendClientPacket(_.writeByte(1)) }
+  inout.clickDelegate = { () =>
+    gate.sendClientPacket(_.writeByte(6).writeByte(2))
+  }
   addChild(inout)
 
   private def renderIcon(icon: Int, position: Point): Unit = {

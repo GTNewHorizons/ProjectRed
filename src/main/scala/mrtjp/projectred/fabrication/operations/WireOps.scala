@@ -30,6 +30,7 @@ abstract class OpWire extends CircuitOp {
       end: Point,
       out: MCDataOutput
   ) {
+    super.writeOp(circuit, start, end, out)
     out.writeInt(start.x).writeInt(start.y)
     out.writeInt(end.x).writeInt(end.y)
   }

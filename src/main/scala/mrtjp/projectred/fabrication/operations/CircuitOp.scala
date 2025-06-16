@@ -9,6 +9,7 @@ import codechicken.lib.data.{MCDataInput, MCDataOutput}
 import codechicken.lib.gui.GuiDraw
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.vec.{Point, Size, Vec2}
+import mrtjp.projectred.fabrication.circuitparts.CircuitPart
 import mrtjp.projectred.fabrication.{IntegratedCircuit, RenderCircuit}
 
 trait CircuitOp {
@@ -20,14 +21,18 @@ trait CircuitOp {
 
   def getConfiguration(): Int
 
+  /** Writes this Circuit operation to the stream. Also writes id
+    */
   def writeOp(
       circuit: IntegratedCircuit,
       start: Point,
       end: Point,
       out: MCDataOutput
-  )
+  ): Unit = {
+    out.writeByte(id)
+  }
 
-  def readOp(circuit: IntegratedCircuit, in: MCDataInput)
+  protected def readOp(circuit: IntegratedCircuit, in: MCDataInput): Unit
 
   @SideOnly(Side.CLIENT)
   def getOpName: String
@@ -81,11 +86,28 @@ trait CircuitOp {
 }
 
 object CircuitOp {
-  def getOperation(id: Int) = CircuitOpDefs(id).getOp
 
-  /** Draw one Tile
+  type List = Seq[(Point, CircuitOp)]
+
+  /** Read operation from stream and create Circuit Part in circuit
+    * @param circuit
+    *   The circuit in which the part is being created
+    * @param in
+    *   Stream
+    */
+  def readOp(circuit: IntegratedCircuit, in: MCDataInput): Unit = {
+    getOperation(in.readUByte()).readOp(circuit, in)
+  }
+
+  /** IDs as in CircuitOpDefs -> CircuitOp
+    */
+  private def getOperation(id: Int): CircuitOp = CircuitOpDefs(id).getOp
+
+  /** Draw a rectangle in the size of one tile
     * @param position
     *   In Grid Coordinates
+    * @param colour
+    *   in ARGB
     */
   def renderHolo(position: Vec2, scale: Double, colour: Int): Unit = {
     val start = position * RenderCircuit.BASE_SCALE * scale
@@ -102,15 +124,21 @@ object CircuitOp {
     )
   }
 
-  /** Draw Multiple tiles in a rect excluding end
-    * @param start
+  /** Same as other renderHolo, only for drawing a rectangle over multiple cells
+    * of the grid
+    * @param topLeft
     *   In Grid Coordinates
-    * @param end
-    *   In Grid coordinates
+    * @param bottomRight
+    *   In Grid coordinates, excluding that cell
     */
-  def renderHolo(start: Vec2, end: Vec2, scale: Double, colour: Int): Unit = {
-    val s = start * RenderCircuit.BASE_SCALE * scale
-    val e = end * RenderCircuit.BASE_SCALE * scale
+  def renderHolo(
+      topLeft: Vec2,
+      bottomRight: Vec2,
+      scale: Double,
+      colour: Int
+  ): Unit = {
+    val s = topLeft * RenderCircuit.BASE_SCALE * scale
+    val e = bottomRight * RenderCircuit.BASE_SCALE * scale
     GuiDraw.drawRect(
       s.dx.toInt,
       s.dy.toInt,
@@ -118,23 +146,6 @@ object CircuitOp {
       (e - s).dy.toInt,
       colour
     )
-  }
-
-  def renderHolo(
-      x: Double,
-      y: Double,
-      xSize: Double,
-      ySize: Double,
-      csize: Size,
-      point: Point,
-      colour: Int
-  ) {
-    val x1 = (x + xSize / csize.width * point.x).toInt
-    val y1 = (y + ySize / csize.height * point.y).toInt
-    val x2 = (x + xSize / csize.width * (point.x + 1)).toInt
-    val y2 = (y + ySize / csize.height * (point.y + 1)).toInt
-
-    GuiDraw.drawRect(x1, y1, x2 - x1, y2 - y1, colour)
   }
 
   def partsBetweenPoints(

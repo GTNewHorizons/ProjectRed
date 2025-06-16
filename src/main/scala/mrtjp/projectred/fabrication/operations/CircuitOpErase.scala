@@ -28,11 +28,12 @@ class CircuitOpErase extends CircuitOp {
       end: Point,
       out: MCDataOutput
   ) {
+    super.writeOp(circuit, start, end, out)
     out.writeInt(start.x).writeInt(start.y)
     out.writeInt(end.x).writeInt(end.y)
   }
 
-  override def readOp(circuit: IntegratedCircuit, in: MCDataInput) {
+  override def readOp(circuit: IntegratedCircuit, in: MCDataInput): Unit = {
     val start = Point(in.readInt(), in.readInt())
     val end = Point(in.readInt(), in.readInt())
 

@@ -28,6 +28,7 @@ abstract class SimplePlacementOp extends CircuitOp {
       end: Point,
       out: MCDataOutput
   ) {
+    super.writeOp(circuit, start, end, out)
     out.writeByte(end.x).writeByte(end.y)
   }
 

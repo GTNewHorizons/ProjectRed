@@ -136,7 +136,7 @@ class IntegratedCircuit {
       setPart_do(in.readInt(), in.readInt(), part)
       part.readDesc(in)
     case 2 => removePart(in.readInt(), in.readInt())
-    case 3 => CircuitOp.getOperation(in.readUByte()).readOp(this, in)
+    case 3 => CircuitOp.readOp(this, in)
     case 4 =>
       getPart(in.readInt(), in.readInt()) match {
         case g: TClientNetCircuitPart => g.readClientPacket(in)
@@ -161,7 +161,7 @@ class IntegratedCircuit {
 
   def sendOpUse(op: CircuitOp, start: Point, end: Point) = {
     if (op.checkOp(this, start, end)) {
-      op.writeOp(this, start, end, network.getICStreamOf(3).writeByte(op.id))
+      op.writeOp(this, start, end, network.getICStreamOf(3))
       true
     } else false
   }
@@ -172,10 +172,6 @@ class IntegratedCircuit {
   ) {
     val s = network.getICStreamOf(4).writeInt(part.x).writeInt(part.y)
     writer(s)
-  }
-
-  def sendIOUpdate(r: Int) {
-    network.getICStreamOf(5).writeByte(r).writeInt(iostate(r))
   }
 
   def sendInputUpdate(r: Int) {

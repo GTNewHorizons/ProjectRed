@@ -40,22 +40,6 @@ trait TFreqIOICGateLogic extends IOICGateLogic {
     gate.writeStreamOf(12).writeByte(freq)
   }
 
-  def freqUp() {
-    if (freq < 15) {
-      freq += 1
-      sendFreqUpdate()
-      gate.onChange()
-    }
-  }
-
-  def freqDown() {
-    if (freq > 0) {
-      freq -= 1
-      sendFreqUpdate()
-      gate.onChange()
-    }
-  }
-
   override def resolveInputFromWorld =
     if ((gate.world.iostate(gate.rotation) & 1 << freq) != 0) 255
     else 0

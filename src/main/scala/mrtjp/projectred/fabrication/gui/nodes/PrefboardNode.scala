@@ -10,22 +10,10 @@ import mrtjp.core.gui.{ClipNode, TNode}
 import mrtjp.core.vec.{Point, Rect, Vec2}
 import mrtjp.projectred.fabrication.circuitparts.ICGateDefinition
 import mrtjp.projectred.fabrication.circuitparts.io.IOICGateLogic
-import mrtjp.projectred.fabrication.circuitparts.latches.{
-  SRLatch,
-  TransparentLatch
-}
-import mrtjp.projectred.fabrication.circuitparts.misc.{
-  Counter,
-  DecRandomizer,
-  Randomizer
-}
+import mrtjp.projectred.fabrication.circuitparts.latches.{SRLatch, TransparentLatch}
+import mrtjp.projectred.fabrication.circuitparts.misc.{Counter, DecRandomizer, Randomizer}
 import mrtjp.projectred.fabrication.circuitparts.primitives._
-import mrtjp.projectred.fabrication.circuitparts.timing.{
-  Repeater,
-  Sequencer,
-  StateCell
-}
-import mrtjp.projectred.fabrication.gui.{CircuitGui, IGuiCircuitPart}
+import mrtjp.projectred.fabrication.circuitparts.timing.{Repeater, Sequencer, StateCell}
 import mrtjp.projectred.fabrication.operations._
 import mrtjp.projectred.fabrication.{IntegratedCircuit, RenderCircuit}
 import net.minecraft.util.EnumChatFormatting

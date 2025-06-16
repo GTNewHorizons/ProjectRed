@@ -39,22 +39,23 @@ class OpGate(meta: Int) extends CircuitOp {
       end: Point,
       out: MCDataOutput
   ) {
+    super.writeOp(circuit, start, end, out)
     out.writeByte(start.x).writeByte(start.y)
     out.writeByte(rotation)
     out.writeByte(configuration)
   }
 
   override def readOp(circuit: IntegratedCircuit, in: MCDataInput) {
-    val point = Point(in.readByte(), in.readByte())
+    val position = Point(in.readByte(), in.readByte())
     rotation = in.readUByte()
     configuration = in.readUByte()
 
-    if (circuit.getPart(point) == null) {
+    if (circuit.getPart(position) == null) {
       val part = CircuitPart
         .createPart(ICGateDefinition(meta).gateType)
         .asInstanceOf[GateICPart]
       part.preparePlacement(rotation, configuration, meta)
-      circuit.setPart(point, part)
+      circuit.setPart(position, part)
     }
   }
 

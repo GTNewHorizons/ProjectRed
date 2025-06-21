@@ -68,7 +68,7 @@ class InsulatedWireICPart extends RedwireICPart with IInsulatedRedwireICPart {
   override def getPartName = Colors(colour & 0xff).name + " Insulated wire"
 
   @SideOnly(Side.CLIENT)
-  override def getPickOp =
+  override def getCircuitOperation =
     CircuitOpDefs
       .values(CircuitOpDefs.WhiteInsulatedWire.ordinal + colour)
       .getOp

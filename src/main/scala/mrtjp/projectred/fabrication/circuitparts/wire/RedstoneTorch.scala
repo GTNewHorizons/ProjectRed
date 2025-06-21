@@ -39,7 +39,7 @@ class TorchICPart
   override def getPartName = "Torch"
 
   @SideOnly(Side.CLIENT)
-  override def getPickOp = CircuitOpDefs.Torch.getOp
+  override def getCircuitOperation = CircuitOpDefs.Torch.getOp
 
   @SideOnly(Side.CLIENT)
   override def renderDynamic(

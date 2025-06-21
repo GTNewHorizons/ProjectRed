@@ -105,6 +105,9 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
       }
 
       addToolset("", Seq(Erase))
+      addToolset("", Seq(Cut))
+      addToolset("", Seq(Copy))
+      addToolset("", Seq(Paste))
       addToolset("Debug", Seq(Torch, Lever, Button))
       addToolset("", Seq(AlloyWire))
       addToolsetRange("Insulated wires", WhiteInsulatedWire, BlackInsulatedWire)

@@ -14,26 +14,27 @@ import mrtjp.projectred.core.libmc.PRResources
 import mrtjp.projectred.fabrication.ICComponentStore._
 import mrtjp.projectred.fabrication.IntegratedCircuit
 
-class CircuitOpErase extends CircuitOp {
+class OpErase extends OpAreaBase {
   override def checkOp(circuit: IntegratedCircuit, start: Point, end: Point) =
     true
 
-  override def getRotation(): Int = 0
-
   override def getConfiguration(): Int = 0
 
-  override def writeOp(
+  override def clientSendOperation(
       circuit: IntegratedCircuit,
       start: Point,
       end: Point,
       out: MCDataOutput
   ) {
-    super.writeOp(circuit, start, end, out)
+    super.clientSendOperation(circuit, start, end, out)
     out.writeInt(start.x).writeInt(start.y)
     out.writeInt(end.x).writeInt(end.y)
   }
 
-  override def readOp(circuit: IntegratedCircuit, in: MCDataInput): Unit = {
+  override def serverReceiveOperation(
+      circuit: IntegratedCircuit,
+      in: MCDataInput
+  ): Unit = {
     val start = Point(in.readInt(), in.readInt())
     val end = Point(in.readInt(), in.readInt())
 
@@ -71,7 +72,6 @@ class CircuitOpErase extends CircuitOp {
     CircuitOp.renderHolo(position - prefboardOffset, scale, 0x33ff0000)
   }
 
-  @SideOnly(Side.CLIENT)
   override def renderDrag(
       start: Vec2,
       end: Vec2,
@@ -79,14 +79,8 @@ class CircuitOpErase extends CircuitOp {
       scale: Double,
       prefboardOffset: Vec2
   ): Unit = {
-    var (topLeft, bottomRight) = (
-      Vec2(math.min(start.dx, end.dx), math.min(start.dy, end.dy))
-        .subtract(prefboardOffset),
-      Vec2(math.max(start.dx, end.dx), math.max(start.dy, end.dy))
-        .subtract(prefboardOffset)
-    )
-    bottomRight = bottomRight.add(1, 1)
-    CircuitOp.renderHolo(topLeft, bottomRight, scale, 0x44ffffff)
+    super.renderDrag(start, end, positionsWithParts, scale, prefboardOffset)
+    // Mark elements that are going to get removed
     for (posWithPart <- positionsWithParts) {
       CircuitOp.renderHolo(posWithPart - prefboardOffset, scale, 0x44ff0000)
     }

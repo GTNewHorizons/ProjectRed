@@ -86,7 +86,7 @@ class LeverICPart
   override def getPartName = "Lever"
 
   @SideOnly(Side.CLIENT)
-  override def getPickOp = CircuitOpDefs.Lever.getOp
+  override def getCircuitOperation = CircuitOpDefs.Lever.getOp
 
   @SideOnly(Side.CLIENT)
   override def getRolloverData(detailLevel: Int) = {

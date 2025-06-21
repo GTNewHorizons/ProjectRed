@@ -24,18 +24,21 @@ abstract class OpWire extends CircuitOp {
 
   override def getConfiguration(): Int = 0
 
-  override def writeOp(
+  override def clientSendOperation(
       circuit: IntegratedCircuit,
       start: Point,
       end: Point,
       out: MCDataOutput
   ) {
-    super.writeOp(circuit, start, end, out)
+    super.clientSendOperation(circuit, start, end, out)
     out.writeInt(start.x).writeInt(start.y)
     out.writeInt(end.x).writeInt(end.y)
   }
 
-  override def readOp(circuit: IntegratedCircuit, in: MCDataInput) {
+  override def serverReceiveOperation(
+      circuit: IntegratedCircuit,
+      in: MCDataInput
+  ) {
     val start = Point(in.readInt(), in.readInt())
     val end = Point(in.readInt(), in.readInt())
     val corner = start + Point((end - start).vectorize.axialProject)

@@ -106,14 +106,14 @@ class PrefboardNode(
         if (rayTest(mouse) && !leftMouseDown) {
           // Render: Erase always, other stuff only if there are no already placed parts under the cursor
           currentOp match {
-            case _: OpGate | _: OpWire | _: SimplePlacementOp =>
+            case _: OpGate | _: OpWire | _: OpSimplePlacement =>
               if (circuit.getPart(toGridPoint(mouse.vectorize)) == null)
                 currentOp.renderHover(
                   toGridPoint(mouse).vectorize,
                   scale,
                   offset
                 )
-            case _: CircuitOpErase =>
+            case _: OpAreaBase =>
               currentOp.renderHover(toGridPoint(mouse).vectorize, scale, offset)
           }
         } else if (leftMouseDown) {
@@ -271,6 +271,8 @@ class PrefboardNode(
       case op: OpGate =>
         op.rotation += 1
         if (op.rotation == 4) op.rotation = 0
+      case op: OpAreaBase =>
+        op.rotateClipboard()
       case _ =>
     }
   }
@@ -337,7 +339,7 @@ class PrefboardNode(
       val part = circuit.getPart(toGridPoint(pos.vectorize))
       opPickDelegate(if (part != null) {
         setConfigNode(null)
-        part.getPickOp
+        part.getCircuitOperation
       } else null)
       updatePreview()
     }

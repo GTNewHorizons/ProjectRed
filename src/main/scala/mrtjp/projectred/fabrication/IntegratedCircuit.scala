@@ -129,23 +129,30 @@ class IntegratedCircuit {
     // etc
   }
 
-  def read(in: MCDataInput, key: Int) = key match {
-    case 0 => readDesc(in)
-    case 1 =>
-      val part = CircuitPart.createPart(in.readUByte())
-      setPart_do(in.readInt(), in.readInt(), part)
-      part.readDesc(in)
-    case 2 => removePart(in.readInt(), in.readInt())
-    case 3 => CircuitOp.readOp(this, in)
-    case 4 =>
-      getPart(in.readInt(), in.readInt()) match {
-        case g: TClientNetCircuitPart => g.readClientPacket(in)
-        case _ => log.error("Server IC stream received invalid client packet")
+  def read(in: MCDataInput, key: Int) = {
+    if (!network.isRemote) {
+      key match {
+        case 3 => CircuitOp.readOp(this, in)
+        case 4 =>
+          getPart(in.readInt(), in.readInt()) match {
+            case g: TClientNetCircuitPart => g.readClientPacket(in)
+            case _ =>
+              log.error("Server IC stream received invalid client packet")
+          }
       }
-    case 5 => iostate(in.readUByte()) = in.readInt()
-    case 6 => setInput(in.readUByte(), in.readShort())
-    case 7 => setOutput(in.readUByte(), in.readShort())
-    case _ =>
+    } else {
+      key match {
+        case 0 => readDesc(in)
+        case 1 =>
+          val part = CircuitPart.createPart(in.readUByte())
+          setPart_do(in.readInt(), in.readInt(), part)
+          part.readDesc(in)
+        case 2 => removePart(in.readInt(), in.readInt())
+        case 5 => iostate(in.readUByte()) = in.readInt()
+        case 6 => setInput(in.readUByte(), in.readShort())
+        case 7 => setOutput(in.readUByte(), in.readShort())
+      }
+    }
   }
 
   def sendPartAdded(part: CircuitPart) {
@@ -161,7 +168,7 @@ class IntegratedCircuit {
 
   def sendOpUse(op: CircuitOp, start: Point, end: Point) = {
     if (op.checkOp(this, start, end)) {
-      op.writeOp(this, start, end, network.getICStreamOf(3))
+      op.clientSendOperation(this, start, end, network.getICStreamOf(3))
       true
     } else false
   }
@@ -246,6 +253,20 @@ class IntegratedCircuit {
   }
 
   def getPart(x: Int, y: Int): CircuitPart = parts.getOrElse((x, y), null)
+
+  def getParts(
+      topLeft: Point,
+      bottomRight: Point
+  ): Map[(Int, Int), CircuitPart] = {
+    parts
+      .filter(element =>
+        element._1._1 >= topLeft.x &&
+          element._1._1 < bottomRight.x &&
+          element._1._2 >= topLeft.y &&
+          element._1._2 < bottomRight.y
+      )
+      .toMap
+  }
 
   def removePart(x: Int, y: Int) {
     val part = getPart(x, y)

@@ -8,7 +8,11 @@ package mrtjp.projectred.fabrication.circuitparts
 import codechicken.lib.data.{MCDataInput, MCDataOutput}
 import codechicken.lib.vec.Transformation
 import cpw.mods.fml.relauncher.{Side, SideOnly}
-import mrtjp.projectred.fabrication.operations.CircuitOpDefs
+import mrtjp.projectred.fabrication.operations.{
+  CircuitOp,
+  CircuitOpDefs,
+  OpGate
+}
 import net.minecraft.nbt.NBTTagCompound
 
 abstract class GateICPart
@@ -207,6 +211,11 @@ abstract class GateICPart
   }
 
   @SideOnly(Side.CLIENT)
-  override def getPickOp =
-    CircuitOpDefs.values(CircuitOpDefs.SimpleIO.ordinal + subID).getOp
+  override def getCircuitOperation: CircuitOp = {
+    val op = new OpGate(subID)
+    op.id = CircuitOpDefs.SimpleIO.ordinal + subID
+    op.rotation = orientation
+    op.configuration = gateShape
+    op
+  }
 }

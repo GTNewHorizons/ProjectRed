@@ -8,22 +8,30 @@ package mrtjp.projectred.fabrication.operations
 import codechicken.lib.data.{MCDataInput, MCDataOutput}
 import codechicken.lib.gui.GuiDraw
 import cpw.mods.fml.relauncher.{Side, SideOnly}
-import mrtjp.core.vec.{Point, Size, Vec2}
-import mrtjp.projectred.fabrication.circuitparts.CircuitPart
+import mrtjp.core.vec.{Point, Vec2}
 import mrtjp.projectred.fabrication.{IntegratedCircuit, RenderCircuit}
 
+/** Circuit Operations describe the communication between server and client:
+  *
+  *   - 1: Client sends operation to the server with [[clientSendOperation]]
+  *   - 2: Server receives operation with [[serverReceiveOperation]] and sends
+  *     updates back to the client(s). The sending back is done in
+  *     [[IntegratedCircuit]]
+  *   - 3: Client(s) receive updated circuit. This step is handled in
+  *     [[IntegratedCircuit]]
+  */
 trait CircuitOp {
   var id = -1
 
+  /** Can this operation be executed
+    */
   def checkOp(circuit: IntegratedCircuit, start: Point, end: Point): Boolean
 
   def getRotation(): Int
 
   def getConfiguration(): Int
 
-  /** Writes this Circuit operation to the stream. Also writes id
-    */
-  def writeOp(
+  def clientSendOperation(
       circuit: IntegratedCircuit,
       start: Point,
       end: Point,
@@ -32,7 +40,10 @@ trait CircuitOp {
     out.writeByte(id)
   }
 
-  protected def readOp(circuit: IntegratedCircuit, in: MCDataInput): Unit
+  protected def serverReceiveOperation(
+      circuit: IntegratedCircuit,
+      in: MCDataInput
+  ): Unit
 
   @SideOnly(Side.CLIENT)
   def getOpName: String
@@ -87,8 +98,6 @@ trait CircuitOp {
 
 object CircuitOp {
 
-  type List = Seq[(Point, CircuitOp)]
-
   /** Read operation from stream and create Circuit Part in circuit
     * @param circuit
     *   The circuit in which the part is being created
@@ -96,7 +105,7 @@ object CircuitOp {
     *   Stream
     */
   def readOp(circuit: IntegratedCircuit, in: MCDataInput): Unit = {
-    getOperation(in.readUByte()).readOp(circuit, in)
+    getOperation(in.readUByte()).serverReceiveOperation(circuit, in)
   }
 
   /** IDs as in CircuitOpDefs -> CircuitOp

@@ -112,7 +112,7 @@ class ButtonICPart
   override def getPartName = "Button"
 
   @SideOnly(Side.CLIENT)
-  override def getPickOp = CircuitOpDefs.Button.getOp
+  override def getCircuitOperation = CircuitOpDefs.Button.getOp
 
   @SideOnly(Side.CLIENT)
   override def getRolloverData(detailLevel: Int) = {

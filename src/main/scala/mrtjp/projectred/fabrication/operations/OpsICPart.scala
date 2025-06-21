@@ -14,7 +14,7 @@ import mrtjp.projectred.fabrication.circuitparts.wire.{
   RenderICTorch
 }
 
-class CircuitOpTorch extends SimplePlacementOp {
+class OpTorch extends OpSimplePlacement {
   override def doPartRender(t: Transformation) = RenderICTorch.render(t, true)
 
   override def createPart = CircuitPartDefs.Torch.createPart
@@ -23,7 +23,7 @@ class CircuitOpTorch extends SimplePlacementOp {
   override def getOpName = "Torch"
 }
 
-class CircuitOpButton extends SimplePlacementOp {
+class OpButton extends OpSimplePlacement {
   override def doPartRender(t: Transformation) {
     RenderICButton.prepairInv()
     RenderICButton.render(t, true)
@@ -35,7 +35,7 @@ class CircuitOpButton extends SimplePlacementOp {
   override def getOpName = "Button"
 }
 
-class CircuitOpLever extends SimplePlacementOp {
+class OpLever extends OpSimplePlacement {
   override def doPartRender(t: Transformation) {
     RenderICLever.prepairInv()
     RenderICLever.render(t, true)

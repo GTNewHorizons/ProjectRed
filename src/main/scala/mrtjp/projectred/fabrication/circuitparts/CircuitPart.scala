@@ -87,8 +87,10 @@ abstract class CircuitPart {
   @SideOnly(Side.CLIENT)
   def getPartName: String
 
+  /** Returns Circuit Operation, that would create this CircuitPart
+    */
   @SideOnly(Side.CLIENT)
-  def getPickOp: CircuitOp = null
+  def getCircuitOperation: CircuitOp = null
 
   @SideOnly(Side.CLIENT)
   def getRolloverData(detailLevel: Int): Seq[String] =

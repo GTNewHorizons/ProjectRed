@@ -14,7 +14,7 @@ import mrtjp.projectred.fabrication.IntegratedCircuit
 import mrtjp.projectred.fabrication.circuitparts.CircuitPart
 import mrtjp.projectred.fabrication.operations.CircuitOp.renderHolo
 
-abstract class SimplePlacementOp extends CircuitOp {
+abstract class OpSimplePlacement extends CircuitOp {
   override def checkOp(circuit: IntegratedCircuit, start: Point, end: Point) =
     circuit.getPart(end.x, end.y) == null
 
@@ -22,17 +22,20 @@ abstract class SimplePlacementOp extends CircuitOp {
 
   override def getConfiguration(): Int = 0
 
-  override def writeOp(
+  override def clientSendOperation(
       circuit: IntegratedCircuit,
       start: Point,
       end: Point,
       out: MCDataOutput
   ) {
-    super.writeOp(circuit, start, end, out)
+    super.clientSendOperation(circuit, start, end, out)
     out.writeByte(end.x).writeByte(end.y)
   }
 
-  override def readOp(circuit: IntegratedCircuit, in: MCDataInput) {
+  override def serverReceiveOperation(
+      circuit: IntegratedCircuit,
+      in: MCDataInput
+  ) {
     val point = Point(in.readUByte(), in.readUByte())
     if (circuit.getPart(point.x, point.y) == null)
       circuit.setPart(point.x, point.y, createPart)

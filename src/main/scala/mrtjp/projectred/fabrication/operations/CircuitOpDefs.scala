@@ -12,12 +12,15 @@ object CircuitOpDefs extends Enum {
   type EnumVal = OpDef
 
   // tools
-  val Erase = OpDef(new CircuitOpErase)
+  val Erase = OpDef(new OpErase)
+  val Cut = OpDef(new OpCut)
+  val Copy = OpDef(new OpCopy)
+  val Paste = OpDef(new OpPaste)
 
   // primitives
-  val Torch = OpDef(new CircuitOpTorch)
-  val Lever = OpDef(new CircuitOpLever)
-  val Button = OpDef(new CircuitOpButton)
+  val Torch = OpDef(new OpTorch)
+  val Lever = OpDef(new OpLever)
+  val Button = OpDef(new OpButton)
 
   // alloy wire
   val AlloyWire = OpDef(new OpAlloyWire)

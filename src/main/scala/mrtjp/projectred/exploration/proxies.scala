@@ -13,14 +13,10 @@ import mrtjp.core.inventory.InvWrapper
 import mrtjp.core.world._
 import mrtjp.projectred.ProjectRedExploration
 import mrtjp.projectred.ProjectRedExploration._
-import mrtjp.projectred.core.libmc.recipe._
-import mrtjp.projectred.core.{
-  Configurator,
-  IProxy,
-  PartDefs,
-  ShapelessOreNBTRecipe
-}
+import mrtjp.projectred.core.libmc.recipe.item.{Input, ItemIn, ItemOut, OreIn}
+import mrtjp.projectred.core.{Configurator, IProxy, PartDefs, ShapelessOreNBTRecipe}
 import mrtjp.projectred.Tags
+import mrtjp.projectred.core.libmc.recipe.builders.{ShapedRecipeBuilder, ShapelessRecipeBuilder, SmeltingRecipeBuilder}
 import net.minecraft.init.{Blocks, Items}
 import net.minecraft.item.ItemStack
 import net.minecraftforge.client.MinecraftForgeClient
@@ -896,9 +892,9 @@ object ExplorationRecipes {
   }
 
   private def addSmeltingRecipe(in: ItemStack, out: ItemStack) {
-    (RecipeLib.newSmeltingBuilder
-      += new ItemIn(in)
-      += new ItemOut(out)).registerResults()
+    new SmeltingRecipeBuilder()
+      .addInput( new ItemIn(in))
+      .addOutput( new ItemOut(out)).asInstanceOf[SmeltingRecipeBuilder].registerResults()
   }
 
   private def addStorageBlockRecipe(
@@ -907,12 +903,13 @@ object ExplorationRecipes {
       blockOre: String,
       block: ItemStack
   ) {
-    (RecipeLib.newShapedBuilder <-> "xxxxxxxxx"
-      += new OreIn(itemOre).to("x")
-      += new ItemOut(block)).registerResult()
-    (RecipeLib.newShapelessBuilder
-      += new OreIn(blockOre)
-      += new ItemOut(item)).registerResult()
+    new ShapedRecipeBuilder().map("xxxxxxxxx")
+      .addInput( new OreIn(itemOre).to("x").asInstanceOf[Input])
+      .addOutput(new ItemOut(block)).asInstanceOf[ShapedRecipeBuilder].registerResult()
+    new ShapelessRecipeBuilder()
+      .addInput(new OreIn(itemOre).to("x").asInstanceOf[Input])
+      .addInput(new OreIn(blockOre))
+      .addOutput(new ItemOut(item)).asInstanceOf[ShapelessRecipeBuilder].registerResult()
   }
 
   private def addWallRecipe(o: ItemStack, m: ItemStack) {

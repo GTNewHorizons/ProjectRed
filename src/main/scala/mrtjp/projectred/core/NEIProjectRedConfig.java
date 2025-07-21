@@ -5,8 +5,8 @@ import codechicken.nei.api.IConfigureNEI;
 import codechicken.nei.recipe.ICraftingHandler;
 import codechicken.nei.recipe.IRecipeHandler;
 import codechicken.nei.recipe.IUsageHandler;
-import mrtjp.projectred.core.libmc.recipe.PRShapedRecipeHandler;
-import mrtjp.projectred.core.libmc.recipe.PRShapelessRecipeHandler;
+import mrtjp.projectred.core.libmc.recipe.handlers.PRShapedRecipeHandler;
+import mrtjp.projectred.core.libmc.recipe.handlers.PRShapelessRecipeHandler;
 
 public class NEIProjectRedConfig implements IConfigureNEI {
 

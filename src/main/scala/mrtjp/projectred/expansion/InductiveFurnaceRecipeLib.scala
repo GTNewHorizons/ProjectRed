@@ -1,9 +1,11 @@
 package mrtjp.projectred.expansion
 
 import java.util.{Map => JMap}
-
 import mrtjp.core.item.ItemKeyStack
 import mrtjp.projectred.core.libmc.recipe._
+import mrtjp.projectred.core.libmc.recipe.recipes.InductiveFurnaceRecipe
+import mrtjp.projectred.core.libmc.recipe.builders.InductiveFurnaceRecipeBuilder
+import mrtjp.projectred.core.libmc.recipe.item.{ItemIn, ItemOut, OreIn}
 import net.minecraft.item.crafting.FurnaceRecipes
 import net.minecraft.item.{ItemFood, ItemStack}
 import net.minecraftforge.oredict.OreDictionary
@@ -28,25 +30,25 @@ object InductiveFurnaceRecipeLib {
   }
 
   def addRecipe(in: ItemStack, out: ItemStack, ticks: Int) {
-    val b = new InductiveFurnaceRecipeBuilder
-    b += new ItemIn(in)
-    b += new ItemOut(out)
+    val b = new InductiveFurnaceRecipeBuilder()
+    b.addInput( new ItemIn(in))
+    b.addOutput( new ItemOut(out))
     b.setBurnTime(ticks)
     b.registerResult()
   }
 
   def addOreRecipe(in: ItemStack, out: ItemStack, ticks: Int) {
-    val b = new InductiveFurnaceRecipeBuilder
-    b += new OreIn(in)
-    b += new ItemOut(out)
+    val b = new InductiveFurnaceRecipeBuilder()
+    b.addInput(new OreIn(in))
+    b.addOutput(new ItemOut(out))
     b.setBurnTime(ticks)
     b.registerResult()
   }
 
   def addOreRecipe(in: String, out: ItemStack, ticks: Int) {
-    val b = new InductiveFurnaceRecipeBuilder
-    b += new OreIn(in)
-    b += new ItemOut(out)
+    val b = new InductiveFurnaceRecipeBuilder()
+    b.addInput(new OreIn(in))
+    b.addOutput(new ItemOut(out))
     b.setBurnTime(ticks)
     b.registerResult()
   }
@@ -74,22 +76,4 @@ object InductiveFurnaceRecipeLib {
       case e: Exception =>
     }
   }
-}
-
-class InductiveFurnaceRecipeBuilder extends RecipeBuilder {
-  private var ticks = 0
-  def setBurnTime(t: Int): this.type = { ticks = t; this }
-
-  def result() = {
-    compute()
-    new InductiveFurnaceRecipe(inResult.head, outResult.head, ticks)
-  }
-
-  def registerResult() {
-    InductiveFurnaceRecipeLib.addRecipe(result())
-  }
-}
-
-case class InductiveFurnaceRecipe(in: Input, out: Output, burnTime: Int) {
-  def createOutput = out.createOutput
 }

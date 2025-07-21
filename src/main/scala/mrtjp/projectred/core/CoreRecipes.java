@@ -41,13 +41,13 @@ import codechicken.microblock.handler.MicroblockProxy;
 import cpw.mods.fml.common.registry.GameRegistry;
 import mrtjp.core.color.Colors_old;
 import mrtjp.projectred.ProjectRedCore;
-import mrtjp.projectred.core.libmc.recipe.Input;
-import mrtjp.projectred.core.libmc.recipe.ItemOut;
-import mrtjp.projectred.core.libmc.recipe.MicroIn;
-import mrtjp.projectred.core.libmc.recipe.Output;
+import mrtjp.projectred.core.libmc.recipe.item.Input;
+import mrtjp.projectred.core.libmc.recipe.item.ItemOut;
+import mrtjp.projectred.core.libmc.recipe.item.MicroIn;
+import mrtjp.projectred.core.libmc.recipe.item.Output;
 import mrtjp.projectred.core.libmc.recipe.RecipeLib;
-import mrtjp.projectred.core.libmc.recipe.ShapedRecipeBuilder;
-import mrtjp.projectred.core.libmc.recipe.ShapelessRecipeBuilder;
+import mrtjp.projectred.core.libmc.recipe.builders.ShapedRecipeBuilder;
+import mrtjp.projectred.core.libmc.recipe.builders.ShapelessRecipeBuilder;
 
 public class CoreRecipes {
 
@@ -76,16 +76,16 @@ public class CoreRecipes {
 
     private static void initToolRecipes() {
         /** Draw Plate **/
-        ShapedRecipeBuilder b = RecipeLib.newShapedBuilder();
-        b.$less$minus$greater(" i " + "idi" + " i ")
-                .$plus$eq((Input) new MicroIn(MicroIn.edge(), MicroIn.fourth(), Blocks.iron_block).to("i"))
-                .$plus$eq((Input) new MicroIn(MicroIn.face(), MicroIn.fourth(), Blocks.diamond_block).to("d"))
-                .$plus$eq((Output) new ItemOut(ProjectRedCore.itemDrawPlate()));
+        ShapedRecipeBuilder b = new ShapedRecipeBuilder();
+        ((ShapedRecipeBuilder) b.map(" i " + "idi" + " i "))
+                .addInput((Input) new MicroIn(MicroIn.edge(), MicroIn.fourth, Blocks.iron_block).to("i"))
+                .addInput((Input) new MicroIn(MicroIn.face(), MicroIn.fourth, Blocks.diamond_block).to("d"))
+                .addOutput((Output) new ItemOut(ProjectRedCore.itemDrawPlate()));
         b.registerResult();
         /** Panel Reset recipe **/
-        ShapelessRecipeBuilder s = RecipeLib.newShapelessBuilder();
-        s.$plus$eq((Input) new MicroIn(MicroIn.face(), MicroIn.fourth(), Blocks.diamond_block))
-                .$plus$eq((Output) new ItemOut(new ItemStack(Items.diamond, 2)));
+        ShapelessRecipeBuilder s = new ShapelessRecipeBuilder();
+        s.addInput((Input) new MicroIn(MicroIn.face(), MicroIn.fourth, Blocks.diamond_block))
+                .addOutput((Output) new ItemOut(new ItemStack(Items.diamond, 2)));
         s.registerResult();
 
         /** Screwdriver **/

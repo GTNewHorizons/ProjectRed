@@ -1,7 +1,7 @@
 package mrtjp.projectred.core.libmc.recipe.builders;
 
+import cpw.mods.fml.common.registry.GameRegistry;
 import mrtjp.projectred.core.libmc.recipe.recipes.ShapelessBuilderRecipe;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class ShapelessRecipeBuilder extends RecipeBuilder {
     public ShapelessBuilderRecipe result() {

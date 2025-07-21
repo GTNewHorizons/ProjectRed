@@ -6,7 +6,7 @@ import mrtjp.projectred.core.libmc.recipe.item.Output;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class RecipeBuilder {
+public class RecipeBuilder {
     protected List<Input> inputs = new ArrayList<>();
     protected List<Output> outputs = new ArrayList<>();
 

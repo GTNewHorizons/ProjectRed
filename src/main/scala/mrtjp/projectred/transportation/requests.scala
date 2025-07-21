@@ -109,9 +109,11 @@ class RequestBranchNode(
       val pathsToThat = requester.getRouter.getRouteTable(
         excess.from.getRouter.getIPAddress
       )
-      val pathsFromThat = excess.from.getRouter.getRouteTable(
-        requester.getRouter.getIPAddress
-      ).iterator
+      val pathsFromThat = excess.from.getRouter
+        .getRouteTable(
+          requester.getRouter.getIPAddress
+        )
+        .iterator
       while (pathsFromThat.hasNext) {
         val from = pathsFromThat.next()
         if (from != null && from.flagRouteTo) {

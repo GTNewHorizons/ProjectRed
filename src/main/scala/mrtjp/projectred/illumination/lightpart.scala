@@ -118,9 +118,9 @@ class BaseLightPart(obj: LightObject)
   }
 
   private def checkPower: Boolean =
-     0 until 6 exists { s =>
-        s != (side ^1) && RedstoneInteractions.getPowerTo(this, s) > 0
-     }
+    0 until 6 exists { s =>
+      s != (side ^ 1) && RedstoneInteractions.getPowerTo(this, s) > 0
+    }
 
   private def updateState(forceRender: Boolean) {
     var updated = false

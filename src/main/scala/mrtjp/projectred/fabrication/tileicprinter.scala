@@ -406,7 +406,11 @@ object TileICPrinter {
 
   def cacheRecipe(key: ItemKey) {
     val recipes =
-      CraftingManager.getInstance().getRecipeList.asInstanceOf[JList[IRecipe]].iterator()
+      CraftingManager
+        .getInstance()
+        .getRecipeList
+        .asInstanceOf[JList[IRecipe]]
+        .iterator()
     while (recipes.hasNext) {
       val r = recipes.next()
       try {

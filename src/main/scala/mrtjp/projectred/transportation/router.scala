@@ -36,7 +36,7 @@ object RouterServices {
     routers synchronized {
       routers.find(r => r != null && r.getParent == holder) match {
         case Some(r) => return r
-        case _ =>
+        case _       =>
       }
       val r = Router(uu, holder)
 
@@ -300,9 +300,13 @@ class Router(ID: UUID, parent: IWorldRouter) extends Ordered[Router] {
     ) {
       val paths = rt(destination)
       if (paths != null)
-        paths.find(path => path.flagRouteTo && priority.isPathUsable(path) && path.allowItem(item)) match {
+        paths.find(path =>
+          path.flagRouteTo && priority.isPathUsable(path) && path.allowItem(
+            item
+          )
+        ) match {
           case Some(x) => return x
-          case _ =>
+          case _       =>
         }
     }
     null

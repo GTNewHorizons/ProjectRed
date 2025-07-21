@@ -48,11 +48,11 @@ class RoutedRequestPipePart extends AbstractNetPipe with TNetworkPipe {
 
       if (count <= 1) return r.input
       else if (count == 2) {
-        0 until 6 find  { i =>
+        0 until 6 find { i =>
           i != (r.input ^ 1) && (connMap & 1 << i) != 0
         } match {
           case Some(x) => return x
-          case _ =>
+          case _       =>
         }
       }
     }

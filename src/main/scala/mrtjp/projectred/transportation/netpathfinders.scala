@@ -23,8 +23,7 @@ object LSPathFinder {
 
   def getLinkState(tile: TileEntity): ISpecialLinkState = {
     if (tile == null) return null
-    for (l <- registeredLSTypes) if (l.matches(tile)) return l
-    null
+    registeredLSTypes.find(_.matches(tile)).orNull
   }
 
   def clear() {

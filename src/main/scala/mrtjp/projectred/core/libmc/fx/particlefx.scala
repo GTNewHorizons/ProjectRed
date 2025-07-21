@@ -115,9 +115,13 @@ class CoreParticle(w: World, px: Double, py: Double, pz: Double)
     if (!ignoreVelocity) moveEntity(motionX, motionY, motionZ)
 
     def iterate() {
-      for (l <- logics) if (!l.getFinished) {
-        l.onUpdate(worldObj, this)
-        if (l.isFinalLogic) return
+      val iter = logics.iterator
+      while (iter.hasNext) {
+        val l = iter.next()
+        if (!l.getFinished) {
+          l.onUpdate(worldObj, this)
+          if (l.isFinalLogic) return
+        }
       }
     }
     iterate()

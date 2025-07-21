@@ -42,7 +42,8 @@ class StorageDrawersInvWrapper(inv: IInventory) extends InvWrapper(inv) {
 
   override def getSpaceForItem(item: ItemKey): Int = {
     var freeSpace = 0
-    for (i <- 0 until getDrawers.getDrawerCount) {
+    var i = 0
+    while (i < getDrawers.getDrawerCount) {
       val drawer = getDrawers.getDrawer(i)
 
       if (drawer != null && drawer.canItemBeStored(item.testStack)) {
@@ -54,6 +55,8 @@ class StorageDrawersInvWrapper(inv: IInventory) extends InvWrapper(inv) {
           case _                                      =>
         }
       }
+
+      i += 1
     }
     freeSpace
   }

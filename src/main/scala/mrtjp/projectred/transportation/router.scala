@@ -34,7 +34,10 @@ object RouterServices {
 
   def getOrCreateRouter(uu: UUID, holder: IWorldRouter): Router = {
     routers synchronized {
-      for (r <- routers) if (r != null && r.getParent == holder) return r
+      routers.find(r => r != null && r.getParent == holder) match {
+        case Some(r) => return r
+        case _ =>
+      }
       val r = Router(uu, holder)
 
       val newLease = r.getIPAddress
@@ -297,10 +300,10 @@ class Router(ID: UUID, parent: IWorldRouter) extends Ordered[Router] {
     ) {
       val paths = rt(destination)
       if (paths != null)
-        for (path <- paths)
-          if (path.flagRouteTo)
-            if (priority.isPathUsable(path) && path.allowItem(item))
-              return path
+        paths.find(path => path.flagRouteTo && priority.isPathUsable(path) && path.allowItem(item)) match {
+          case Some(x) => return x
+          case _ =>
+        }
     }
     null
   }

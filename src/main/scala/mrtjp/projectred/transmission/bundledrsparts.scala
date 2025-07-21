@@ -46,15 +46,16 @@ object BundledCommons {
 
   def isSignalZero(signal: Array[Byte]): Boolean = {
     if (signal == null) return true
-    for (i <- 0 until 16) if (signal(i) != 0) return false
-    true
+    0 until 15 forall {
+      signal(_) == 0
+    }
   }
 
   def isSignalZero(signal: Array[Byte], mask: Int): Boolean = {
     if (signal == null) return true
-    for (i <- 0 until 16)
-      if ((mask & 1 << i) != 0 && signal(i) != 0) return false
-    true
+    0 until 15 forall { i =>
+      (mask & 1 << i) == 0 || signal(i) == 0
+    }
   }
 
   def dropSignalsLessThan(inThis: Array[Byte], fromThat: Array[Byte]) = {

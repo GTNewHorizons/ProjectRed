@@ -193,13 +193,8 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
       selectedItem = null
 
     def filterAllows(stack: ItemKeyStack): Boolean = {
-      def stringMatch(name: String, filter: String): Boolean = {
-        for (s <- filter.split(" ")) if (!name.contains(s)) return false
-        true
-      }
-
-      if (stringMatch(stack.key.getName.toLowerCase, textFilter.text)) true
-      else false
+      val haystack = stack.key.getName.toLowerCase
+      textFilter.text.split(" ").forall(haystack.contains)
     }
   }
 

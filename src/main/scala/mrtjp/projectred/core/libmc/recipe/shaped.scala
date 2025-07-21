@@ -40,7 +40,8 @@ class ShapedBuilderRecipe(val builder: ShapedRecipeBuilder) extends IRecipe {
   override def matches(inv: InventoryCrafting, world: World): Boolean = {
     if (inv.getSizeInventory < getRecipeSize) return false
 
-    for (i <- 0 until inv.getSizeInventory) {
+    var i = 0
+    while (i < inv.getSizeInventory) {
       val in = builder.inputMap.getOrElse(i, null)
       val slot = ItemKeyStack.get(inv.getStackInSlot(i))
       if (
@@ -48,6 +49,7 @@ class ShapedBuilderRecipe(val builder: ShapedRecipeBuilder) extends IRecipe {
         (slot == null && in != null) ||
         (slot != null && in != null && !in.matches(slot))
       ) return false
+      i += 1
     }
     true
   }

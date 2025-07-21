@@ -104,7 +104,8 @@ class TileBlockPlacer
     reloadPlayer()
     val upos = position.offset(side ^ 1)
     copyInvToPlayer()
-    for (i <- 0 until 9) {
+    var i = 0
+    while (i < 9) {
       val stack = getStackInSlot(i)
       if (stack != null && tryUseItem(stack, upos.x, upos.y, upos.z, i)) {
         if (fakePlayer.isUsingItem) fakePlayer.stopUsingItem()
@@ -114,6 +115,7 @@ class TileBlockPlacer
           setInventorySlotContents(i, null)
         return
       }
+      i += 1
     }
     copyInvFromPlayer()
   }

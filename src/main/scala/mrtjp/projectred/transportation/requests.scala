@@ -75,57 +75,63 @@ class RequestBranchNode(
     root.promiseAdded(promise)
   }
 
-  def doPullReq() = {
+  def doPullReq(): Boolean = {
     val allRouters = requester.getRouter
       .getFilteredRoutesByCost(p =>
         p.flagRouteFrom && p.allowBroadcast && p.allowItem(stack.key)
       )
       .sorted(PathOrdering.loadAndDistance)
-    def search() {
-      for (l <- allRouters)
-        if (isDone) return
-        else
-          l.end.getParent match {
-            case member: IWorldBroadcaster =>
-              if (
-                !LogisticPathFinder.sharesInventory(
-                  requester.getContainer,
-                  member.getContainer
-                )
-              ) {
-                val prev = root.getExistingPromisesFor(member, stack.key)
-                member.requestPromise(this, prev)
-              }
-            case _ =>
-          }
+    val iter = allRouters.iterator
+    while (iter.hasNext) {
+      val l = iter.next()
+      if (isDone) return isDone
+      else
+        l.end.getParent match {
+          case member: IWorldBroadcaster =>
+            if (
+              !LogisticPathFinder.sharesInventory(
+                requester.getContainer,
+                member.getContainer
+              )
+            ) {
+              val prev = root.getExistingPromisesFor(member, stack.key)
+              member.requestPromise(this, prev)
+            }
+          case _ =>
+        }
     }
-    search()
     isDone
   }
 
-  def doExcessReq() = {
-    val all = root.gatherExcessFor(stack.key)
-    def locate() {
-      import scala.util.control.Breaks._
-      for (excess <- all)
-        if (isDone) return
-        else if (excess.size > 0) breakable {
-          val pathsToThat = requester.getRouter.getRouteTable(
-            excess.from.getRouter.getIPAddress
-          )
-          val pathsFromThat = excess.from.getRouter.getRouteTable(
-            requester.getRouter.getIPAddress
-          )
-          for (from <- pathsFromThat)
-            if (from != null && from.flagRouteTo)
-              for (to <- pathsToThat) if (to != null && to.flagRouteFrom) {
-                excess.size = math.min(excess.size, getMissingCount)
-                addPromise(excess)
-                break()
-              }
+  def doExcessReq(): Boolean = {
+    val all = root.gatherExcessFor(stack.key).iterator
+    def process(excess: DeliveryPromise): Unit = {
+      val pathsToThat = requester.getRouter.getRouteTable(
+        excess.from.getRouter.getIPAddress
+      )
+      val pathsFromThat = excess.from.getRouter.getRouteTable(
+        requester.getRouter.getIPAddress
+      ).iterator
+      while (pathsFromThat.hasNext) {
+        val from = pathsFromThat.next()
+        if (from != null && from.flagRouteTo) {
+          val iter = pathsToThat.iterator
+          while (iter.hasNext) {
+            val to = iter.next()
+            if (to != null && to.flagRouteFrom) {
+              excess.size = math.min(excess.size, getMissingCount)
+              addPromise(excess)
+              return
+            }
+          }
         }
+      }
     }
-    locate()
+    while (all.hasNext) {
+      val excess = all.next()
+      if (isDone) return true
+      if (excess.size > 0) process(excess)
+    }
     isDone
   }
 
@@ -271,7 +277,9 @@ class RequestBranchNode(
           if (extras != null) {
             var toRem = Vector[DeliveryPromise]()
             def remove() {
-              for (e <- extras) {
+              val iter = extras.iterator
+              while (iter.hasNext) {
+                val e = iter.next()
                 if (e.size >= usedcount) {
                   e.size -= usedcount
                   return
@@ -469,11 +477,14 @@ class CraftingPromise(
       eq: ItemEquality,
       destination: IWorldRequester
   ) {
-    for ((s, e, d) <- ingredients2)
+    val iter = ingredients2.iterator
+    while (iter.hasNext) {
+      val (s, e, d) = iter.next()
       if (s.key == stack.key && d == destination) {
         s.stackSize += stack.stackSize
         return
       }
+    }
     ingredients2 :+= ((stack, eq, destination))
   }
 

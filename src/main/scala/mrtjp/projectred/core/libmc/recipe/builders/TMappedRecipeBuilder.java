@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-abstract class TMappedRecipeBuilder extends RecipeBuilder {
+public abstract class TMappedRecipeBuilder extends RecipeBuilder {
     public String map = "";
 
     public TMappedRecipeBuilder map(String m) {

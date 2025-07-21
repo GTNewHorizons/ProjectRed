@@ -16,9 +16,15 @@ import static net.minecraftforge.oredict.OreDictionary.getOres;
 
 public class OreIn extends Input {
     private List<Integer> oreIDs;
+    private List<ItemStack> ins;
 
     public OreIn(List<Integer> oreIDs) {
         this.oreIDs = oreIDs;
+
+        ins = new ArrayList<>();
+        for (Integer oreID : oreIDs) {
+            ins.addAll(getOres(getOreName(oreID)));
+        }
     }
 
     public OreIn(int id) {
@@ -63,17 +69,10 @@ public class OreIn extends Input {
         return false;
     }
 
-    private List<ItemStack> ins;
-
-    {
-        ins = new ArrayList<>();
-        for (Integer oreID : oreIDs) {
-            ins.addAll(getOres(getOreName(oreID)));
-        }
-    }
 
     @Override
     public List<ItemStack> matchingInputs() {
         return ins;
     }
 }
+

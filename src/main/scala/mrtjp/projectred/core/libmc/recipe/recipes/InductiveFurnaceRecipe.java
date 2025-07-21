@@ -2,6 +2,7 @@ package mrtjp.projectred.core.libmc.recipe.recipes;
 
 import mrtjp.projectred.core.libmc.recipe.item.Input;
 import mrtjp.projectred.core.libmc.recipe.item.Output;
+import net.minecraft.item.ItemStack;
 
 import java.io.Serializable;
 
@@ -16,7 +17,7 @@ public class InductiveFurnaceRecipe implements Serializable {
         this.burnTime = burnTime;
     }
 
-    public Output createOutput() {
+    public ItemStack createOutput() {
         return out.createOutput();
     }
 }

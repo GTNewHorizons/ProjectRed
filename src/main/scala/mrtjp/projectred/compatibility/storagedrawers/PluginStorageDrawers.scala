@@ -13,8 +13,6 @@ import mrtjp.projectred.compatibility.IPRPlugin
 import mrtjp.projectred.core.Configurator
 import net.minecraft.inventory.IInventory
 
-import scala.util.control.Breaks.{break, breakable}
-
 object PluginStorageDrawers extends IPRPlugin {
   override def getModIDs = Array("StorageDrawers")
 
@@ -42,7 +40,8 @@ class StorageDrawersInvWrapper(inv: IInventory) extends InvWrapper(inv) {
 
   override def getSpaceForItem(item: ItemKey): Int = {
     var freeSpace = 0
-    for (i <- 0 until getDrawers.getDrawerCount) {
+    var i = 0
+    while (i < getDrawers.getDrawerCount) {
       val drawer = getDrawers.getDrawer(i)
 
       if (drawer != null && drawer.canItemBeStored(item.testStack)) {
@@ -54,6 +53,8 @@ class StorageDrawersInvWrapper(inv: IInventory) extends InvWrapper(inv) {
           case _                                      =>
         }
       }
+
+      i += 1
     }
     freeSpace
   }
@@ -131,13 +132,12 @@ class StorageDrawersInvWrapper(inv: IInventory) extends InvWrapper(inv) {
     var items = Map[ItemKey, Int]()
 
     for (i <- 0 until getDrawers.getDrawerCount) {
-      breakable { // Turns "break" into a "continue"
-        val drawer = getDrawers.getDrawer(i)
-        if (drawer == null) { break }
-
+      val drawer = getDrawers.getDrawer(i)
+      if (drawer != null) {
         val key = ItemKey.get(drawer.getStoredItemPrototype)
-        if (key == null) { break }
-        items += key -> (drawer.getStoredItemCount + items.getOrElse(key, 0))
+        if (key != null) {
+          items += key -> (drawer.getStoredItemCount + items.getOrElse(key, 0))
+        }
       }
     }
     items

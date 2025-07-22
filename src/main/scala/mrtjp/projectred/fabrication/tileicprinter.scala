@@ -216,17 +216,20 @@ class TileICPrinter extends TileICMachine with TInventory {
 
   def containsEnoughOf(stack: ItemKeyStack): Boolean = {
     var a = 0
-    for (i <- 0 until 18) {
+    var i = 0
+    while (i < 18) {
       val s = getStackInSlot(i)
       if (s != null && ItemKey.get(s) == stack.key) {
         a += s.stackSize
         if (a >= stack.stackSize) return true
       }
+      i += 1
     }
 
     if (!world.isRemote) {
       externalItems -= stack.key
-      for (s <- 0 until 6 if s != 1) {
+      var s = 0
+      while (s < 6) if (s != 1) {
         val inv = InvWrapper.getInventory(world, position.offset(s))
         if (inv != null) {
           val w = InvWrapper.wrap(inv).setSlotsFromSide(s ^ 1)
@@ -239,6 +242,7 @@ class TileICPrinter extends TileICMachine with TInventory {
             }
           }
         }
+        s += 1
       }
     } else return externalItems.contains(stack.key)
 
@@ -247,7 +251,8 @@ class TileICPrinter extends TileICMachine with TInventory {
 
   def eatResource(stack: ItemKeyStack) {
     var left = stack.stackSize
-    for (i <- 0 until 18) {
+    var i = 0
+    while (i < 18) {
       val s = getStackInSlot(i)
       if (s != null && stack.key == ItemKey.get(s)) {
         val toEat = math.min(left, s.stackSize)
@@ -257,15 +262,18 @@ class TileICPrinter extends TileICMachine with TInventory {
         else setInventorySlotContents(i, s)
         if (left <= 0) return
       }
+      i += 1
     }
 
-    for (s <- 0 until 6 if s != 1) {
+    var s = 0
+    while (s < 6) if (s != 1) {
       val inv = InvWrapper.getInventory(world, position.offset(s))
       if (inv != null) {
         val w = InvWrapper.wrap(inv).setSlotsFromSide(s ^ 1)
         left -= w.extractItem(stack.key, left)
         if (left <= 0) return
       }
+      s += 1
     }
   }
 
@@ -398,49 +406,56 @@ object TileICPrinter {
 
   def cacheRecipe(key: ItemKey) {
     val recipes =
-      CraftingManager.getInstance().getRecipeList.asInstanceOf[JList[IRecipe]]
-    for (r <- recipes) try {
-      val out = ItemKey.get(r.getRecipeOutput)
-      if (out == key) {
-        val inputs = r match {
-          case s: ShapedRecipes =>
-            s.recipeItems.toSeq.filterNot(_ == null).map(ItemKey.get)
+      CraftingManager
+        .getInstance()
+        .getRecipeList
+        .asInstanceOf[JList[IRecipe]]
+        .iterator()
+    while (recipes.hasNext) {
+      val r = recipes.next()
+      try {
+        val out = ItemKey.get(r.getRecipeOutput)
+        if (out == key) {
+          val inputs = r match {
+            case s: ShapedRecipes =>
+              s.recipeItems.toSeq.filterNot(_ == null).map(ItemKey.get)
 
-          case s: ShapelessRecipes =>
-            s.recipeItems
-              .asInstanceOf[JList[ItemStack]]
-              .toSeq
-              .filterNot(_ == null)
-              .map(ItemKey.get)
+            case s: ShapelessRecipes =>
+              s.recipeItems
+                .asInstanceOf[JList[ItemStack]]
+                .toSeq
+                .filterNot(_ == null)
+                .map(ItemKey.get)
 
-          case s: ShapedOreRecipe =>
-            s.getInput.toSeq
-              .flatMap {
-                case s: ItemStack                    => Seq(s)
-                case a: JAList[ItemStack] @unchecked => a.toSeq
-                case _                               => Seq.empty
-              }
-              .map(ItemKey.get)
+            case s: ShapedOreRecipe =>
+              s.getInput.toSeq
+                .flatMap {
+                  case s: ItemStack                    => Seq(s)
+                  case a: JAList[ItemStack] @unchecked => a.toSeq
+                  case _                               => Seq.empty
+                }
+                .map(ItemKey.get)
 
-          case s: ShapelessOreRecipe =>
-            s.getInput.toSeq
-              .flatMap {
-                case s: ItemStack                    => Seq(s)
-                case a: JAList[ItemStack] @unchecked => a.toSeq
-                case _                               => Seq.empty
-              }
-              .map(ItemKey.get)
+            case s: ShapelessOreRecipe =>
+              s.getInput.toSeq
+                .flatMap {
+                  case s: ItemStack                    => Seq(s)
+                  case a: JAList[ItemStack] @unchecked => a.toSeq
+                  case _                               => Seq.empty
+                }
+                .map(ItemKey.get)
 
-          case _ => Seq.empty
+            case _ => Seq.empty
+          }
+          if (inputs.nonEmpty) {
+            gRec += key -> inputs
+            return
+          }
         }
-        if (inputs.nonEmpty) {
-          gRec += key -> inputs
-          return
-        }
+      } catch {
+        case e: Exception =>
+          log.error(s"Some mod messed up. The recipe $r has a null output.")
       }
-    } catch {
-      case e: Exception =>
-        log.error(s"Some mod messed up. The recipe $r has a null output.")
     }
     gRec += key -> Seq.empty
   }

@@ -112,7 +112,8 @@ object FabricationRecipes {
       override def getRecipeSize = 9
 
       override def getCraftingResult(inv: InventoryCrafting): ItemStack = {
-        for (i <- 0 until 9) {
+        var i = 0
+        while (i < 9) {
           val stack = inv.getStackInSlot(i)
           if (stack == null) return null
           i match {
@@ -124,6 +125,8 @@ object FabricationRecipes {
             case _ =>
               if (!stack.isItemEqual(PartDefs.PLATE.makeStack)) return null
           }
+
+          i += 1
         }
         val out = GateDefinition.ICGate.makeStack
         ItemICBlueprint.copyToGate(inv.getStackInSlot(4), out)
@@ -192,11 +195,13 @@ object FabricationRecipes {
 
       override def getCraftingResult(inv: InventoryCrafting): ItemStack = {
         var bp: ItemStack = null
-        for (i <- 0 until inv.getSizeInventory) {
+        var i = 0
+        while (i < inv.getSizeInventory) {
           val s = inv.getStackInSlot(i)
           if (s != null)
             if (bp != null) return null
             else bp = s
+          i += 1
         }
 
         if (
@@ -220,7 +225,8 @@ object FabricationRecipes {
       override def getCraftingResult(inv: InventoryCrafting): ItemStack = {
         var bp: ItemStack = null
         var emptyCount = 0
-        for (i <- 0 until inv.getSizeInventory) {
+        var i = 0
+        while (i < inv.getSizeInventory) {
           val s = inv.getStackInSlot(i)
           if (s != null) {
             if (s.getItem != itemICBlueprint) return null
@@ -230,6 +236,8 @@ object FabricationRecipes {
             else
               emptyCount += 1
           }
+
+          i += 1
         }
         if (bp != null && emptyCount > 0) {
           val out = new ItemStack(itemICBlueprint)

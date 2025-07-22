@@ -342,22 +342,26 @@ class ChipResetRecipe extends IRecipe {
   }
 
   def getType(inv: InventoryCrafting): ChipVal = {
-    for (i <- 0 until inv.getSizeInventory) {
+    var i = 0
+    while (i < inv.getSizeInventory) {
       val cdef = RoutingChipDefs.getForStack(inv.getStackInSlot(i))
       if (cdef != null) return cdef
+      i += 1
     }
     null
   }
 
   def isTypeExclusive(cdef: ChipVal, inv: InventoryCrafting): Boolean = {
-    for (i <- 0 until inv.getSizeInventory) {
+    0 until inv.getSizeInventory forall { i =>
       val stack = inv.getStackInSlot(i)
+
       if (stack != null && !stack.getItem.isInstanceOf[ItemRoutingChip])
-        return false
-      val type2 = RoutingChipDefs.getForStack(stack)
-      if (type2 != null && !(type2 == cdef)) return false
+        false
+      else {
+        val type2 = RoutingChipDefs.getForStack(stack)
+        type2 == null || type2 == cdef
+      }
     }
-    true
   }
 
   def countUnits(inv: InventoryCrafting): Int = {

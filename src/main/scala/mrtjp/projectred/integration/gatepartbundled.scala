@@ -315,8 +315,11 @@ class BusRandomizer(gate: BundledGatePart) extends BundledGateLogic(gate) {
     val high = Integer.bitCount(mask)
     val n = rand.nextInt(high)
     var v = 0
-    for (i <- 0 until 16)
+    var i = 0
+    while (i < 16) {
       if ((mask & 1 << i) != 0 && { v += 1; v - 1 } == n) return 1 << i
+      i += 1
+    }
     0
   }
 

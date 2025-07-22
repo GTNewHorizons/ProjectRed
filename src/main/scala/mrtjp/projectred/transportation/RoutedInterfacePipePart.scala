@@ -70,7 +70,8 @@ class RoutedInterfacePipePart
   ): Boolean = {
     if (super.activate(player, hit, item)) return true
     if (item != null && item.getItem.isInstanceOf[ItemRoutingChip]) {
-      for (i <- 0 until chipSlots.getSizeInventory)
+      var i = 0
+      while (i < chipSlots.getSizeInventory) {
         if (
           chipSlots
             .getStackInSlot(i) == null && chipSlots.isItemValidForSlot(i, item)
@@ -79,6 +80,8 @@ class RoutedInterfacePipePart
           chipSlots.setInventorySlotContents(i, chip)
           return true
         }
+        i += 1
+      }
     }
 
     if (!player.isSneaking) {
@@ -200,8 +203,7 @@ class RoutedInterfacePipePart
   }
 
   override def weakTileChanges(): Boolean = {
-    for (r <- chips) if (r != null) if (r.weakTileChanges) return true
-    false
+    chips exists { r => r != null && r.weakTileChanges }
   }
 
   override def requestCraftPromise(request: RequestBranchNode) = {

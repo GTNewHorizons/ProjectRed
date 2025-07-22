@@ -248,14 +248,16 @@ class SlotProjectCrafting(
       inputs: Array[ItemStack],
       storage: Array[ItemStack]
   ): Boolean = {
-    i = 0
+    this.i = 0
     val invCrafting = new InventoryCrafting(new NodeContainer, 3, 3)
-    for (i <- 0 until 9) {
+    var i = 0
+    while (i < 9) {
       val item = inputs(i)
       if (item != null) {
         if (!eatResource(recipe, item, storage)) return false
         invCrafting.setInventorySlotContents(i, item)
       }
+      i += 1
     }
     recipe.matches(invCrafting, world)
   }

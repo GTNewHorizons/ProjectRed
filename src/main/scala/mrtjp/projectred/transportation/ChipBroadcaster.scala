@@ -75,76 +75,75 @@ trait TActiveBroadcastStack extends RoutingChip {
 
   def timeOutOnFailedExtract: Boolean
 
-  def doExtractOperation() {
+  def doExtractOperation(): Unit = {
     if (!hasOrders) return
 
     var stacksRemaining = getStacksToExtract
     var itemsRemaining = getItemsToExtract
 
-    val wh, cont = new scala.util.control.Breaks
-    wh.breakable {
-      while (hasOrders && stacksRemaining > 0 && itemsRemaining > 0)
-        cont.breakable {
-          val bObj = peek
-          val BroadcastObject(stack, req) = bObj
+    while (hasOrders && stacksRemaining > 0 && itemsRemaining > 0 && work()) {}
 
-          val real = invProvider.getInventory
-          if (real == null) {
-            popAll()
-            req.itemLost(stack)
-            cont.break()
-          }
+    def work(): Boolean = {
+      val bObj = peek
+      val BroadcastObject(stack, req) = bObj
 
-          if (
-            !routeLayer.getRouter.canRouteTo(
-              req.getRouter.getIPAddress,
-              stack.key,
-              bObj.priority
-            )
-          ) {
-            popAll()
-            req.itemLost(stack)
-            cont.break()
-          }
+      val real = invProvider.getInventory
+      if (real == null) {
+        popAll()
+        req.itemLost(stack)
+        return true
+      }
 
-          var toExtract = stack.stackSize
-          toExtract = math.min(toExtract, itemsRemaining)
-          toExtract = math.min(toExtract, stack.key.getMaxStackSize)
+      if (
+        !routeLayer.getRouter.canRouteTo(
+          req.getRouter.getIPAddress,
+          stack.key,
+          bObj.priority
+        )
+      ) {
+        popAll()
+        req.itemLost(stack)
+        return true
+      }
 
-          var restack = false
+      var toExtract = stack.stackSize
+      toExtract = math.min(toExtract, itemsRemaining)
+      toExtract = math.min(toExtract, stack.key.getMaxStackSize)
 
-          val dspace = req.getActiveFreeSpace(stack.key)
-          if (dspace < toExtract) {
-            toExtract = dspace
-            if (toExtract <= 0) {
-              restackOrders()
-              wh.break()
-            }
-            restack = true
-          }
+      var restack = false
 
-          val removed = extractItem(stack.key, toExtract)
-          if (removed <= 0 && timeOutOnFailedExtract) {
-            popAll()
-            req.itemLost(stack)
-            cont.break()
-          }
-
-          if (removed > 0) {
-            val toSend = stack.key.makeStack(removed)
-            routeLayer.queueStackToSend(
-              toSend,
-              invProvider.getInterfacedSide,
-              bObj.priority,
-              req.getRouter.getIPAddress
-            )
-          }
-
-          if (!pop(removed) && restack) restackOrders()
-
-          stacksRemaining -= 1
-          itemsRemaining -= removed
+      val dspace = req.getActiveFreeSpace(stack.key)
+      if (dspace < toExtract) {
+        toExtract = dspace
+        if (toExtract <= 0) {
+          restackOrders()
+          return false
         }
+        restack = true
+      }
+
+      val removed = extractItem(stack.key, toExtract)
+      if (removed <= 0 && timeOutOnFailedExtract) {
+        popAll()
+        req.itemLost(stack)
+        return true
+      }
+
+      if (removed > 0) {
+        val toSend = stack.key.makeStack(removed)
+        routeLayer.queueStackToSend(
+          toSend,
+          invProvider.getInterfacedSide,
+          bObj.priority,
+          req.getRouter.getIPAddress
+        )
+      }
+
+      if (!pop(removed) && restack) restackOrders()
+
+      stacksRemaining -= 1
+      itemsRemaining -= removed
+      true
     }
   }
 }

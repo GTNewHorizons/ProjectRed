@@ -88,15 +88,8 @@ trait TMotorTile
 
     val oldPow = isPowered
 
-    isPowered = false
-    import scala.util.control.Breaks._
-    breakable {
-      for (s <- 0 until 6) {
-        if (RedstoneInteractions.getPowerTo(world, x, y, z, s, 0x1f) > 0) {
-          isPowered = true
-          break()
-        }
-      }
+    isPowered = 0 until 6 exists {
+      RedstoneInteractions.getPowerTo(world, x, y, z, _, 0x1f) > 0
     }
 
     if (!oldPow && isPowered && !isMoving && cond.canWork) {

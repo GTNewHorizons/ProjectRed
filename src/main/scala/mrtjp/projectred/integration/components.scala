@@ -21,7 +21,6 @@ import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.util.{IIcon, ResourceLocation}
 
 import scala.collection.JavaConversions._
-import scala.util.control.Breaks
 
 object ComponentStore {
   val base = loadBase("base")
@@ -306,9 +305,11 @@ object TWireModel {
   def rectangulate(data: Array[Colour]) = {
     val wireCorners = new Array[Boolean](1024)
 
-    for (y <- 0 to 30) for (x <- 0 to 30) Breaks.breakable {
-      if (data(y * 32 + x).rgba != -1) Breaks.break()
-      if (overlap(wireCorners, x, y)) Breaks.break()
+    for (
+      y <- 0 to 30;
+      x <- 0 to 30
+      if data(y * 32 + x).rgba == -1 && !overlap(wireCorners, x, y)
+    ) {
       if (!segment2x2(data, x, y))
         throw new RuntimeException(
           "Wire segment not 2x2 at (" + x + ", " + y + ")"
@@ -325,19 +326,16 @@ object TWireModel {
       rect.w = x - rect.x
 
       var y = rect.y + 2
-      Breaks.breakable {
-        while (y < 30) {
-          var advance = true
-          var dx = rect.x
-          while (dx < rect.x + rect.w && advance) {
-            if (!wireCorners(y * 32 + dx)) advance = false
-            dx += 2
-          }
-
-          if (!advance) Breaks.break()
-
-          y += 2
+      var advance = true
+      while (y < 30 && advance) {
+        var dx = rect.x
+        while (dx < rect.x + rect.w && advance) {
+          if (!wireCorners(y * 32 + dx)) advance = false
+          dx += 2
         }
+
+        if (advance)
+          y += 2
       }
       rect.h = y - rect.y
 

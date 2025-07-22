@@ -458,10 +458,9 @@ trait TInventoryPipe[T <: AbstractPipePayload]
         classOf[IInventory]
       ) == null
     if (!invalid) return
-    var found = false
     val oldSide = inOutSide
 
-    0 until 6 exists { i =>
+    val found = 0 until 6 exists { _ =>
       inOutSide = ((inOutSide + 1) % 6).toByte
       if (maskConnects(inOutSide)) {
         val bc = new BlockCoord(tile).offset(inOutSide)

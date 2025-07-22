@@ -334,7 +334,8 @@ object TWireModel {
           dx += 2
         }
 
-        y += 2
+        if (advance)
+          y += 2
       }
       rect.h = y - rect.y
 

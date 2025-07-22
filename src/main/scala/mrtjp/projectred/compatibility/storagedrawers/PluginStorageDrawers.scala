@@ -131,20 +131,14 @@ class StorageDrawersInvWrapper(inv: IInventory) extends InvWrapper(inv) {
   override def getAllItemStacks = {
     var items = Map[ItemKey, Int]()
 
-    0 until getDrawers.getDrawerCount collect {
-      case x
-          if getDrawers.getDrawer(x) != null && ItemKey.get(
-            getDrawers.getDrawer(x).getStoredItemPrototype
-          ) != null =>
-        x
-    }
-
-    for (
-      i <- 0 until getDrawers.getDrawerCount;
-      drawer <- Option(getDrawers.getDrawer(i));
-      key <- Option(ItemKey.get(drawer.getStoredItemPrototype))
-    ) {
-      items += key -> (drawer.getStoredItemCount + items.getOrElse(key, 0))
+    for (i <- 0 until getDrawers.getDrawerCount) {
+      val drawer = getDrawers.getDrawer(i)
+      if (drawer != null) {
+        val key = ItemKey.get(drawer.getStoredItemPrototype)
+        if (key != null) {
+          items += key -> (drawer.getStoredItemCount + items.getOrElse(key, 0))
+        }
+      }
     }
     items
   }

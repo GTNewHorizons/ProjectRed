@@ -84,7 +84,7 @@ class RequestBranchNode(
     val iter = allRouters.iterator
     while (iter.hasNext) {
       val l = iter.next()
-      if (isDone) return isDone
+      if (isDone) return true
       else
         l.end.getParent match {
           case member: IWorldBroadcaster =>

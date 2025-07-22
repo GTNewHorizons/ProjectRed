@@ -46,14 +46,14 @@ object BundledCommons {
 
   def isSignalZero(signal: Array[Byte]): Boolean = {
     if (signal == null) return true
-    0 until 15 forall {
+    0 until 16 forall {
       signal(_) == 0
     }
   }
 
   def isSignalZero(signal: Array[Byte], mask: Int): Boolean = {
     if (signal == null) return true
-    0 until 15 forall { i =>
+    0 until 16 forall { i =>
       (mask & 1 << i) == 0 || signal(i) == 0
     }
   }

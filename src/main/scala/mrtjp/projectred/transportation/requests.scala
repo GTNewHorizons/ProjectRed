@@ -137,7 +137,7 @@ class RequestBranchNode(
     isDone
   }
 
-  def doCraftReq() = {
+  def doCraftReq(): Boolean = {
     val allRouters = requester.getRouter
       .getFilteredRoutesByCost(p =>
         p.flagRouteFrom && p.allowCrafting && p.allowItem(stack.key)
@@ -166,66 +166,67 @@ class RequestBranchNode(
     var priority = 0
     var lastCrafter: CraftingPromise = null
 
-    val outer, inner = new scala.util.control.Breaks
-    outer.breakable {
-      while (!finished) inner.breakable {
-        if (it.hasNext) {
-          if (lastCrafter == null) lastCrafter = it.next()
-        } else if (lastCrafter == null) finished = true
+    while (!finished) {
+      finished = work()
+    }
 
-        var itemsNeeded = getMissingCount
+    def work(): Boolean = {
+      var finished = false
+      if (it.hasNext) {
+        if (lastCrafter == null) lastCrafter = it.next()
+      } else if (lastCrafter == null) finished = true
 
-        if (
-          lastCrafter != null && (balanced.isEmpty || priority == lastCrafter.priority)
-        ) {
-          priority = lastCrafter.priority
-          val crafter = lastCrafter
-          lastCrafter = null
-          if (recurse_IsCrafterUsed(crafter)) outer.break()
+      var itemsNeeded = getMissingCount
 
-          val ci = new CraftingInitializer(crafter, itemsNeeded, this)
-          balanced.add(ci)
-          inner.break()
-        }
+      if (
+        lastCrafter != null && (balanced.isEmpty || priority == lastCrafter.priority)
+      ) {
+        priority = lastCrafter.priority
+        val crafter = lastCrafter
+        lastCrafter = null
+        if (recurse_IsCrafterUsed(crafter)) return true
 
-        if (unbalanced.isEmpty && balanced.isEmpty) inner.break()
+        val ci = new CraftingInitializer(crafter, itemsNeeded, this)
+        balanced.add(ci)
+        return finished
+      }
 
-        if (balanced.size == 1) {
-          unbalanced :+= balanced.poll()
-          unbalanced(0).addAdditionalItems(itemsNeeded)
-        } else {
-          if (!balanced.isEmpty) unbalanced :+= balanced.poll
-          while (unbalanced.nonEmpty && itemsNeeded > 0) {
-            while (
-              !balanced.isEmpty && balanced.peek.toDo <= unbalanced(0).toDo
-            )
-              unbalanced :+= balanced.poll
+      if (unbalanced.isEmpty && balanced.isEmpty) return finished
 
-            var cap =
-              if (!balanced.isEmpty) balanced.peek.toDo else Int.MaxValue
+      if (balanced.size == 1) {
+        unbalanced :+= balanced.poll()
+        unbalanced(0).addAdditionalItems(itemsNeeded)
+      } else {
+        if (!balanced.isEmpty) unbalanced :+= balanced.poll
+        while (unbalanced.nonEmpty && itemsNeeded > 0) {
+          while (!balanced.isEmpty && balanced.peek.toDo <= unbalanced(0).toDo)
+            unbalanced :+= balanced.poll
 
-            val floor = unbalanced(0).toDo
-            cap = math.min(
-              cap,
-              floor + (itemsNeeded + unbalanced.size - 1) / unbalanced.size
-            )
+          var cap =
+            if (!balanced.isEmpty) balanced.peek.toDo else Int.MaxValue
 
-            for (crafter <- unbalanced) {
-              val request = Math.min(itemsNeeded, cap - floor)
-              if (request > 0)
-                itemsNeeded -= crafter.addAdditionalItems(request)
-            }
+          val floor = unbalanced(0).toDo
+          cap = math.min(
+            cap,
+            floor + (itemsNeeded + unbalanced.size - 1) / unbalanced.size
+          )
+
+          for (crafter <- unbalanced) {
+            val request = Math.min(itemsNeeded, cap - floor)
+            if (request > 0)
+              itemsNeeded -= crafter.addAdditionalItems(request)
           }
         }
-
-        unbalanced = unbalanced.filterNot(c =>
-          c.setsRequested > 0 && !c.finalizeInteraction()
-        )
-
-        itemsNeeded = getMissingCount
-        if (itemsNeeded <= 0) outer.break()
-        if (unbalanced.nonEmpty) finished = false
       }
+
+      unbalanced = unbalanced.filterNot(c =>
+        c.setsRequested > 0 && !c.finalizeInteraction()
+      )
+
+      itemsNeeded = getMissingCount
+      if (itemsNeeded <= 0) return true
+      if (unbalanced.nonEmpty) finished = false
+      finished
     }
 
     isDone

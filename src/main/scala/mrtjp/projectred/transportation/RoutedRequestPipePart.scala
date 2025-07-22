@@ -52,7 +52,7 @@ class RoutedRequestPipePart extends AbstractNetPipe with TNetworkPipe {
           i != (r.input ^ 1) && (connMap & 1 << i) != 0
         } match {
           case Some(x) => return x
-          case _       =>
+          case None    =>
         }
       }
     }

@@ -348,8 +348,9 @@ class Router(ID: UUID, parent: IWorldRouter) extends Ordered[Router] {
     closedFilters(getIPAddress) = Vector(Set[PathFilter](PathFilter.default))
 
     Router.LSADatabasereadLock.lock()
-    import scala.util.control.Breaks._
-    while (!openPaths.isEmpty) breakable {
+    while (!openPaths.isEmpty && work()) {}
+
+    def work(): Boolean = {
       val dequeue = openPaths.poll()
       val deqIP = dequeue.end.getIPAddress
       ensureClosed(deqIP)
@@ -357,10 +358,13 @@ class Router(ID: UUID, parent: IWorldRouter) extends Ordered[Router] {
 
       // Skip if we have already found a path with identical filters
       val filtSetsClosed = closedFilters(deqIP)
-      if (filtSetsClosed != null)
-        for (filtsClosed <- filtSetsClosed)
-          if (filtsClosed.subsetOf(dequeue.filters))
-            break() // dequeue's filters contain all closed filters
+      if (filtSetsClosed != null) {
+        val containsClosed = filtSetsClosed exists {
+          _.subsetOf(dequeue.filters)
+        }
+        if (containsClosed)
+          return false
+      } // dequeue's filters contain all closed filters
 
       // Queue all of the neighbors of the end of this path for searching
       val lsa = deqIP match {
@@ -379,6 +383,7 @@ class Router(ID: UUID, parent: IWorldRouter) extends Ordered[Router] {
       closedFilters(deqIP) =
         if (filtSetsClosed != null) filtSetsClosed :+ dequeue.filters
         else Vector(dequeue.filters)
+      true
     }
     Router.LSADatabasereadLock.unlock()
 

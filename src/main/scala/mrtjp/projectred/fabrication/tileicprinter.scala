@@ -411,8 +411,7 @@ object TileICPrinter {
         .getRecipeList
         .asInstanceOf[JList[IRecipe]]
         .iterator()
-    while (recipes.hasNext) {
-      val r = recipes.next()
+    for (r <- recipes)
       try {
         val out = ItemKey.get(r.getRecipeOutput)
         if (out == key) {
@@ -456,7 +455,6 @@ object TileICPrinter {
         case e: Exception =>
           log.error(s"Some mod messed up. The recipe $r has a null output.")
       }
-    }
     gRec += key -> Seq.empty
   }
 

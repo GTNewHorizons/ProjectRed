@@ -229,16 +229,18 @@ class TileICPrinter extends TileICMachine with TInventory {
     if (!world.isRemote) {
       externalItems -= stack.key
       var s = 0
-      while (s < 6) if (s != 1) {
-        val inv = InvWrapper.getInventory(world, position.offset(s))
-        if (inv != null) {
-          val w = InvWrapper.wrap(inv).setSlotsFromSide(s ^ 1)
-          val in = w.getItemCount(stack.key)
-          if (in > 0) {
-            a += in
-            if (a >= stack.stackSize) {
-              externalItems += stack.key
-              return true
+      while (s < 6) {
+        if (s != 1) {
+          val inv = InvWrapper.getInventory(world, position.offset(s))
+          if (inv != null) {
+            val w = InvWrapper.wrap(inv).setSlotsFromSide(s ^ 1)
+            val in = w.getItemCount(stack.key)
+            if (in > 0) {
+              a += in
+              if (a >= stack.stackSize) {
+                externalItems += stack.key
+                return true
+              }
             }
           }
         }
@@ -266,12 +268,14 @@ class TileICPrinter extends TileICMachine with TInventory {
     }
 
     var s = 0
-    while (s < 6) if (s != 1) {
-      val inv = InvWrapper.getInventory(world, position.offset(s))
-      if (inv != null) {
-        val w = InvWrapper.wrap(inv).setSlotsFromSide(s ^ 1)
-        left -= w.extractItem(stack.key, left)
-        if (left <= 0) return
+    while (s < 6) {
+      if (s != 1) {
+        val inv = InvWrapper.getInventory(world, position.offset(s))
+        if (inv != null) {
+          val w = InvWrapper.wrap(inv).setSlotsFromSide(s ^ 1)
+          left -= w.extractItem(stack.key, left)
+          if (left <= 0) return
+        }
       }
       s += 1
     }

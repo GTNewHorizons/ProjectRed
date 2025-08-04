@@ -134,17 +134,14 @@ class ChipCrafting
 
     val it = excess.result.iterator
 
-    while (it.hasNext && stacksRemaining > 0 && itemsRemaining > 0) {
-      work()
-    }
-
-    def work(): Unit = {
+    import scala.util.control.Breaks._
+    while (it.hasNext && stacksRemaining > 0 && itemsRemaining > 0) breakable {
       val (item, amount) = it.next()
 
       val real = invProvider.getInventory
       if (real == null) {
         excess.remove(item, amount)
-        return
+        break()
       }
 
       var toExtract = amount
@@ -154,7 +151,7 @@ class ChipCrafting
       val removed = extractItem(item, toExtract)
       if (removed <= 0 && timeOutOnFailedExtract) {
         excess.remove(item, amount)
-        return
+        break()
       }
 
       if (removed > 0) {

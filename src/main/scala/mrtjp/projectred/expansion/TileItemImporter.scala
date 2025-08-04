@@ -55,23 +55,20 @@ class TileItemImporter
     if (inv == null) return false
     val w = InvWrapper.wrap(inv)
     w.setSlotsFromSide(side)
-    val list = w.getAllItemStacks.iterator
-    while (list.hasNext) {
-      val (k, v) = list.next()
-      if (canImport(k)) {
-        val toExtract = math.min(k.getMaxStackSize, getExtractAmount)
-        val extracted = w.extractItem(k, toExtract)
+    val list = w.getAllItemStacks
+    for ((k, v) <- list) if (canImport(k)) {
+      val toExtract = math.min(k.getMaxStackSize, getExtractAmount)
+      val extracted = w.extractItem(k, toExtract)
 
-        if (extracted > 0) {
-          storage.add(k.makeStack(extracted))
-          active = true
-          sendStateUpdate()
-          scheduleTick(4)
-          exportBuffer()
-          return true
-        }
-        return false
+      if (extracted > 0) {
+        storage.add(k.makeStack(extracted))
+        active = true
+        sendStateUpdate()
+        scheduleTick(4)
+        exportBuffer()
+        return true
       }
+      return false
     }
     false
   }

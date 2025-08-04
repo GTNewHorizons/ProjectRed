@@ -23,7 +23,8 @@ object LSPathFinder {
 
   def getLinkState(tile: TileEntity): ISpecialLinkState = {
     if (tile == null) return null
-    registeredLSTypes.find(_.matches(tile)).orNull
+    for (l <- registeredLSTypes) if (l.matches(tile)) return l
+    null
   }
 
   def clear() {
@@ -205,28 +206,26 @@ object LogisticPathFinder {
   def result(): SyncResponse = {
     var bestResponse = new SyncResponse
     var bestIP = -1
+    import scala.util.control.Breaks._
 
     for (
       l <- start.getFilteredRoutesByCost(p =>
         p.flagRouteTo && p.allowRouting && p.allowItem(payload)
       )
-    )
-      work(l)
-
-    def work(l: StartEndPath) {
+    ) breakable {
       val r = l.end
-      if (excludeSource && r.getIPAddress == start.getIPAddress) return
+      if (excludeSource && r.getIPAddress == start.getIPAddress) break()
       if (
         excludeSource && LogisticPathFinder.sharesInventory(
           start.getParent.getContainer,
           r.getParent.getContainer
         )
-      ) return
-      if (exclusions(r.getIPAddress) || visited(r.getIPAddress)) return
+      ) break()
+      if (exclusions(r.getIPAddress) || visited(r.getIPAddress)) break()
 
       visited += r.getIPAddress
       val parent = r.getParent
-      if (parent == null) return
+      if (parent == null) break()
 
       val sync = parent.getSyncResponse(payload, bestResponse)
       if (sync != null) if (sync.isPreferredOver(bestResponse)) {

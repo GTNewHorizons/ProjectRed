@@ -445,11 +445,14 @@ trait TChipCrafter extends RoutingChip {
     amount
   }
 
-  def isIngredient(item: ItemKey): Boolean =
-    0 until 9 exists { i =>
+  def isIngredient(item: ItemKey): Boolean = {
+    for (i <- 0 until 9) {
       val s = matrix.getStackInSlot(i)
-      s != null && ItemKey.get(s) == item
+      if (s != null && ItemKey.get(s) == item)
+        return true
     }
+    false
+  }
 
   def addMatrixInfo(list: ListBuffer[String]) {
     list += (EnumChatFormatting.GRAY.toString + "Matrix: ")

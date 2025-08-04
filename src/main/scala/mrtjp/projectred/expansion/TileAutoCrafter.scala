@@ -176,14 +176,12 @@ class TileAutoCrafter
       .isInstanceOf[ShapelessOreRecipe]
 
     var found = 0
-    var i = 9
-    while (i < 27) {
+    for (i <- 9 until 27) {
       val s = getStackInSlot(i)
       if (s != null && eq.matches(item, ItemKey.get(s))) {
         found += s.stackSize
         if (found >= amount) return true
       }
-      i += 1
     }
     false
   }
@@ -208,8 +206,7 @@ class TileAutoCrafter
       .isInstanceOf[ShapelessOreRecipe]
 
     var left = amount
-    var i = 9
-    while (i < 27) {
+    for (i <- 9 until 27) {
       val s = getStackInSlot(i)
       if (s != null && eq.matches(item, ItemKey.get(s))) {
         if (s.getItem.hasContainerItem(s)) {
@@ -226,8 +223,6 @@ class TileAutoCrafter
 
         if (left <= 0) return
       }
-
-      i += 1
     }
   }
 

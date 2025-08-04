@@ -38,8 +38,7 @@ class ShapelessBuilderRecipe(val builder: ShapelessRecipeBuilder)
     if (inv.getSizeInventory < getRecipeSize) return false
 
     var required = builder.inResult
-    var i = 0
-    while (i < inv.getSizeInventory) {
+    for (i <- 0 until inv.getSizeInventory) {
       val stack = ItemKeyStack.get(inv.getStackInSlot(i))
       if (stack != null) required.find(_.matches(stack)) match {
         case Some(e) =>
@@ -47,7 +46,6 @@ class ShapelessBuilderRecipe(val builder: ShapelessRecipeBuilder)
           required = required.take(idx) ++ required.drop(idx + 1)
         case None => return false
       }
-      i += 1
     }
     required.isEmpty
   }

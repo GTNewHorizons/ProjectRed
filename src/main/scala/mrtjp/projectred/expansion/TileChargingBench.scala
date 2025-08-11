@@ -150,14 +150,14 @@ class TileChargingBench
   }
 
   def containsUncharged: Boolean = {
-    0 until 8 exists { i =>
+    for (i <- 0 until 8) {
       val stack = getStackInSlot(i)
       if (stack != null) stack.getItem match {
-        case ic: IChargable if !ic.isFullyCharged(stack) => true
+        case ic: IChargable if !ic.isFullyCharged(stack) => return true
         case _                                           =>
       }
-      false
     }
+    false
   }
 
   private var oldIC = false

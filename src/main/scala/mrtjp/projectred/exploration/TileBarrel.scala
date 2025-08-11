@@ -454,10 +454,13 @@ class BarrelInvWrapper(inv: IInventory) extends InvWrapper(inv) {
   override def injectItem(item: ItemKey, toAdd: Int) = {
     var itemsLeft = toAdd
     if (slots.contains(0) && (getBarrel.isEmpty || item == getBarrel.item)) {
-      while (itemsLeft > 0 && getBarrel.getFreeSpace > 0) {
-        val toAdd = math.min(item.getMaxStackSize, itemsLeft)
-        val added = getBarrel.importStack(item.makeStack(toAdd))
-        itemsLeft -= added
+      import scala.util.control.Breaks._
+      breakable {
+        while (itemsLeft > 0 && getBarrel.getFreeSpace > 0) {
+          val toAdd = math.min(item.getMaxStackSize, itemsLeft)
+          val added = getBarrel.importStack(item.makeStack(toAdd))
+          itemsLeft -= added
+        }
       }
     }
     toAdd - itemsLeft

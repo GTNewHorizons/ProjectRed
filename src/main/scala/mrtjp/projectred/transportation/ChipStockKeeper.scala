@@ -40,12 +40,10 @@ class ChipStockKeeper
     var requestAttempted = false
     var requestedSomething = false
 
-    for (i <- 0 until stock.getSizeInventory)
-      work(i)
-
-    def work(i: Int): Unit = {
+    import scala.util.control.Breaks._
+    for (i <- 0 until stock.getSizeInventory) breakable {
       val keyStack = ItemKeyStack.get(stock.getStackInSlot(i))
-      if (keyStack == null || checked.contains(keyStack.key)) return
+      if (keyStack == null || checked.contains(keyStack.key)) break()
       checked += keyStack.key
 
       val eq = createEqualityFor(i)
@@ -59,7 +57,7 @@ class ChipStockKeeper
         routeLayer.getRequester.getActiveFreeSpace(keyStack.key)
       var toRequest = math.min(stockToKeep - inInventory, spaceInInventory)
       toRequest = math.min(toRequest, maxRequestSize)
-      if (toRequest <= 0 || (requestMode == 1 && inInventory > 0)) return
+      if (toRequest <= 0 || (requestMode == 1 && inInventory > 0)) break()
 
       val req = new RequestConsole(RequestFlags.full)
         .setDestination(routeLayer.getRequester)

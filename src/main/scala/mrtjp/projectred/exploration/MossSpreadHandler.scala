@@ -73,10 +73,11 @@ object MossSpreadHandler extends IBlockEventHandler {
   val wetAndHot = wetSources ++ heatSources
 
   private def ncheck(w: World, b: BlockCoord)(f: Block => Boolean): Boolean = {
-    0 until 6 exists { i =>
+    for (i <- 0 until 6) {
       val bc = b.copy.offset(i)
       val block = w.getBlock(bc.x, bc.y, bc.z)
-      f(block)
+      if (f(block)) return true
     }
+    false
   }
 }

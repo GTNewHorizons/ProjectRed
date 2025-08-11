@@ -458,16 +458,21 @@ trait TInventoryPipe[T <: AbstractPipePayload]
         classOf[IInventory]
       ) == null
     if (!invalid) return
+    var found = false
     val oldSide = inOutSide
 
-    val found = 0 until 6 exists { _ =>
-      inOutSide = ((inOutSide + 1) % 6).toByte
-      if (maskConnects(inOutSide)) {
-        val bc = new BlockCoord(tile).offset(inOutSide)
-        val t = WorldLib.getTileEntity(world, bc)
-        t.isInstanceOf[IInventory]
-      } else {
-        false
+    import scala.util.control.Breaks._
+    breakable {
+      for (i <- 0 until 6) {
+        inOutSide = ((inOutSide + 1) % 6).toByte
+        if (maskConnects(inOutSide)) {
+          val bc = new BlockCoord(tile).offset(inOutSide)
+          val t = WorldLib.getTileEntity(world, bc)
+          if (t.isInstanceOf[IInventory]) {
+            found = true
+            break()
+          }
+        }
       }
     }
 

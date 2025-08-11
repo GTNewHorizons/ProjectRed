@@ -25,9 +25,10 @@ class ChipExtractor extends RoutingChip with TChipFilter with TChipOrientation {
     val inv = InvWrapper.wrap(real).setSlotsFromSide(side)
     val filt = applyFilter(InvWrapper.wrap(filter))
 
-    val available = inv.getAllItemStacks.iterator
-    while (available.hasNext) {
-      val (stackKey, stackSize) = available.next()
+    val available = inv.getAllItemStacks
+    for ((k, v) <- available) {
+      val stackKey = k
+      val stackSize = v
 
       if (
         stackKey != null &&

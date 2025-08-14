@@ -69,7 +69,9 @@ class ConfigurationCounter(gate: SequentialGateICPart)
 
     val pos_state = position.add(5, 102)
     GuiDraw.drawString(
-      "State: " + counterLogic.getCounterValue.toString,
+      translate(
+        "gui.projectred.fabrication.state"
+      ) + ": " + counterLogic.getCounterValue.toString,
       pos_state.x,
       pos_state.y,
       Colors.GREY.argb,
@@ -77,12 +79,30 @@ class ConfigurationCounter(gate: SequentialGateICPart)
     )
 
     val pos_max = position.add(5, 120)
-    GuiDraw.drawString("Max", pos_max.x, pos_max.y, Colors.GREY.argb, false)
+    GuiDraw.drawString(
+      translate("gui.projectred.fabrication.max"),
+      pos_max.x,
+      pos_max.y,
+      Colors.GREY.argb,
+      false
+    )
 
     val pos_inc = position.add(5, 140)
-    GuiDraw.drawString("Inc", pos_inc.x, pos_inc.y, Colors.GREY.argb, false)
+    GuiDraw.drawString(
+      translate("gui.projectred.fabrication.inc"),
+      pos_inc.x,
+      pos_inc.y,
+      Colors.GREY.argb,
+      false
+    )
 
     val pos_dec = position.add(5, 160)
-    GuiDraw.drawString("Dec", pos_dec.x, pos_dec.y, Colors.GREY.argb, false)
+    GuiDraw.drawString(
+      translate("gui.projectred.fabrication.dec"),
+      pos_dec.x,
+      pos_dec.y,
+      Colors.GREY.argb,
+      false
+    )
   }
 }

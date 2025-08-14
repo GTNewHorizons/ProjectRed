@@ -11,6 +11,7 @@ import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.projectred.fabrication.IntegratedCircuit
 import mrtjp.projectred.fabrication.operations.CircuitOp
 import net.minecraft.nbt.NBTTagCompound
+import net.minecraft.util.StatCollector
 
 object CircuitPart {
   def createPart(id: Int) = CircuitPartDefs(id).createPart
@@ -94,7 +95,8 @@ abstract class CircuitPart {
 
   @SideOnly(Side.CLIENT)
   def getRolloverData(detailLevel: Int): Seq[String] =
-    if (detailLevel > 0) Seq(getPartName) else Seq.empty
+    if (detailLevel > 0) Seq(StatCollector.translateToLocal(getPartName))
+    else Seq.empty
 
   @SideOnly(Side.CLIENT)
   def renderDynamic(t: Transformation, ortho: Boolean, frame: Float) {}

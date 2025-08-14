@@ -190,8 +190,8 @@ class BundledCableICPart
   }
 
   @SideOnly(Side.CLIENT)
-  override def getPartName = (if (colour != -1) Colors(colour & 0xff).name + " "
-                              else "") + "Bundled cable"
+  override def getPartName =
+    "item.projectred.transmission.wire|" + colour + ".name"
 
   @SideOnly(Side.CLIENT)
   override def getCircuitOperation = CircuitOpDefs

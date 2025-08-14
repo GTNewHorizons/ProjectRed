@@ -14,6 +14,7 @@ import mrtjp.projectred.fabrication.circuitparts.{
   ICGateRenderer,
   TClientNetCircuitPart
 }
+import net.minecraft.util.StatCollector
 
 trait TConfigurable extends TClientNetCircuitPart {
   def createConfigurationNode: ConfigurationNode
@@ -33,5 +34,9 @@ abstract class ConfigurationNode(gate: GateICPart) extends TNode {
       true,
       rframe
     )
+  }
+
+  protected def translate(unlocalizedName: String): String = {
+    StatCollector.translateToLocal(unlocalizedName)
   }
 }

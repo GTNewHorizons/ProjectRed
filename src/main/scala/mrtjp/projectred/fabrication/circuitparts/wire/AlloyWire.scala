@@ -23,7 +23,7 @@ class AlloyWireICPart extends RedwireICPart {
   }
 
   @SideOnly(Side.CLIENT)
-  override def getPartName = "Alloy wire"
+  override def getPartName = "item.projectred.transmission.wire|0.name"
 
   @SideOnly(Side.CLIENT)
   override def getCircuitOperation = CircuitOpDefs.AlloyWire.getOp

@@ -118,5 +118,5 @@ class OpGate(meta: Int) extends CircuitOp {
   }
 
   @SideOnly(Side.CLIENT)
-  override def getOpName = ICGateDefinition(meta).unlocal
+  override def getOpName = ICGateDefinition(meta).unlocalized
 }

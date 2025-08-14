@@ -20,7 +20,7 @@ class OpTorch extends OpSimplePlacement {
   override def createPart = CircuitPartDefs.Torch.createPart
 
   @SideOnly(Side.CLIENT)
-  override def getOpName = "Torch"
+  override def getOpName = "tile.notGate.name"
 }
 
 class OpButton extends OpSimplePlacement {
@@ -32,7 +32,7 @@ class OpButton extends OpSimplePlacement {
   override def createPart = CircuitPartDefs.Button.createPart
 
   @SideOnly(Side.CLIENT)
-  override def getOpName = "Button"
+  override def getOpName = "tile.button.name"
 }
 
 class OpLever extends OpSimplePlacement {
@@ -44,5 +44,5 @@ class OpLever extends OpSimplePlacement {
   override def createPart = CircuitPartDefs.Lever.createPart
 
   @SideOnly(Side.CLIENT)
-  override def getOpName = "Lever"
+  override def getOpName = "tile.lever.name"
 }

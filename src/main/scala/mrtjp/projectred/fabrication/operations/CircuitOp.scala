@@ -45,6 +45,8 @@ trait CircuitOp {
       in: MCDataInput
   ): Unit
 
+  /** Get unlocalized name
+    */
   @SideOnly(Side.CLIENT)
   def getOpName: String
 

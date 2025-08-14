@@ -41,7 +41,7 @@ class OpPaste extends OpAreaBase {
     }
   }
 
-  override def getOpName: String = "Paste"
+  override def getOpName: String = "gui.projectred.fabrication.paste"
 
   override def renderHover(
       position: Vec2,

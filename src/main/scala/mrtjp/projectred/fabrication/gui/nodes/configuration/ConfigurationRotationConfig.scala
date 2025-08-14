@@ -15,7 +15,7 @@ class ConfigurationRotationConfig(gate: GateICPart)
   val conf = new MCButtonNode
   conf.position = Point(8, 80)
   conf.size = Size(50, 15)
-  conf.text = "configure"
+  conf.text = translate("gui.projectred.fabrication.configure")
   conf.clickDelegate = { () => gate.sendClientPacket(_.writeByte(1)) }
   addChild(conf)
 }

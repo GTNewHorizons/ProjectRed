@@ -36,10 +36,10 @@ import scala.collection.convert.WrapAsJava
 class PrefboardNode(
     circuit: IntegratedCircuit,
     hasBlueprint: Boolean,
-    previewUpdateDelegate: CircuitOp => Unit,
-    setConfigNode: TNode => Unit
+    setConfigNode: TNode => Unit,
+    onPick: CircuitOp => Unit
 ) extends TNode {
-  var currentOp: CircuitOp = null
+  private var currentOp: CircuitOp = null
 
   /** 0 - off 1 - name only 2 - minor details 3 - all details
     */
@@ -48,16 +48,10 @@ class PrefboardNode(
 
   var offset: Vec2 = Vec2(0, 0)
 
-  def updatePreview(): Unit = {
-    previewUpdateDelegate(currentOp)
-  }
-
   override def frame = Rect(
     position,
     parent.frame.size
   )
-
-  var opPickDelegate = { _: CircuitOp => () }
 
   private var leftMouseDown = false
   private var rightMouseDown = false
@@ -80,11 +74,6 @@ class PrefboardNode(
       math.floor(circuitCoord.dx).round.toInt,
       math.floor(circuitCoord.dy).round.toInt
     )
-  }
-
-  private def toCenteredGuiPoint(gridP: Point) = {
-    val dp = frame.size.vectorize / 16
-    Point(gridP.vectorize * dp + dp / 2)
   }
 
   override def update_Impl() {
@@ -243,14 +232,14 @@ class PrefboardNode(
   }
 
   override def keyPressed_Impl(c: Char, keycode: Int, consumed: Boolean) = {
-    updatePreview()
     import Keyboard._
     if (!consumed) keycode match {
       case KEY_ESCAPE if leftMouseDown =>
         leftMouseDown = false
         true
       case KEY_ESCAPE if currentOp != null =>
-        opPickDelegate(null)
+        currentOp = null
+        onPick(null)
         true
       case KEY_Q =>
         doPickOp()
@@ -328,6 +317,11 @@ class PrefboardNode(
     }
   }
 
+  def pickOp(op: CircuitOp): Unit = {
+    setConfigNode(null)
+    currentOp = op
+  }
+
   def doPickOp() {
     val root = getRoot
     val i = Mouse.getX * root.width / root.mc.displayWidth
@@ -337,11 +331,13 @@ class PrefboardNode(
     val pos = parent.convertPointFromScreen(absPos)
     if (rayTest(pos)) {
       val part = circuit.getPart(toGridPoint(pos.vectorize))
-      opPickDelegate(if (part != null) {
+      val op = if (part != null) {
         setConfigNode(null)
         part.getCircuitOperation
-      } else null)
-      updatePreview()
+      } else
+        null
+      currentOp = op
+      onPick(op)
     }
   }
 

@@ -87,5 +87,5 @@ class OpErase extends OpAreaBase {
   }
 
   @SideOnly(Side.CLIENT)
-  override def getOpName = "Erase"
+  override def getOpName = "gui.projectred.fabrication.erase"
 }

@@ -209,7 +209,8 @@ class OpInsulatedWire(colour: Int) extends OpWire {
   }
 
   @SideOnly(Side.CLIENT)
-  override def getOpName = Colors(colour & 0xff).name + " Insulated wire"
+  override def getOpName =
+    "item.projectred.transmission.wire|" + colour + ".name"
 }
 
 class OpBundledCable(colour: Int) extends OpWire {

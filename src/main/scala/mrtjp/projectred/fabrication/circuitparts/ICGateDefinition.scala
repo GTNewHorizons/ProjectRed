@@ -13,54 +13,154 @@ object ICGateDefinition extends Enum {
 
   import mrtjp.projectred.integration.{GateDefinition => gd}
 
-  val IOSimple = ICGateDef("Simple IO", CircuitPartDefs.IOGate.id)
-  val IOAnalog = ICGateDef("Analog IO", CircuitPartDefs.IOGate.id)
-  val IOBundled = ICGateDef("Bundled IO", CircuitPartDefs.IOGate.id)
+  val IOSimple =
+    ICGateDef("gui.projectred.fabrication.io_simple", CircuitPartDefs.IOGate.id)
+  val IOAnalog =
+    ICGateDef("gui.projectred.fabrication.io_analog", CircuitPartDefs.IOGate.id)
+  val IOBundled = ICGateDef(
+    "gui.projectred.fabrication.io_bundled",
+    CircuitPartDefs.IOGate.id
+  )
 
-  val OR = ICGateDef("OR gate", CircuitPartDefs.SimpleGate.id, gd.OR)
-  val NOR = ICGateDef("NOR gate", CircuitPartDefs.SimpleGate.id, gd.NOR)
-  val NOT = ICGateDef("NOT gate", CircuitPartDefs.SimpleGate.id, gd.NOT)
-  val AND = ICGateDef("AND gate", CircuitPartDefs.SimpleGate.id, gd.AND)
-  val NAND = ICGateDef("NAND gate", CircuitPartDefs.SimpleGate.id, gd.NAND)
-  val XOR = ICGateDef("XOR gate", CircuitPartDefs.SimpleGate.id, gd.XOR)
-  val XNOR = ICGateDef("XNOR gate", CircuitPartDefs.SimpleGate.id, gd.XNOR)
+  val OR = ICGateDef(
+    "item.projectred.integration.gate|0.name",
+    CircuitPartDefs.SimpleGate.id,
+    gd.OR
+  )
+  val NOR = ICGateDef(
+    "item.projectred.integration.gate|1.name",
+    CircuitPartDefs.SimpleGate.id,
+    gd.NOR
+  )
+  val NOT = ICGateDef(
+    "item.projectred.integration.gate|2.name",
+    CircuitPartDefs.SimpleGate.id,
+    gd.NOT
+  )
+  val AND = ICGateDef(
+    "item.projectred.integration.gate|3.name",
+    CircuitPartDefs.SimpleGate.id,
+    gd.AND
+  )
+  val NAND = ICGateDef(
+    "item.projectred.integration.gate|4.name",
+    CircuitPartDefs.SimpleGate.id,
+    gd.NAND
+  )
+  val XOR = ICGateDef(
+    "item.projectred.integration.gate|5.name",
+    CircuitPartDefs.SimpleGate.id,
+    gd.XOR
+  )
+  val XNOR = ICGateDef(
+    "item.projectred.integration.gate|6.name",
+    CircuitPartDefs.SimpleGate.id,
+    gd.XNOR
+  )
   val Buffer =
-    ICGateDef("Buffer gate", CircuitPartDefs.SimpleGate.id, gd.Buffer)
+    ICGateDef(
+      "item.projectred.integration.gate|7.name",
+      CircuitPartDefs.SimpleGate.id,
+      gd.Buffer
+    )
   val Multiplexer =
-    ICGateDef("Multiplexer", CircuitPartDefs.SimpleGate.id, gd.Multiplexer)
-  val Pulse = ICGateDef("Pulse Former", CircuitPartDefs.SimpleGate.id, gd.Pulse)
+    ICGateDef(
+      "item.projectred.integration.gate|8.name",
+      CircuitPartDefs.SimpleGate.id,
+      gd.Multiplexer
+    )
+  val Pulse = ICGateDef(
+    "item.projectred.integration.gate|9.name",
+    CircuitPartDefs.SimpleGate.id,
+    gd.Pulse
+  )
   val Repeater =
-    ICGateDef("Repeater", CircuitPartDefs.SimpleGate.id, gd.Repeater)
+    ICGateDef(
+      "item.projectred.integration.gate|10.name",
+      CircuitPartDefs.SimpleGate.id,
+      gd.Repeater
+    )
   val Randomizer =
-    ICGateDef("Randomizer", CircuitPartDefs.SimpleGate.id, gd.Randomizer)
+    ICGateDef(
+      "item.projectred.integration.gate|11.name",
+      CircuitPartDefs.SimpleGate.id,
+      gd.Randomizer
+    )
   val SRLatch =
-    ICGateDef("SR Latch", CircuitPartDefs.ComplexGate.id, gd.SRLatch)
+    ICGateDef(
+      "item.projectred.integration.gate|12.name",
+      CircuitPartDefs.ComplexGate.id,
+      gd.SRLatch
+    )
   val ToggleLatch =
-    ICGateDef("Toggle Latch", CircuitPartDefs.ComplexGate.id, gd.ToggleLatch)
+    ICGateDef(
+      "item.projectred.integration.gate|13.name",
+      CircuitPartDefs.ComplexGate.id,
+      gd.ToggleLatch
+    )
   val TransparentLatch = ICGateDef(
-    "Transparent Latch",
+    "item.projectred.integration.gate|14.name",
     CircuitPartDefs.SimpleGate.id,
     gd.TransparentLatch
   )
-  val Timer = ICGateDef("Timer", CircuitPartDefs.ComplexGate.id, gd.Timer)
+  val Timer = ICGateDef(
+    "item.projectred.integration.gate|17.name",
+    CircuitPartDefs.ComplexGate.id,
+    gd.Timer
+  )
   val Sequencer =
-    ICGateDef("Sequencer", CircuitPartDefs.ComplexGate.id, gd.Sequencer)
-  val Counter = ICGateDef("Counter", CircuitPartDefs.ComplexGate.id, gd.Counter)
+    ICGateDef(
+      "item.projectred.integration.gate|18.name",
+      CircuitPartDefs.ComplexGate.id,
+      gd.Sequencer
+    )
+  val Counter = ICGateDef(
+    "item.projectred.integration.gate|19.name",
+    CircuitPartDefs.ComplexGate.id,
+    gd.Counter
+  )
   val StateCell =
-    ICGateDef("State Cell", CircuitPartDefs.ComplexGate.id, gd.StateCell)
+    ICGateDef(
+      "item.projectred.integration.gate|20.name",
+      CircuitPartDefs.ComplexGate.id,
+      gd.StateCell
+    )
   val Synchronizer =
-    ICGateDef("Synchronizer", CircuitPartDefs.ComplexGate.id, gd.Synchronizer)
+    ICGateDef(
+      "item.projectred.integration.gate|21.name",
+      CircuitPartDefs.ComplexGate.id,
+      gd.Synchronizer
+    )
   val DecRandomizer =
-    ICGateDef("Dec Randomizer", CircuitPartDefs.SimpleGate.id, gd.DecRandomizer)
+    ICGateDef(
+      "item.projectred.integration.gate|33.name",
+      CircuitPartDefs.SimpleGate.id,
+      gd.DecRandomizer
+    )
   val NullCell =
-    ICGateDef("Null Cell", CircuitPartDefs.ArrayGate.id, gd.NullCell)
+    ICGateDef(
+      "item.projectred.integration.gate|23.name",
+      CircuitPartDefs.ArrayGate.id,
+      gd.NullCell
+    )
   val InvertCell =
-    ICGateDef("Invert Cell", CircuitPartDefs.ArrayGate.id, gd.InvertCell)
+    ICGateDef(
+      "item.projectred.integration.gate|24.name",
+      CircuitPartDefs.ArrayGate.id,
+      gd.InvertCell
+    )
   val BufferCell =
-    ICGateDef("Buffer Cell", CircuitPartDefs.ArrayGate.id, gd.BufferCell)
+    ICGateDef(
+      "item.projectred.integration.gate|25.name",
+      CircuitPartDefs.ArrayGate.id,
+      gd.BufferCell
+    )
 
-  case class ICGateDef(unlocal: String, gateType: Int, intDef: GateDef = null)
-      extends Value {
-    override def name = unlocal
+  case class ICGateDef(
+      unlocalized: String,
+      gateType: Int,
+      intDef: GateDef = null
+  ) extends Value {
+    override def name = unlocalized
   }
 }

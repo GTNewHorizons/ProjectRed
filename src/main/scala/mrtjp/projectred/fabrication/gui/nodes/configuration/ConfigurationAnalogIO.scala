@@ -13,6 +13,7 @@ import mrtjp.projectred.fabrication.circuitparts.io.{
   AnalogIOICGateLogic,
   IOGateICPart
 }
+import net.minecraft.util.StatCollector
 
 import scala.util.Try
 
@@ -37,7 +38,9 @@ class ConfigurationAnalogIO(gate: IOGateICPart)
 
     val pos_text = position.add(5, 100)
     GuiDraw.drawString(
-      "Frequency:",
+      StatCollector.translateToLocal(
+        "gui.projectred.fabrication.frequency"
+      ) + ":",
       pos_text.x,
       pos_text.y,
       Colors.GREY.argb,

@@ -41,7 +41,7 @@ class ConfigurationTimer(gate: SequentialGateICPart)
 
     val pos_state = position.add(13, 82)
     GuiDraw.drawString(
-      "Interval:",
+      translate("gui.projectred.fabrication.timer_interval") + ":",
       pos_state.x,
       pos_state.y,
       Colors.GREY.argb,

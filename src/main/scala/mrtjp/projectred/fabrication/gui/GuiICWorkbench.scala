@@ -19,6 +19,7 @@ import mrtjp.projectred.fabrication.{FabricationProxy, TileICWorkbench}
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Gui
 import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.util.StatCollector
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 
@@ -28,6 +29,10 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
   var pref: PrefboardNode = null
   var toolSets = Seq[ICToolsetNode]()
   var configurationNode: TNode = null
+
+  def translate(unlocalizedName: String): String = {
+    StatCollector.translateToLocal(unlocalizedName)
+  }
 
   override def onAddedToParent_Impl() {
     val clip = new ClipNode
@@ -108,13 +113,27 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
       addToolset("", Seq(Cut))
       addToolset("", Seq(Copy))
       addToolset("", Seq(Paste))
-      addToolset("Debug", Seq(Torch, Lever, Button))
-      addToolset("", Seq(AlloyWire))
-      addToolsetRange("Insulated wires", WhiteInsulatedWire, BlackInsulatedWire)
-      addToolsetRange("Bundled cables", NeutralBundledCable, BlackBundledCable)
-      addToolset("IOs", Seq(SimpleIO, BundledIO, AnalogIO))
       addToolset(
-        "Primatives",
+        translate("gui.projectred.fabrication.debug"),
+        Seq(Torch, Lever, Button)
+      )
+      addToolset("", Seq(AlloyWire))
+      addToolsetRange(
+        translate("gui.projectred.fabrication.insulated_wires"),
+        WhiteInsulatedWire,
+        BlackInsulatedWire
+      )
+      addToolsetRange(
+        translate("gui.projectred.fabrication.bundled_cables"),
+        NeutralBundledCable,
+        BlackBundledCable
+      )
+      addToolset(
+        translate("gui.projectred.fabrication.ios"),
+        Seq(SimpleIO, BundledIO, AnalogIO)
+      )
+      addToolset(
+        translate("gui.projectred.fabrication.primitives"),
         Seq(
           ORGate,
           NORGate,
@@ -128,7 +147,7 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
         )
       )
       addToolset(
-        "Timing and Clocks",
+        translate("gui.projectred.fabrication.timing_and_clocks"),
         Seq(
           PulseFormerGate,
           RepeaterGate,
@@ -138,12 +157,12 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
         )
       )
       addToolset(
-        "Latches",
+        translate("gui.projectred.fabrication.latches"),
         Seq(SRLatchGate, ToggleLatchGate, TransparentLatchGate)
       )
       addToolset("Cells", Seq(NullCellGate, InvertCellGate, BufferCellGate))
       addToolset(
-        "Misc",
+        translate("gui.projectred.fabrication.misc"),
         Seq(RandomizerGate, CounterGate, SynchronizerGate, DecRandomizerGate)
       )
     }
@@ -192,7 +211,7 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     val resetView = new MCButtonNode
     resetView.position = Point(200, 3)
     resetView.size = Size(60, 12)
-    resetView.text = "Reset View"
+    resetView.text = translate("gui.projectred.fabrication.reset_view")
     resetView.clickDelegate = { () =>
       if (tile.hasBP && tile.circuit.parts.nonEmpty) {
         pref.scaleGuiToCircuit()
@@ -236,11 +255,25 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     PRResources.guiPrototyper.bind()
     Gui.func_146110_a(0, 0, 0, 0, size.width, size.height, 512, 512)
 
-    GuiDraw.drawString("IC Workbench", 8, 6, Colors.GREY.argb, false)
+    GuiDraw.drawString(
+      translate("tile.projectred.integration.icblock|0.name"),
+      8,
+      6,
+      Colors.GREY.argb,
+      false
+    )
 
-    GuiDraw.drawStringC("detail", 273, 190, 42, 14, Colors.GREY.argb, false)
     GuiDraw.drawStringC(
-      pref.detailLevel + "",
+      translate("gui.projectred.fabrication.detail"),
+      273,
+      190,
+      42,
+      14,
+      Colors.GREY.argb,
+      false
+    )
+    GuiDraw.drawStringC(
+      pref.detailLevel.toString,
       279,
       200,
       30,
@@ -250,7 +283,7 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     )
 
     GuiDraw.drawStringC(
-      BigDecimal(pref.scale, new MathContext(2)) + "",
+      BigDecimal(pref.scale, new MathContext(2)).toString(),
       278,
       4,
       30,

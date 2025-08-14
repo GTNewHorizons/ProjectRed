@@ -31,7 +31,7 @@ class OpCopy extends OpAreaBase {
       in: MCDataInput
   ): Unit = {}
 
-  override def getOpName: String = "Copy"
+  override def getOpName: String = "gui.projectred.fabrication.copy"
 
   override def renderHover(
       position: Vec2,

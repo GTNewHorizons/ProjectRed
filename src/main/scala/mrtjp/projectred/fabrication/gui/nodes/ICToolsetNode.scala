@@ -9,6 +9,7 @@ import codechicken.lib.gui.GuiDraw
 import mrtjp.core.gui.{ButtonNode, IconButtonNode, TNode}
 import mrtjp.core.vec.{Point, Size}
 import mrtjp.projectred.fabrication.operations.CircuitOp
+import net.minecraft.util.StatCollector
 
 import scala.collection.immutable.ListMap
 import scala.collection.JavaConversions._
@@ -58,7 +59,7 @@ class ICToolsetNode extends TNode {
     }
     groupButton.size = buttonSize
     groupButton.tooltipBuilder = {
-      _ += buttonOpMap(selectedButton).getOpName
+      _ += StatCollector.translateToLocal(buttonOpMap(selectedButton).getOpName)
     }
     groupButton.clickDelegate = { () => selectedButton.clickDelegate() }
     addChild(groupButton)
@@ -113,7 +114,7 @@ class ICToolsetNode extends TNode {
       }
     }
     b.tooltipBuilder = {
-      _ += op.getOpName
+      _ += StatCollector.translateToLocal(op.getOpName)
     }
     b.clickDelegate = { () => buttonClicked(op, b) }
     b

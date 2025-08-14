@@ -32,5 +32,5 @@ class OpCut extends OpErase {
       height: Double
   ): Unit = {}
 
-  override def getOpName: String = "Cut"
+  override def getOpName: String = "gui.projectred.fabrication.cut"
 }

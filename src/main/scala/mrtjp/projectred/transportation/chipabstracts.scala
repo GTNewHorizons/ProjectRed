@@ -20,10 +20,10 @@ abstract class RoutingChip {
   private var s = -1
 
   def setEnvironment(
-                      inventoryProvider: IInventoryProvider,
-                      routeLayer: TRouteLayer,
-                      slot: Int
-                    ) {
+      inventoryProvider: IInventoryProvider,
+      routeLayer: TRouteLayer,
+      slot: Int
+  ) {
     invProv = inventoryProvider
     rl = routeLayer
     s = slot
@@ -119,7 +119,7 @@ class ItemLostEvent(val item: ItemKey, val amount: Int) extends NetworkEvent {
 }
 
 class ItemReceivedEvent(val item: ItemKey, val amount: Int)
-  extends NetworkEvent {
+    extends NetworkEvent {
   var remaining = amount
 
   override def isCancelable = true
@@ -164,10 +164,10 @@ trait TChipFilter extends RoutingChip {
   }
 
   def applyFilter(
-                   inv: InvWrapper,
-                   patterns: Boolean = true,
-                   hide: Boolean = true
-                 ): InvWrapper = {
+      inv: InvWrapper,
+      patterns: Boolean = true,
+      hide: Boolean = true
+  ): InvWrapper = {
     if (inv == null) return null
 
     inv.setSlotsAll()
@@ -231,8 +231,8 @@ trait TChipFilter extends RoutingChip {
       if (nbtMatch) s += sep + "NBT"
       if (oreMatch) s += sep + "Ore Dictionary"
       list += (EnumChatFormatting.GRAY.toString + "Matching: " + (if (s.isEmpty)
-        "ignore all"
-      else s))
+                                                                    "ignore all"
+                                                                  else s))
       if (damageGroupMode != 0)
         list += (EnumChatFormatting.GRAY.toString + "Damage group: " + grpPerc(
           damageGroupMode
@@ -241,10 +241,10 @@ trait TChipFilter extends RoutingChip {
 
     if (enableFilter) {
       list += (EnumChatFormatting.GRAY.toString + "Filter mode: " + (if (
-        filterExclude
-      ) "blacklist"
-      else
-        "whitelist"))
+                                                                       filterExclude
+                                                                     ) "blacklist"
+                                                                     else
+                                                                       "whitelist"))
       list += (EnumChatFormatting.GRAY.toString + "Filter: ")
       var added = false
 
@@ -315,12 +315,12 @@ trait TChipOrientation extends RoutingChip {
 
   def addOrientInfo(list: ListBuffer[String]) {
     list += (EnumChatFormatting.GRAY.toString + "Extract orientation: " + (if (
-      extractOrient == -1
-    ) "Default"
-    else
-      dirs(
-        extractOrient
-      )))
+                                                                             extractOrient == -1
+                                                                           ) "Default"
+                                                                           else
+                                                                             dirs(
+                                                                               extractOrient
+                                                                             )))
   }
 }
 
@@ -343,7 +343,7 @@ trait TChipStock extends RoutingChip {
     stock.loadInv(tag)
     for (i <- 0 until stock.getSizeInventory) {
       val s = stock.getStackInSlot(i)
-      if (s != null &&  s.stackSize < 0)
+      if (s != null && s.stackSize < 0)
         s.stackSize += 256
     }
     requestMode =
@@ -462,7 +462,7 @@ trait TChipCrafter extends RoutingChip {
     matrix.loadInv(tag)
     for (i <- 0 until matrix.getSizeInventory) {
       val s = matrix.getStackInSlot(i)
-      if (s != null &&  s.stackSize < 0)
+      if (s != null && s.stackSize < 0)
         s.stackSize += 256
     }
     extMatrix.loadInv(tag)
@@ -509,8 +509,8 @@ trait TChipCrafter extends RoutingChip {
   def addExtInfo(list: ListBuffer[String]) {
     list += (EnumChatFormatting.GRAY.toString + "Extensions: " +
       EnumChatFormatting.GRAY.toString + (0 until 9).count {
-      extMatrix.getStackInSlot(_) != null
-    })
+        extMatrix.getStackInSlot(_) != null
+      })
   }
 }
 

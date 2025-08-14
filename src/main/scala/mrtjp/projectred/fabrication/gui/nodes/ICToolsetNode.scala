@@ -14,13 +14,11 @@ import net.minecraft.util.StatCollector
 import scala.collection.immutable.ListMap
 import scala.collection.JavaConversions._
 
-class ICToolsetNode extends TNode {
+class ICToolsetNode(onSelect: CircuitOp => Unit) extends TNode {
   var opSet = Seq.empty[CircuitOp]
   var title = ""
   var buttonSize = Size(16, 16)
   var buttonGap = 1
-
-  var opSelectDelegate = { _: CircuitOp => () }
 
   private var focused = false
   private var buttonOpMap = ListMap.empty[ButtonNode, CircuitOp]
@@ -65,43 +63,6 @@ class ICToolsetNode extends TNode {
     addChild(groupButton)
   }
 
-  private def buttonClicked(op: CircuitOp, button: ButtonNode) {
-    setFocused()
-    opSelectDelegate(op)
-    parent.children
-      .collect {
-        case t: ICToolsetNode if t != this => t
-      }
-      .foreach(_.setUnfocused())
-    selectedButton.mouseoverLock = false
-    button.mouseoverLock = true
-    selectedButton = button
-  }
-
-  def setUnfocused() {
-    if (focused) hideSubTools()
-    focused = false
-    groupButton.mouseoverLock = false
-  }
-
-  def setFocused() {
-    if (!focused) unhideSubTools()
-    focused = true
-    groupButton.mouseoverLock = true
-  }
-
-  private def unhideSubTools() {
-    if (buttonOpMap.size > 1)
-      for (b <- buttonOpMap.keys)
-        b.hidden = false
-  }
-
-  private def hideSubTools() {
-    if (buttonOpMap.size > 1)
-      for (b <- buttonOpMap.keys)
-        b.hidden = true
-  }
-
   private def createButtonFor(op: CircuitOp) = {
     val b = new IconButtonNode {
       override def drawButton(mouseover: Boolean) {
@@ -116,16 +77,53 @@ class ICToolsetNode extends TNode {
     b.tooltipBuilder = {
       _ += StatCollector.translateToLocal(op.getOpName)
     }
-    b.clickDelegate = { () => buttonClicked(op, b) }
+    b.clickDelegate = { () => {
+      onSelect(op)
+      buttonClicked(op, b)
+    } }
     b
   }
 
-  def pickOp(op: CircuitOp) {
-    setUnfocused()
-    buttonOpMap.find(_._2 == op) match {
-      case Some((b, _)) => b.clickDelegate()
-      case _            =>
+  private def buttonClicked(op: CircuitOp, button: ButtonNode) {
+    setFocused()
+    // Hide all other toolsets
+    parent.children
+      .collect {
+        case t: ICToolsetNode if t != this => t
+      }
+      .foreach(toolsetNode => toolsetNode.setUnfocused())
+    selectedButton.mouseoverLock = false
+    button.mouseoverLock = true
+    selectedButton = button
+  }
+
+  def select(op: CircuitOp): Unit = {
+    for((button, operation) <- buttonOpMap) {
+      if(op.id == operation.id) {
+        buttonClicked(op, button)
+        return
+      }
     }
+  }
+
+  def setFocused() {
+    if (!focused) {
+      if (buttonOpMap.size > 1)
+        for (b <- buttonOpMap.keys)
+          b.hidden = false
+    }
+    focused = true
+    groupButton.mouseoverLock = true
+  }
+
+  def setUnfocused() {
+    if (focused) {
+      if (buttonOpMap.size > 1)
+        for (b <- buttonOpMap.keys)
+          b.hidden = true
+    }
+    focused = false
+    groupButton.mouseoverLock = false
   }
 
   override def drawFront_Impl(mouse: Point, rframe: Float) {

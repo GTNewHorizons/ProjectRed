@@ -14,7 +14,6 @@ import mrtjp.core.vec.{Point, Size, Vec2}
 import mrtjp.core.world.WorldLib
 import mrtjp.projectred.core.libmc.PRResources
 import mrtjp.projectred.fabrication.gui.nodes._
-import mrtjp.projectred.fabrication.operations.{CircuitOpDefs, OpGate}
 import mrtjp.projectred.fabrication.{FabricationProxy, TileICWorkbench}
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Gui
@@ -27,7 +26,6 @@ import java.math.MathContext
 
 class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
   var pref: PrefboardNode = null
-  var toolSets = Seq[ICToolsetNode]()
   var configurationNode: TNode = null
 
   def translate(unlocalizedName: String): String = {
@@ -44,10 +42,17 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     opPreview.position = Point(269, 18)
     addChild(opPreview)
 
+    val toolbar = new ToolbarNode(
+      op => {
+        opPreview.updatePreview(op)
+        pref.pickOp(op)
+      }
+    )
+    toolbar.buildToolbar()
+
     pref = new PrefboardNode(
       tile.circuit,
       tile.hasBP,
-      op => { opPreview.updatePreview(op) },
       node => {
         if (configurationNode != null) {
           configurationNode.removeFromParent()
@@ -58,113 +63,19 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
           configurationNode.position = Point(260, 17)
           addChild(configurationNode)
         }
+      },
+      op => {
+        opPreview.updatePreview(op)
+        toolbar.selectOp(op)
       }
     )
     pref.zPosition = -0.01 // Must be below clip nodes
-    pref.opPickDelegate = { op =>
-      if (op == null) {
-        // Reset rotation and configuration of selected Gate
-        pref.currentOp match {
-          case op: OpGate =>
-            op.rotation = 0
-            op.configuration = 0
-          case _ =>
-        }
-        pref.currentOp = null
-        pref.updatePreview()
-      }
-      toolSets.foreach(_.pickOp(op))
-    }
     clip.addChild(pref)
     if (tile.circuit.parts.nonEmpty) {
       pref.scaleGuiToCircuit()
     } else {
       pref.offset = Vec2(0, 0)
       pref.scale = 1.0d
-    }
-
-    val toolbar = new TNode {}
-
-    {
-      import CircuitOpDefs._
-      def addToolsetRange(name: String, from: OpDef, to: OpDef) {
-        addToolset(name, (from.getID to to.getID).map(CircuitOpDefs(_)))
-      }
-
-      def addToolset(name: String, opset: Seq[OpDef]) {
-        val toolset = new ICToolsetNode
-        toolset.position = Point(17, 0) * toolbar.children.size
-        toolset.title = name
-        toolset.opSet = opset.map(_.getOp)
-        toolset.setup()
-        toolset.opSelectDelegate = { op =>
-          pref.currentOp = op
-          pref.updatePreview()
-          if (configurationNode != null) {
-            configurationNode.removeFromParent()
-            configurationNode = null
-          }
-        }
-        toolbar.addChild(toolset)
-        toolSets :+= toolset
-      }
-
-      addToolset("", Seq(Erase))
-      addToolset("", Seq(Cut))
-      addToolset("", Seq(Copy))
-      addToolset("", Seq(Paste))
-      addToolset(
-        translate("gui.projectred.fabrication.debug"),
-        Seq(Torch, Lever, Button)
-      )
-      addToolset("", Seq(AlloyWire))
-      addToolsetRange(
-        translate("gui.projectred.fabrication.insulated_wires"),
-        WhiteInsulatedWire,
-        BlackInsulatedWire
-      )
-      addToolsetRange(
-        translate("gui.projectred.fabrication.bundled_cables"),
-        NeutralBundledCable,
-        BlackBundledCable
-      )
-      addToolset(
-        translate("gui.projectred.fabrication.ios"),
-        Seq(SimpleIO, BundledIO, AnalogIO)
-      )
-      addToolset(
-        translate("gui.projectred.fabrication.primitives"),
-        Seq(
-          ORGate,
-          NORGate,
-          NOTGate,
-          ANDGate,
-          NANDGate,
-          XORGate,
-          XNORGate,
-          BufferGate,
-          MultiplexerGate
-        )
-      )
-      addToolset(
-        translate("gui.projectred.fabrication.timing_and_clocks"),
-        Seq(
-          PulseFormerGate,
-          RepeaterGate,
-          TimerGate,
-          SequencerGate,
-          StateCellGate
-        )
-      )
-      addToolset(
-        translate("gui.projectred.fabrication.latches"),
-        Seq(SRLatchGate, ToggleLatchGate, TransparentLatchGate)
-      )
-      addToolset("Cells", Seq(NullCellGate, InvertCellGate, BufferCellGate))
-      addToolset(
-        translate("gui.projectred.fabrication.misc"),
-        Seq(RandomizerGate, CounterGate, SynchronizerGate, DecRandomizerGate)
-      )
     }
 
     addChild(toolbar)

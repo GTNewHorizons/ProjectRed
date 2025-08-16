@@ -29,14 +29,14 @@ abstract class OpSimplePlacement extends CircuitOp {
       out: MCDataOutput
   ) {
     super.clientSendOperation(circuit, start, end, out)
-    out.writeByte(end.x).writeByte(end.y)
+    out.writeInt(end.x).writeInt(end.y)
   }
 
   override def serverReceiveOperation(
       circuit: IntegratedCircuit,
       in: MCDataInput
   ) {
-    val point = Point(in.readUByte(), in.readUByte())
+    val point = Point(in.readInt(), in.readInt())
     if (circuit.getPart(point.x, point.y) == null)
       circuit.setPart(point.x, point.y, createPart)
   }

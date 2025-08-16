@@ -42,12 +42,10 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     opPreview.position = Point(269, 18)
     addChild(opPreview)
 
-    val toolbar = new ToolbarNode(
-      op => {
-        opPreview.updatePreview(op)
-        pref.pickOp(op)
-      }
-    )
+    val toolbar = new ToolbarNode(op => {
+      opPreview.updatePreview(op)
+      pref.pickOp(op)
+    })
     toolbar.buildToolbar()
 
     pref = new PrefboardNode(

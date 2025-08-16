@@ -207,6 +207,12 @@ class PrefboardNode(
         mouseStart,
         mouseEnd
       )
+      if (
+        currentOp == CircuitOpDefs.Cut.op || currentOp == CircuitOpDefs.Copy.op
+      ) {
+        pickOp(CircuitOpDefs.Paste.op)
+        onPick(CircuitOpDefs.Paste.op)
+      }
       if (!opUsed && mouseStart == mouseEnd) {
         val part = circuit.getPart(mouseEnd)
         if (part != null) part.onClicked()
@@ -249,6 +255,18 @@ class PrefboardNode(
         true
       case KEY_C if currentOp != null =>
         doConfigure()
+        true
+      case KEY_C if Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) =>
+        pickOp(CircuitOpDefs.Copy.op)
+        onPick(CircuitOpDefs.Copy.op)
+        true
+      case KEY_V if Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) =>
+        pickOp(CircuitOpDefs.Paste.op)
+        onPick(CircuitOpDefs.Paste.op)
+        true
+      case KEY_X if Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) =>
+        pickOp(CircuitOpDefs.Cut.op)
+        onPick(CircuitOpDefs.Cut.op)
         true
       case _ => false
     }

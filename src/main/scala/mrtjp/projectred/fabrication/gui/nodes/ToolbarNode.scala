@@ -8,7 +8,48 @@ package mrtjp.projectred.fabrication.gui.nodes
 import mrtjp.core.gui.TNode
 import mrtjp.core.vec.Point
 import mrtjp.projectred.fabrication.operations.{CircuitOp, CircuitOpDefs}
-import mrtjp.projectred.fabrication.operations.CircuitOpDefs.{ANDGate, AlloyWire, AnalogIO, BlackBundledCable, BlackInsulatedWire, BufferCellGate, BufferGate, BundledIO, Button, Copy, CounterGate, Cut, DecRandomizerGate, Erase, InvertCellGate, Lever, MultiplexerGate, NANDGate, NORGate, NOTGate, NeutralBundledCable, NullCellGate, ORGate, OpDef, Paste, PulseFormerGate, RandomizerGate, RepeaterGate, SRLatchGate, SequencerGate, SimpleIO, StateCellGate, SynchronizerGate, TimerGate, ToggleLatchGate, Torch, TransparentLatchGate, WhiteInsulatedWire, XNORGate, XORGate}
+import mrtjp.projectred.fabrication.operations.CircuitOpDefs.{
+  ANDGate,
+  AlloyWire,
+  AnalogIO,
+  BlackBundledCable,
+  BlackInsulatedWire,
+  BufferCellGate,
+  BufferGate,
+  BundledIO,
+  Button,
+  Copy,
+  CounterGate,
+  Cut,
+  DecRandomizerGate,
+  Erase,
+  InvertCellGate,
+  Lever,
+  MultiplexerGate,
+  NANDGate,
+  NORGate,
+  NOTGate,
+  NeutralBundledCable,
+  NullCellGate,
+  ORGate,
+  OpDef,
+  Paste,
+  PulseFormerGate,
+  RandomizerGate,
+  RepeaterGate,
+  SRLatchGate,
+  SequencerGate,
+  SimpleIO,
+  StateCellGate,
+  SynchronizerGate,
+  TimerGate,
+  ToggleLatchGate,
+  Torch,
+  TransparentLatchGate,
+  WhiteInsulatedWire,
+  XNORGate,
+  XORGate
+}
 import net.minecraft.util.StatCollector
 
 class ToolbarNode(onPick: CircuitOp => Unit) extends TNode {
@@ -79,15 +120,18 @@ class ToolbarNode(onPick: CircuitOp => Unit) extends TNode {
   }
 
   def selectOp(op: CircuitOp): Unit = {
-    if(op == null) {
-      children.collect { case b: ICToolsetNode => b }.foreach(node => {
-        node.setUnfocused()
-      })
-    }
-    else {
-      children.collect { case b: ICToolsetNode => b }.foreach(node => {
-        node.select(op)
-      })
+    if (op == null) {
+      children
+        .collect { case b: ICToolsetNode => b }
+        .foreach(node => {
+          node.setUnfocused()
+        })
+    } else {
+      children
+        .collect { case b: ICToolsetNode => b }
+        .foreach(node => {
+          node.select(op)
+        })
     }
   }
 

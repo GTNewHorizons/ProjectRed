@@ -77,10 +77,12 @@ class ICToolsetNode(onSelect: CircuitOp => Unit) extends TNode {
     b.tooltipBuilder = {
       _ += StatCollector.translateToLocal(op.getOpName)
     }
-    b.clickDelegate = { () => {
-      onSelect(op)
-      buttonClicked(op, b)
-    } }
+    b.clickDelegate = { () =>
+      {
+        onSelect(op)
+        buttonClicked(op, b)
+      }
+    }
     b
   }
 
@@ -98,8 +100,8 @@ class ICToolsetNode(onSelect: CircuitOp => Unit) extends TNode {
   }
 
   def select(op: CircuitOp): Unit = {
-    for((button, operation) <- buttonOpMap) {
-      if(op.id == operation.id) {
+    for ((button, operation) <- buttonOpMap) {
+      if (op.id == operation.id) {
         buttonClicked(op, button)
         return
       }

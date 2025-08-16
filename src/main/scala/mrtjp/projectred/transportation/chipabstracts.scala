@@ -343,8 +343,8 @@ trait TChipStock extends RoutingChip {
     stock.loadInv(tag)
     for (i <- 0 until stock.getSizeInventory) {
       val s = stock.getStackInSlot(i)
-      if (s != null && s.stackSize < 0)
-        s.stackSize += 256
+      if (s != null)
+        s.stackSize &= 0xff
     }
     requestMode =
       if (tag.getBoolean("mode")) 1 // TODO Legacy
@@ -462,8 +462,8 @@ trait TChipCrafter extends RoutingChip {
     matrix.loadInv(tag)
     for (i <- 0 until matrix.getSizeInventory) {
       val s = matrix.getStackInSlot(i)
-      if (s != null && s.stackSize < 0)
-        s.stackSize += 256
+      if (s != null)
+        s.stackSize &= 0xff
     }
     extMatrix.loadInv(tag)
   }

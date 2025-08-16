@@ -28,7 +28,7 @@ class OpPaste extends OpAreaBase {
     super.clientSendOperation(circuit, start, end, out)
     out.writeInt(OpAreaBase.clipboard.size)
     OpAreaBase.clipboard.foreach { op =>
-      op._2.clientSendOperation(circuit, start + op._1, end + op._1, out)
+      op._2.clientSendOperation(circuit, start + op._1, start + op._1, out)
     }
   }
 

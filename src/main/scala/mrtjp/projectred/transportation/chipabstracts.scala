@@ -30,7 +30,9 @@ abstract class RoutingChip {
   }
 
   def invProvider = invProv
+
   def routeLayer = rl
+
   def slot = s
 
   def update() {}
@@ -42,22 +44,31 @@ abstract class RoutingChip {
 
   /** Broadcasting * */
   def requestPromise(request: RequestBranchNode, existingPromises: Int) {}
+
   def deliverPromise(promise: DeliveryPromise, requester: IWorldRequester) {}
+
   def getBroadcasts(col: ItemQueue) {}
 
   def getBroadcastPriority = Integer.MAX_VALUE
+
   def getWorkLoad = 0.0d
 
   /** Crafting * */
   def requestCraftPromise(requeset: RequestBranchNode): CraftingPromise = null
+
   def registerExcess(promise: DeliveryPromise) {}
+
   def getCraftedItem: ItemKeyStack = null
+
   def getProcessingItems = 0
 
   /** World interactions * */
   def onAdded() {}
+
   def onRemoved() {}
+
   def onNeighborTileChanged(side: Int, weak: Boolean) {}
+
   def weakTileChanges = false
 
   def save(tag: NBTTagCompound) {}
@@ -176,7 +187,9 @@ trait TChipFilter extends RoutingChip {
   }
 
   def enableHiding = true
+
   def enableFilter = true
+
   def enablePatterns = true
 
   abstract override def save(tag: NBTTagCompound) {
@@ -202,6 +215,7 @@ trait TChipFilter extends RoutingChip {
   }
 
   val hide = Seq("off", "one per type", "one per stack")
+
   def addFilterInfo(list: ListBuffer[String]) {
     if (enableHiding)
       list += (EnumChatFormatting.GRAY.toString + "Hide mode: " + hide(
@@ -210,7 +224,9 @@ trait TChipFilter extends RoutingChip {
 
     if (enablePatterns) {
       var s = ""
+
       def sep = if (s == "") "" else ", "
+
       if (metaMatch) s += "Meta"
       if (nbtMatch) s += sep + "NBT"
       if (oreMatch) s += sep + "Ore Dictionary"
@@ -253,6 +269,7 @@ trait TChipPriority extends RoutingChip {
       .isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)
   ) 10
   else 1
+
   def prefUp() {
     preference = Math.min(prefScale, preference + shift)
   }
@@ -308,7 +325,7 @@ trait TChipOrientation extends RoutingChip {
 }
 
 trait TChipStock extends RoutingChip {
-  val stock = new SimpleInventory(9, "stock", 127)
+  val stock = new SimpleInventory(9, "stock", 255)
   var requestMode =
     0 // 0 - stock continuous, 1 - stock empty, 2 - stock infinite
 
@@ -324,6 +341,11 @@ trait TChipStock extends RoutingChip {
 
   abstract override def load(tag: NBTTagCompound) {
     stock.loadInv(tag)
+    for (i <- 0 until stock.getSizeInventory) {
+      val s = stock.getStackInSlot(i)
+      if (s != null)
+        s.stackSize &= 0xff
+    }
     requestMode =
       if (tag.getBoolean("mode")) 1 // TODO Legacy
       else tag.getByte("rmode")
@@ -375,22 +397,28 @@ trait TChipMatchMatrix extends RoutingChip {
     ((data & 1) != 0, (data & 2) != 0, (data & 4) != 0, data >> 3)
 
   def matchMeta(i: Int) = getData(i)._1
+
   def matchNBT(i: Int) = getData(i)._2
+
   def matchOre(i: Int) = getData(i)._3
+
   def matchGroup(i: Int) = getData(i)._4
 
   def toggleMatchMeta(i: Int) = {
     val (meta, nbt, ore, group) = getData(i)
     setData(i, !meta, nbt, ore, group)
   }
+
   def toggleMatchNBT(i: Int) = {
     val (meta, nbt, ore, group) = getData(i)
     setData(i, meta, !nbt, ore, group)
   }
+
   def toggleMatchOre(i: Int) = {
     val (meta, nbt, ore, group) = getData(i)
     setData(i, meta, nbt, !ore, group)
   }
+
   def toggleMatchGroup(i: Int) = {
     val (meta, nbt, ore, group) = getData(i)
     setData(i, meta, nbt, ore, (group + 1) % 5)
@@ -416,7 +444,7 @@ trait TChipMatchMatrix extends RoutingChip {
 }
 
 trait TChipCrafter extends RoutingChip {
-  var matrix = new SimpleInventory(10, "matrix", 127)
+  var matrix = new SimpleInventory(10, "matrix", 255)
   var extMatrix = new SimpleInventory(9, "ext_matrix", 1) {
     override def isItemValidForSlot(slot: Int, stack: ItemStack) =
       stack != null && ItemRoutingChip.hasChipInside(stack) &&
@@ -432,6 +460,11 @@ trait TChipCrafter extends RoutingChip {
   abstract override def load(tag: NBTTagCompound) {
     super.load(tag)
     matrix.loadInv(tag)
+    for (i <- 0 until matrix.getSizeInventory) {
+      val s = matrix.getStackInSlot(i)
+      if (s != null)
+        s.stackSize &= 0xff
+    }
     extMatrix.loadInv(tag)
   }
 

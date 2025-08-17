@@ -5,8 +5,10 @@
  */
 package mrtjp.projectred.fabrication.gui.nodes
 
-import mrtjp.core.gui.TNode
-import mrtjp.core.vec.Point
+import codechicken.lib.gui.GuiDraw
+import mrtjp.core.gui.{IconButtonNode, TNode}
+import mrtjp.core.vec.{Point, Size}
+import mrtjp.projectred.fabrication.IntegratedCircuit
 import mrtjp.projectred.fabrication.operations.{CircuitOp, CircuitOpDefs}
 import mrtjp.projectred.fabrication.operations.CircuitOpDefs.{
   ANDGate,
@@ -50,15 +52,17 @@ import mrtjp.projectred.fabrication.operations.CircuitOpDefs.{
   XNORGate,
   XORGate
 }
+import net.minecraft.util.EnumChatFormatting.{AQUA, ITALIC}
 import net.minecraft.util.StatCollector
 
-class ToolbarNode(onPick: CircuitOp => Unit) extends TNode {
+import scala.collection.JavaConversions._
+
+class ToolbarNode(circuit: IntegratedCircuit, onPick: CircuitOp => Unit)
+    extends TNode {
 
   private def translate(str: String): String = {
     StatCollector.translateToLocal(str)
   }
-
-  private var toolSets: Seq[ICToolsetNode] = Seq()
 
   def buildToolbar(): Unit = {
     addToolset("", Seq(Erase))
@@ -117,6 +121,7 @@ class ToolbarNode(onPick: CircuitOp => Unit) extends TNode {
       translate("gui.projectred.fabrication.misc"),
       Seq(RandomizerGate, CounterGate, SynchronizerGate, DecRandomizerGate)
     )
+    addImExport()
   }
 
   def selectOp(op: CircuitOp): Unit = {
@@ -140,11 +145,53 @@ class ToolbarNode(onPick: CircuitOp => Unit) extends TNode {
   }
 
   private def addToolset(name: String, opset: Seq[OpDef]): Unit = {
-    val toolset = new ICToolsetNode({ op => onPick(op) })
+    val toolset = new ICToolsetNode(name, { op => onPick(op) })
     toolset.position = Point(17, 0) * children.size
-    toolset.title = name
     toolset.opSet = opset.map(_.getOp)
     toolset.setup()
     addChild(toolset)
+  }
+
+  private def addImExport(): Unit = {
+    var button: IconButtonNode = null
+    button = new IconButtonNode {
+      override def drawFront_Impl(mouse: Point, rframe: Float): Unit = {
+        val p = parent.children
+          .filter { p => p.isInstanceOf[IconButtonNode] }
+          .head
+          .position
+        if (
+          p.x < mouse.x && mouse.x < p.x + 16 && p.y < mouse.y && mouse.y < p.y + 16
+        ) {
+          translateToScreen()
+          val Point(mx, my) = parent.convertPointToScreen(mouse)
+          GuiDraw.drawMultilineTip(
+            mx + 12,
+            my - 16,
+            Seq(
+              ITALIC.toString + StatCollector.translateToLocal(
+                "gui.projectred.fabrication.im_ex_port"
+              )
+            )
+          )
+          translateFromScreen()
+        }
+      }
+    }
+    button.size = Size(16, 16)
+    button.position = Point(17, 0) * children.size
+    button.clickDelegate = { () =>
+      var exportGui: StringExport = null
+      exportGui = new StringExport(
+        circuit,
+        () => {
+          exportGui.removeFromParent()
+          selectOp(Paste.op)
+          onPick(Paste.op)
+        }
+      )
+      addChild(exportGui)
+    }
+    addChild(button)
   }
 }

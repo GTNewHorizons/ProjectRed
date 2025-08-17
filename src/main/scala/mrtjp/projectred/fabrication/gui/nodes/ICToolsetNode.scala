@@ -14,9 +14,8 @@ import net.minecraft.util.StatCollector
 import scala.collection.immutable.ListMap
 import scala.collection.JavaConversions._
 
-class ICToolsetNode(onSelect: CircuitOp => Unit) extends TNode {
+class ICToolsetNode(title: String, onSelect: CircuitOp => Unit) extends TNode {
   var opSet = Seq.empty[CircuitOp]
-  var title = ""
   var buttonSize = Size(16, 16)
   var buttonGap = 1
 

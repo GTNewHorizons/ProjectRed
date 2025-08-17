@@ -17,6 +17,26 @@ object OpAreaBase {
   /** clipboard for copy/past/cut operations
     */
   var clipboard: List = Seq()
+
+  /** Saves parts to [[OpAreaBase.clipboard]]
+    */
+  def saveToClipboard(parts: Map[(Int, Int), CircuitPart]): Unit = {
+    val (x, y) = if (parts.nonEmpty) {
+      parts
+        .reduce((a, b) =>
+          ((math.min(a._1._1, b._1._1), math.min(a._1._2, b._1._2)), null)
+        )
+        ._1
+    } else (0, 0)
+    OpAreaBase.clipboard = parts
+      .map(element => {
+        (
+          Point(element._1._1 - x, element._1._2 - y),
+          element._2.getCircuitOperation
+        )
+      })
+      .toList
+  }
 }
 
 abstract class OpAreaBase extends CircuitOp {
@@ -53,26 +73,6 @@ abstract class OpAreaBase extends CircuitOp {
     )
     bottomRight = bottomRight.add(1, 1)
     CircuitOp.renderHolo(topLeft, bottomRight, scale, 0x44ffffff)
-  }
-
-  /** Saves parts to [[OpAreaBase.clipboard]]
-    */
-  protected def saveToClipboard(parts: Map[(Int, Int), CircuitPart]): Unit = {
-    val (x, y) = if (parts.nonEmpty) {
-      parts
-        .reduce((a, b) =>
-          ((math.min(a._1._1, b._1._1), math.min(a._1._2, b._1._2)), null)
-        )
-        ._1
-    } else (0, 0)
-    OpAreaBase.clipboard = parts
-      .map(element => {
-        (
-          Point(element._1._1 - x, element._1._2 - y),
-          element._2.getCircuitOperation
-        )
-      })
-      .toList
   }
 
   def rotateClipboard(): Unit = {

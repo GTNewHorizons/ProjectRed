@@ -130,21 +130,6 @@ abstract class OpWire extends CircuitOp {
         )
       }
     }
-
-    // TODO Connections
-//    if (circuit.getPart(px, py) == null) {
-//      val t = orthoPartT(x, y, xSize, ySize, circuit.size, px, py)
-//      var m = 0
-//      if (px > start.x) { m |= 8; if (px != end2.x) m |= 2 }
-//      if (px < start.x) { m |= 2; if (px != end2.x) m |= 8 }
-//      if (py > start.y) { m |= 1; if (py != end2.y) m |= 4 }
-//      if (py < start.y) { m |= 4; if (py != end2.y) m |= 1 }
-//      if (px == start.x && end2.x > start.x) m |= 2
-//      if (px == start.x && end2.x < start.x) m |= 8
-//      if (py == start.y && end2.y > start.y) m |= 4
-//      if (py == start.y && end2.y < start.y) m |= 1
-//      doRender(t, m)
-//    }
   }
 
   @SideOnly(Side.CLIENT)

@@ -614,6 +614,12 @@ gui.projectred.fabrication.max=Max
 gui.projectred.fabrication.inc=Inc
 gui.projectred.fabrication.dec=Dec
 gui.projectred.fabrication.timer_interval=Interval
+gui.projectred.fabrication.import_string=Import string from clipboard
+gui.projectred.fabrication.export_string=Export string to clipboard
+gui.projectred.fabrication.export_success=Blueprint exported to clipboard!
+gui.projectred.fabrication.invalid_string=Not a valid blueprint string
+gui.projectred.fabrication.clipboard_unavailable=Can't access system clipboard
+gui.projectred.fabrication.im_ex_port=Im-/Export Blueprint Strings
 
 
 tile.projectred.integration.icblock.name=IC Workbench/Printer

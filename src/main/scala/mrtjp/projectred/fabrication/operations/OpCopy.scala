@@ -21,7 +21,7 @@ class OpCopy extends OpAreaBase {
     val topLeft = Point(math.min(start.x, end.x), math.min(start.y, end.y))
     val bottomRight = Point(math.max(start.x, end.x), math.max(start.y, end.y))
     val parts = circuit.getParts(topLeft, bottomRight + Point(1, 1))
-    saveToClipboard(parts)
+    OpAreaBase.saveToClipboard(parts)
     super.clientSendOperation(circuit, start, end, out)
   }
 

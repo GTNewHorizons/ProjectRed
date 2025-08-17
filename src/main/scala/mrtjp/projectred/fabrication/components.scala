@@ -16,7 +16,8 @@ import codechicken.lib.render.{
 }
 import codechicken.lib.vec._
 import mrtjp.core.color.Colors
-import mrtjp.core.vec.Size
+import mrtjp.core.vec.{Size, Vec2}
+import mrtjp.projectred.fabrication.circuitparts.ICGateRenderer
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.util.IIcon
 
@@ -44,6 +45,10 @@ object ICComponentStore {
   val insulatedwireIcons = new Array[IIcon](16)
   val bundledwireIcons = new Array[IIcon](16)
   var bundledColourIcon: IIcon = null
+
+  var arrowIn: IIcon = null
+  var arrowOut: IIcon = null
+  var arrowInOut: IIcon = null
 
   var ioBorder: IIcon = null
   var ioSig: IIcon = null
@@ -82,11 +87,15 @@ object ICComponentStore {
     buttonOffIcon = register("button_off")
     buttonOnIcon = register("button_on")
 
-    RenderICGate.registerIcons(reg)
+    ICGateRenderer.registerIcons(reg)
 
     for (m <- WireModel.wireModels) m.icon = register("surface/" + m.iconPath)
     for (m <- BaseComponentModel.baseModels)
       m.icon = register("surface/" + m.iconPath + "/base")
+
+    arrowIn = register("in")
+    arrowOut = register("out")
+    arrowInOut = register("inout")
 
     ioBorder = register("io_freq")
     ioSig = register("io_sig")
@@ -131,6 +140,22 @@ object ICComponentStore {
       0,
       0
     )
+
+  def orthoPartT(position: Vec2, scale: Double): TransformationList = {
+    new TransformationList(
+      new Scale(
+        RenderCircuit.BASE_SCALE * scale,
+        1,
+        -RenderCircuit.BASE_SCALE * scale
+      ),
+      new Translation(
+        position.dx * RenderCircuit.BASE_SCALE * scale,
+        0,
+        -position.dy * RenderCircuit.BASE_SCALE * scale
+      ),
+      new Rotation(1.571, 1, 0, 0)
+    )
+  }
 
   def orthoPartT(
       x: Double,
@@ -259,6 +284,28 @@ class IOSigModel extends ICComponentModel {
       t0,
       new IconTransformation(ioSig),
       ColourMultiplier.instance(signalColour(if (on) 255.toByte else 0.toByte))
+    )
+  }
+}
+
+class ArrowModel extends ICComponentModel {
+  // 0: in, 1: out, 2: inout
+  var arrowDirection: Int = 0
+
+  override def renderModel(
+      t: Transformation,
+      orient: Int,
+      ortho: Boolean
+  ): Unit = {
+    val m = faceModels(dynamicIdx(orient, ortho))
+    val t0 = dynamicT(orient) `with` t
+    m.render(
+      t0,
+      arrowDirection match {
+        case 0 => new IconTransformation(arrowIn)
+        case 1 => new IconTransformation(arrowOut)
+        case 2 => new IconTransformation(arrowInOut)
+      }
     )
   }
 }

@@ -145,7 +145,18 @@ class RoutedInterfacePipePart
       }
     }
     if (found) {
-      best.itemCount -= countInTransit(item)
+      for (i <- transitQueue.keySet) { // make sure that we aren't going to overfill the inventory
+        val inTransit = countInTransit(i)
+        val max = i.getMaxStackSize
+
+        // if there are items of other types in transit, simulate a full slot
+        if (i != item) {
+          val filled = math.ceil(inTransit.toDouble / max).toInt // how many slots are we going to need to fill
+          best.itemCount -= item.getMaxStackSize * filled // simulate slot being unplaceable
+        } else {
+          best.itemCount -= inTransit // allow same item stack filling
+        }
+      }
       if (best.itemCount > 0) return best
     }
     null

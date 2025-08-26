@@ -151,7 +151,10 @@ class RoutedInterfacePipePart
 
         // if there are items of other types in transit, simulate a full slot
         if (i != item) {
-          val filled = math.ceil(inTransit.toDouble / max).toInt // how many slots are we going to need to fill
+          val filled =
+            math
+              .ceil(inTransit.toDouble / max)
+              .toInt // how many slots are we going to need to fill
           best.itemCount -= item.getMaxStackSize * filled // simulate slot being unplaceable
         } else {
           best.itemCount -= inTransit // allow same item stack filling

@@ -268,18 +268,29 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
     packet.sendToServer()
   }
 
+  private def getModifierIncrement: Int = {
+    if (
+      Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(
+        Keyboard.KEY_RCONTROL
+      )
+    )
+      64
+    else if (
+      Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(
+        Keyboard.KEY_RSHIFT
+      )
+    )
+      10
+    else
+      1
+  }
+
   private def countUp() {
     var current = 0
     val s = textCount.text
     if (s != null && !s.isEmpty) current = Integer.parseInt(s)
 
-    val newCount =
-      if (
-        Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(
-          Keyboard.KEY_RSHIFT
-        )
-      ) current + 10
-      else current + 1
+    val newCount = current + getModifierIncrement
 
     if (newCount < 999999999) textCount.text = "" + newCount
   }
@@ -288,13 +299,7 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
     val s = textCount.text
     val current = if (s.nonEmpty) Integer.parseInt(s) else 1
 
-    val newCount =
-      (if (
-         Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(
-           Keyboard.KEY_RSHIFT
-         )
-       ) current - 10
-       else current - 1) max 1
+    val newCount = (current - getModifierIncrement) max 1
 
     textCount.text = "" + newCount
   }

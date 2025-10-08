@@ -228,6 +228,37 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
     GuiDraw.drawString("Pull", 218, 144, Colors.GREY.rgb, false)
     GuiDraw.drawString("Craft", 218, 159, Colors.GREY.rgb, false)
     GuiDraw.drawString("Partial", 218, 174, Colors.GREY.rgb, false)
+    drawCountBreakdownHint()
+  }
+
+  private def drawCountBreakdownHint() {
+    val countHint =
+      try {
+        val count = textCount.text.toInt
+        if (count <= 0) return ""
+
+        val stacks = count / 64
+        val remainder = count % 64
+
+        if (stacks > 0 && remainder > 0) {
+          s"$stacks × 64 + $remainder"
+        } else if (stacks > 0) {
+          s"$stacks × 64"
+        } else {
+          "" // Don't show anything for counts less than 64
+        }
+      } catch {
+        case _: NumberFormatException => ""
+      }
+
+    if (countHint.nonEmpty) {
+      val textWidth = GuiDraw.getStringWidth(countHint)
+      val x =
+        102 + (50 - textWidth) / 2 // Center below textCount (102 is textCount x position, 50 is width)
+      val y =
+        158 + 16 + 2 // Below textCount (158 is textCount y position, 16 is textCount height, 4 is padding)
+      GuiDraw.drawString(countHint, x, y, Colors.GREY.rgb, false)
+    }
   }
 
   override def onAddedToParent_Impl() {

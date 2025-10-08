@@ -54,6 +54,9 @@ object GuiInterfacePipe extends TGuiBuilder {
 }
 
 class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
+  private val MAX_COUNT = 999999999
+  private val MAX_COUNT_LENGTH = 9
+
   var clip: ClipNode = null
   var pan: PanNode = null
   var list: ItemListNode = null
@@ -122,6 +125,10 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
     textCount.text = "1"
     textCount.phantom = "1"
     textCount.allowedcharacters = "0123456789"
+    textCount.textChangedDelegate = { () =>
+      if (textCount.text.length > MAX_COUNT_LENGTH)
+        textCount.text = textCount.text.substring(0, MAX_COUNT_LENGTH)
+    }
     textCount.focusChangeDelegate = { () =>
       if (!textCount.focused)
         if (textCount.text.isEmpty || Integer.parseInt(textCount.text) < 1)
@@ -323,7 +330,7 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
 
     val newCount = current + getModifierIncrement
 
-    if (newCount < 999999999) textCount.text = "" + newCount
+    if (newCount <= MAX_COUNT) textCount.text = "" + newCount
   }
 
   private def countDown() {

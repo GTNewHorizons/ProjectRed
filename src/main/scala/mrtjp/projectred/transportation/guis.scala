@@ -183,7 +183,7 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
 
   def refreshList() {
     list.items = itemMap
-      .map(p => ItemKeyStack.get(p._1, p._2))
+      .map { case (key, count) => ItemKeyStack.get(key, count) }
       .toSeq
       .filter(filterAllows)
       .sorted
@@ -193,14 +193,30 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
       selectedItem = null
 
     def filterAllows(stack: ItemKeyStack): Boolean = {
-      def stringMatch(name: String, filter: String): Boolean = {
+      val searchText = textFilter.text
+      if (searchText.isEmpty) return true
+
+      def fallbackStringMatch(name: String, filter: String): Boolean = {
         for (s <- filter.split(" ")) if (!name.contains(s)) return false
         true
       }
 
-      if (stringMatch(stack.key.getName.toLowerCase, textFilter.text)) true
-      else false
+      if (!NEISearchFieldHelper.existsSearchField())
+        return fallbackStringMatch(stack.key.getName.toLowerCase, searchText)
+
+      Option(NEISearchFieldHelper.getFilter(searchText)) match {
+        case Some(filter) =>
+          try {
+            filter.test(stack.key.makeStack(1))
+          } catch {
+            case _: Throwable =>
+              fallbackStringMatch(stack.key.getName.toLowerCase, searchText)
+          }
+        case None =>
+          fallbackStringMatch(stack.key.getName.toLowerCase, searchText)
+      }
     }
+
   }
 
   override def drawBack_Impl(mouse: Point, frame: Float) {

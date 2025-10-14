@@ -2,6 +2,7 @@ package mrtjp.projectred.transportation
 
 import mrtjp.core.inventory.InvWrapper
 import mrtjp.core.item.{ItemEquality, ItemKey, ItemKeyStack}
+import mrtjp.projectred.transportation.RequestMode._
 
 import scala.collection.mutable.{ListBuffer, Set => MSet}
 
@@ -49,15 +50,18 @@ class ChipStockKeeper
       val eq = createEqualityFor(i)
       inv.eq = eq
 
-      val stockToKeep =
-        if (requestMode == 2) Int.MaxValue else filt.getItemCount(keyStack.key)
+      val stockToKeep = requestMode match {
+        case INFINITE => Int.MaxValue
+        case _        => filt.getItemCount(keyStack.key)
+      }
       val inInventory =
         inv.getItemCount(keyStack.key) + getEnroute(eq, keyStack.key)
       val spaceInInventory =
         routeLayer.getRequester.getActiveFreeSpace(keyStack.key)
       var toRequest = math.min(stockToKeep - inInventory, spaceInInventory)
       toRequest = math.min(toRequest, maxRequestSize)
-      if (toRequest <= 0 || (requestMode == 1 && inInventory > 0)) break()
+      if (toRequest <= 0 || (requestMode == WHEN_EMPTY && inInventory > 0))
+        break()
 
       val req = new RequestConsole(RequestFlags.full)
         .setDestination(routeLayer.getRequester)

@@ -97,15 +97,37 @@ class ChipStockKeeper
       case INFINITE => Int.MaxValue
       case _        => filt.getItemCount(keyStack.key)
     }
-    val inInventory =
-      inv.getItemCount(keyStack.key) + getEnroute(eq, keyStack.key)
+
     val spaceInInventory =
       routeLayer.getRequester.getActiveFreeSpace(keyStack.key)
+
+    // Early exit: if no space in inventory, no need to check further
+    if (spaceInInventory <= 0) {
+      return (false, false)
+    }
+
+    val storedCount = inv.getItemCount(keyStack.key)
+
+    // Early exit: if WHEN_EMPTY mode and we have items, skip
+    if (requestMode == WHEN_EMPTY && storedCount > 0) {
+      return (false, false)
+    }
+
+    val enrouteCount = getEnroute(eq, keyStack.key)
+
+    // Early exit: if quota already satisfied, skip expensive getPendingOrders call
+    if (storedCount + enrouteCount >= stockToKeep) {
+      return (false, false)
+    }
+
+    val pendingCount = getPendingOrders(eq, keyStack.key)
+    val inInventory = storedCount + enrouteCount + pendingCount
+
     var toRequest = math.min(stockToKeep - inInventory, spaceInInventory)
     toRequest = math.min(toRequest, maxRequestSize)
 
-    // Early exit: no need to request if quota met or WHEN_EMPTY mode has items
-    if (toRequest <= 0 || (requestMode == WHEN_EMPTY && inInventory > 0)) {
+    // Early exit: if nothing to request after all calculations
+    if (toRequest <= 0) {
       return (false, false)
     }
 
@@ -122,6 +144,23 @@ class ChipStockKeeper
   def getEnroute(eq: ItemEquality, item: ItemKey) =
     routeLayer.getWorldRouter.getContainer.transitQueue
       .count(eq.matches(item, _))
+
+  def getPendingOrders(eq: ItemEquality, item: ItemKey): Int = {
+    val requester = routeLayer.getRequester
+    val routes = routeLayer.getRouter
+      .getFilteredRoutesByCost(p =>
+        p.flagRouteFrom && (p.allowBroadcast || p.allowCrafting)
+      )
+
+    routes.foldLeft(0) { (total, path) =>
+      path.end.getParent match {
+        case broadcaster: IWorldBroadcaster =>
+          total + broadcaster.getPendingDeliveries(item, eq, requester)
+        case _ =>
+          total
+      }
+    }
+  }
 
   override def weakTileChanges = true
 

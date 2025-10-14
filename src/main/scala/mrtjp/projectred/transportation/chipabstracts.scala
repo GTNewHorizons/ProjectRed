@@ -53,6 +53,12 @@ abstract class RoutingChip {
 
   def getWorkLoad = 0.0d
 
+  def getPendingDeliveries(
+      item: ItemKey,
+      equality: ItemEquality,
+      requester: IWorldRequester
+  ): Int = 0
+
   /** Crafting * */
   def requestCraftPromise(requeset: RequestBranchNode): CraftingPromise = null
 

@@ -41,36 +41,12 @@ class ChipStockKeeper
     var requestAttempted = false
     var requestedSomething = false
 
-    import scala.util.control.Breaks._
-    for (i <- 0 until stock.getSizeInventory) breakable {
-      val keyStack = ItemKeyStack.get(stock.getStackInSlot(i))
-      if (keyStack == null || checked.contains(keyStack.key)) break()
-      checked += keyStack.key
-
-      val eq = createEqualityFor(i)
-      inv.eq = eq
-
-      val stockToKeep = requestMode match {
-        case INFINITE => Int.MaxValue
-        case _        => filt.getItemCount(keyStack.key)
+    for (i <- 0 until stock.getSizeInventory) {
+      val (wasAttempted, wasRequested) = processStockSlot(i, inv, filt, checked)
+      if (wasAttempted) {
+        requestAttempted = true
+        if (wasRequested) requestedSomething = true
       }
-      val inInventory =
-        inv.getItemCount(keyStack.key) + getEnroute(eq, keyStack.key)
-      val spaceInInventory =
-        routeLayer.getRequester.getActiveFreeSpace(keyStack.key)
-      var toRequest = math.min(stockToKeep - inInventory, spaceInInventory)
-      toRequest = math.min(toRequest, maxRequestSize)
-      if (toRequest <= 0 || (requestMode == WHEN_EMPTY && inInventory > 0))
-        break()
-
-      val req = new RequestConsole(RequestFlags.full)
-        .setDestination(routeLayer.getRequester)
-        .setEquality(eq)
-      val request = ItemKeyStack.get(keyStack.key, toRequest)
-      req.makeRequest(request)
-
-      requestAttempted = true
-      if (req.requested > 0) requestedSomething = true
     }
 
     if (requestAttempted)
@@ -82,6 +58,65 @@ class ChipStockKeeper
     else operationsWithoutRequest += 1
 
     remainingDelay = operationDelay + throttleDelay
+  }
+
+  /** Process a single stock slot and attempt to request items if needed.
+    *
+    * @param slotIndex
+    *   The slot index to process
+    * @param inv
+    *   The wrapped inventory to check and request from
+    * @param filt
+    *   The wrapped filter inventory containing target stock levels
+    * @param checked
+    *   Set of already checked items (to avoid duplicates)
+    * @return
+    *   A tuple (wasAttempted, wasRequested) where: wasAttempted is true if a
+    *   request was attempted, wasRequested is true if the network successfully
+    *   accepted the request (req.requested > 0)
+    */
+  private def processStockSlot(
+      slotIndex: Int,
+      inv: InvWrapper,
+      filt: InvWrapper,
+      checked: MSet[ItemKey]
+  ): (Boolean, Boolean) = {
+    val keyStack = ItemKeyStack.get(stock.getStackInSlot(slotIndex))
+
+    // Early exit: skip if slot is empty or item already checked
+    if (keyStack == null || checked.contains(keyStack.key)) {
+      return (false, false)
+    }
+
+    checked += keyStack.key
+
+    val eq = createEqualityFor(slotIndex)
+    inv.eq = eq
+
+    val stockToKeep = requestMode match {
+      case INFINITE => Int.MaxValue
+      case _        => filt.getItemCount(keyStack.key)
+    }
+    val inInventory =
+      inv.getItemCount(keyStack.key) + getEnroute(eq, keyStack.key)
+    val spaceInInventory =
+      routeLayer.getRequester.getActiveFreeSpace(keyStack.key)
+    var toRequest = math.min(stockToKeep - inInventory, spaceInInventory)
+    toRequest = math.min(toRequest, maxRequestSize)
+
+    // Early exit: no need to request if quota met or WHEN_EMPTY mode has items
+    if (toRequest <= 0 || (requestMode == WHEN_EMPTY && inInventory > 0)) {
+      return (false, false)
+    }
+
+    // Make the request
+    val req = new RequestConsole(RequestFlags.full)
+      .setDestination(routeLayer.getRequester)
+      .setEquality(eq)
+    val request = ItemKeyStack.get(keyStack.key, toRequest)
+    req.makeRequest(request)
+
+    (true, req.requested > 0)
   }
 
   def getEnroute(eq: ItemEquality, item: ItemKey) =

@@ -53,6 +53,12 @@ abstract class RoutingChip {
 
   def getWorkLoad = 0.0d
 
+  def getPendingDeliveries(
+      item: ItemKey,
+      equality: ItemEquality,
+      requester: IWorldRequester
+  ): Int = 0
+
   /** Crafting * */
   def requestCraftPromise(requeset: RequestBranchNode): CraftingPromise = null
 
@@ -324,18 +330,41 @@ trait TChipOrientation extends RoutingChip {
   }
 }
 
+/** Request modes for stock keeping chips. Defines when items should be
+  * requested from the network.
+  */
+object RequestMode extends Enumeration {
+  type RequestMode = Value
+
+  /** Request items when count is below target (fill to configured amount) */
+  val WHEN_MISSING = Value(0, "when missing")
+
+  /** Request items only when inventory is completely empty (keep at least one)
+    */
+  val WHEN_EMPTY = Value(1, "when empty")
+
+  /** Always request items to keep inventory full */
+  val INFINITE = Value(2, "infinite")
+
+  /** Get the next request mode in the cycle */
+  def next(current: RequestMode): RequestMode = {
+    RequestMode((current.id + 1) % maxId)
+  }
+}
+
 trait TChipStock extends RoutingChip {
+  import RequestMode._
+
   val stock = new SimpleInventory(9, "stock", 255)
-  var requestMode =
-    0 // 0 - stock continuous, 1 - stock empty, 2 - stock infinite
+  var requestMode: RequestMode = WHEN_MISSING
 
   def shiftRequestMode() {
-    requestMode = (requestMode + 1) % 3
+    requestMode = RequestMode.next(requestMode)
   }
 
   abstract override def save(tag: NBTTagCompound) {
     stock.saveInv(tag)
-    tag.setByte("rmode", requestMode.toByte)
+    tag.setByte("rmode", requestMode.id.toByte)
     super.save(tag)
   }
 
@@ -347,17 +376,13 @@ trait TChipStock extends RoutingChip {
         s.stackSize &= 0xff
     }
     requestMode =
-      if (tag.getBoolean("mode")) 1 // TODO Legacy
-      else tag.getByte("rmode")
+      if (tag.getBoolean("mode")) WHEN_EMPTY // Legacy compatibility
+      else RequestMode(tag.getByte("rmode"))
     super.load(tag)
   }
 
   def addStockInfo(list: ListBuffer[String]) {
-    list += (EnumChatFormatting.GRAY + "Fill mode: " + (requestMode match {
-      case 0 => "when missing"
-      case 1 => "when empty"
-      case 2 => "infinite"
-    }))
+    list += (EnumChatFormatting.GRAY + "Fill mode: " + requestMode.toString)
     list += (EnumChatFormatting.GRAY.toString + "Stock: ")
     var added = false
     for (i <- 0 until stock.getSizeInventory) {

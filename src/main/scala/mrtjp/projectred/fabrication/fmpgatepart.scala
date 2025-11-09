@@ -145,6 +145,11 @@ class CircuitGateLogic(gate: CircuitGatePart)
     if (!gate.world.isRemote) ic.tick()
   }
 
+  override def setup(gate: CircuitGatePart): Unit = {
+    super.setup(gate)
+    ic.firstSetup()
+  }
+
   override def onChange(gate: CircuitGatePart) {
     var cmask = 0
     for (r <- 0 until 4)

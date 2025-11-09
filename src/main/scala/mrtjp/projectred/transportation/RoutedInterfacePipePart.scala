@@ -3,7 +3,7 @@ package mrtjp.projectred.transportation
 import codechicken.multipart.INeighborTileChange
 import mrtjp.core.gui.{GuiLib, NodeContainer, Slot3}
 import mrtjp.core.inventory.SimpleInventory
-import mrtjp.core.item.{ItemKey, ItemKeyStack, ItemQueue}
+import mrtjp.core.item.{ItemEquality, ItemKey, ItemKeyStack, ItemQueue}
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
@@ -207,6 +207,16 @@ class RoutedInterfacePipePart
   override def getWorkLoad = {
     val all = chips.filter(_ != null).map(_.getWorkLoad)
     if (all.isEmpty) 0 else all.max
+  }
+
+  override def getPendingDeliveries(
+      item: ItemKey,
+      equality: ItemEquality,
+      requester: IWorldRequester
+  ): Int = {
+    chips.filterNot(_ == null).foldLeft(0) { (total, chip) =>
+      total + chip.getPendingDeliveries(item, equality, requester)
+    }
   }
 
   override def onNeighborTileChanged(side: Int, weak: Boolean) {

@@ -1,7 +1,7 @@
 package mrtjp.projectred.transportation
 
 import mrtjp.core.inventory.InvWrapper
-import mrtjp.core.item.{ItemKey, ItemKeyStack, ItemQueue}
+import mrtjp.core.item.{ItemEquality, ItemKey, ItemKeyStack, ItemQueue}
 import mrtjp.projectred.transportation.RoutingChipDefs.ChipVal
 
 import scala.collection.mutable.ListBuffer
@@ -64,6 +64,21 @@ trait TActiveBroadcastStack extends RoutingChip {
 
   def getTotalDeliveryCount =
     orders.foldLeft(0)((b, p) => b + p.stack.stackSize)
+
+  override def getPendingDeliveries(
+      item: ItemKey,
+      equality: ItemEquality,
+      requester: IWorldRequester
+  ): Int = {
+    orders.foldLeft(0) { (sum, order) =>
+      if (
+        order.requester == requester && equality.matches(item, order.stack.key)
+      )
+        sum + order.stack.stackSize
+      else
+        sum
+    }
+  }
 
   def onOrdersChanged() {}
 

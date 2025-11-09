@@ -4,7 +4,7 @@ import java.util.UUID
 import codechicken.lib.data.{MCDataInput, MCDataOutput}
 import codechicken.lib.vec.BlockCoord
 import mrtjp.core.inventory.InvWrapper
-import mrtjp.core.item.{ItemKey, ItemKeyStack, ItemQueue}
+import mrtjp.core.item.{ItemEquality, ItemKey, ItemKeyStack, ItemQueue}
 import mrtjp.core.world.Messenger
 import mrtjp.projectred.api.IConnectable
 import mrtjp.projectred.core.Configurator
@@ -59,6 +59,23 @@ trait IWorldBroadcaster extends IWorldRouter {
   def getBroadcastPriority: Int
 
   def getWorkLoad: Double
+
+  /** Get the count of items pending delivery to a specific requester.
+    *
+    * @param item
+    *   The item to query
+    * @param equality
+    *   The equality matcher for flexible item matching
+    * @param requester
+    *   The destination requester
+    * @return
+    *   The count of items pending delivery
+    */
+  def getPendingDeliveries(
+      item: ItemKey,
+      equality: ItemEquality,
+      requester: IWorldRequester
+  ): Int = 0
 }
 
 trait IWorldCrafter extends IWorldRequester with IWorldBroadcaster {

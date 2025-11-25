@@ -103,19 +103,37 @@ class TileBlockPlacer
     if (world.isRemote) return
     reloadPlayer()
     val upos = position.offset(side ^ 1)
-    copyInvToPlayer()
-    for (i <- 0 until 9) {
-      val stack = getStackInSlot(i)
-      if (stack != null && tryUseItem(stack, upos.x, upos.y, upos.z, i)) {
-        if (fakePlayer.isUsingItem) fakePlayer.stopUsingItem()
-        copyInvFromPlayer()
-        val newStack = getStackInSlot(i)
-        if (newStack != null && newStack.stackSize == 0)
-          setInventorySlotContents(i, null)
-        return
+
+    // tryUseItem will immediately trigger block updates, which can trigger other TileBlockPlacers' onActivate.
+    // Because of this, we back up the inventory of the fake player before copying over this block's inventory,
+    // and we restore it before we return from this function.
+
+    // Otherwise, if TileBlockPlacer A's onActivated triggered TileBlockPlacer B's onActivated,
+    // TileBlockPlacer B would overwrite the inventory that TileBlockPlacer A copied into the fake player,
+    // and TileBlockPlacer A would copy back the inventory that TileBlockPlacer B stored in the fake player.
+    val backupInv = new Array[ItemStack](9)
+    for (i <- 0 until 9) backupInv(i) = fakePlayer.inventory.getStackInSlot(i)
+
+    try {
+      copyInvToPlayer()
+      for (i <- 0 until 9) {
+        val stack = getStackInSlot(i)
+        if (stack != null && tryUseItem(stack, upos.x, upos.y, upos.z, i)) {
+          if (fakePlayer.isUsingItem) fakePlayer.stopUsingItem()
+          copyInvFromPlayer()
+          val newStack = getStackInSlot(i)
+          if (newStack != null && newStack.stackSize == 0)
+            setInventorySlotContents(i, null)
+          return
+        }
       }
+      copyInvFromPlayer()
+    } finally {
+      // Restore inventory as it was before
+      for (i <- 0 until 9)
+        fakePlayer.inventory.setInventorySlotContents(i, backupInv(i))
     }
-    copyInvFromPlayer()
+
   }
 
   def copyInvToPlayer() {

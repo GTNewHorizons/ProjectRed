@@ -103,19 +103,29 @@ class TileBlockPlacer
     if (world.isRemote) return
     reloadPlayer()
     val upos = position.offset(side ^ 1)
-    copyInvToPlayer()
-    for (i <- 0 until 9) {
-      val stack = getStackInSlot(i)
-      if (stack != null && tryUseItem(stack, upos.x, upos.y, upos.z, i)) {
-        if (fakePlayer.isUsingItem) fakePlayer.stopUsingItem()
-        copyInvFromPlayer()
-        val newStack = getStackInSlot(i)
-        if (newStack != null && newStack.stackSize == 0)
-          setInventorySlotContents(i, null)
-        return
+
+    val backupInv = new Array[ItemStack](9)
+    for (i <- 0 until 9) backupInv(i) = fakePlayer.inventory.getStackInSlot(i)
+
+    try {
+      copyInvToPlayer()
+      for (i <- 0 until 9) {
+        val stack = getStackInSlot(i)
+        if (stack != null && tryUseItem(stack, upos.x, upos.y, upos.z, i)) {
+          if (fakePlayer.isUsingItem) fakePlayer.stopUsingItem()
+          copyInvFromPlayer()
+          val newStack = getStackInSlot(i)
+          if (newStack != null && newStack.stackSize == 0)
+            setInventorySlotContents(i, null)
+          return
+        }
       }
+      copyInvFromPlayer()
+    } finally {
+      for (i <- 0 until 9)
+        fakePlayer.inventory.setInventorySlotContents(i, backupInv(i))
     }
-    copyInvFromPlayer()
+
   }
 
   def copyInvToPlayer() {

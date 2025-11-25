@@ -107,7 +107,7 @@ class TileBlockPlacer
     // tryUseItem will immediately trigger block updates, which can trigger other TileBlockPlacers' onActivate.
     // Because of this, we back up the inventory of the fake player before copying over this block's inventory,
     // and we restore it before we return from this function.
-    
+
     // Otherwise, if TileBlockPlacer A's onActivated triggered TileBlockPlacer B's onActivated,
     // TileBlockPlacer B would overwrite the inventory that TileBlockPlacer A copied into the fake player,
     // and TileBlockPlacer A would copy back the inventory that TileBlockPlacer B stored in the fake player.

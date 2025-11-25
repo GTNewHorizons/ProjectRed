@@ -104,6 +104,8 @@ class TileBlockPlacer
     reloadPlayer()
     val upos = position.offset(side ^ 1)
 
+    // Store the inventory before inventory manipulation to restore it later, required because of  how placing blocks
+    // could trigger other TileBlockPlacer before this one finishes while onActivate did not finish.
     val backupInv = new Array[ItemStack](9)
     for (i <- 0 until 9) backupInv(i) = fakePlayer.inventory.getStackInSlot(i)
 
@@ -122,6 +124,7 @@ class TileBlockPlacer
       }
       copyInvFromPlayer()
     } finally {
+      // Restore inventory as it was before
       for (i <- 0 until 9)
         fakePlayer.inventory.setInventorySlotContents(i, backupInv(i))
     }

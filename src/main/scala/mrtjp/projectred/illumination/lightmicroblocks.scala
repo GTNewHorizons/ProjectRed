@@ -45,6 +45,8 @@ object LightMicroMaterial {
 }
 
 trait LightMicroblock extends Microblock {
+  override def shouldRenderDynamic = true
+
   @SideOnly(Side.CLIENT)
   override def renderDynamic(pos: Vector3, frame: Float, pass: Int) {
     if (pass == 0) {

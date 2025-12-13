@@ -48,9 +48,9 @@ class TileBlockBreaker
     world.playAuxSFXAtEntity(
       null,
       2001,
-      x,
-      y,
-      z,
+      bc.x,
+      bc.y,
+      bc.z,
       Block.getIdFromBlock(b) + (meta << 12)
     )
     world.setBlockToAir(bc.x, bc.y, bc.z)

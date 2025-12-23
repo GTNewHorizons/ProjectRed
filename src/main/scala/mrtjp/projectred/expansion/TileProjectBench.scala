@@ -348,7 +348,7 @@ class ContainerProjectBench(player: EntityPlayer, tile: TileProjectBench)
     super.slotClick(id, mouse, mode, player)
   }
 
-  override def transferStackInSlot(player:EntityPlayer, i:Int):ItemStack = {
+  override def transferStackInSlot(player: EntityPlayer, i: Int): ItemStack = {
     if (i == 28 && !getSlot(28).canTakeStack(player))
       null
     else

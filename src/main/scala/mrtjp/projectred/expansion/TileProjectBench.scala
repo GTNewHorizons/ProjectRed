@@ -211,7 +211,6 @@ class SlotProjectCrafting(
   }
 
   override def onPickupFromSlot(player: EntityPlayer, stack: ItemStack) {
-    onCrafting(stack)
 
     val storage = ((9 until 27) ++ (0 until 9)).map { i =>
       val s = tile.getStackInSlot(i)
@@ -241,6 +240,7 @@ class SlotProjectCrafting(
     FMLCommonHandler
       .instance()
       .firePlayerCraftingEvent(player, stack, invCrafting)
+    onCrafting(stack)
 
     tile.updateRecipe()
   }

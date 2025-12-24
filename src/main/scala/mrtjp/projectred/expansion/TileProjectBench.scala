@@ -200,11 +200,14 @@ class SlotProjectCrafting(
         tile.currentRecipe,
         tile.currentInputs,
         storage
-      )
+      ) && tile.currentRecipe.matches(tile.invCrafting, tile.world)
     }
 
     // copied from super for obfuscation bug
-    canRemoveDelegate()
+    canRemoveDelegate() && tile.currentRecipe.matches(
+      tile.invCrafting,
+      tile.world
+    )
   }
 
   override def onPickupFromSlot(player: EntityPlayer, stack: ItemStack) {

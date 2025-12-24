@@ -172,8 +172,7 @@ class TileAutoCrafter
     val eq = new ItemEquality
     eq.matchMeta = !item.makeStack(0).isItemStackDamageable
     eq.matchNBT = false
-    eq.matchOre = currentRecipe.isInstanceOf[ShapedOreRecipe] || currentRecipe
-      .isInstanceOf[ShapelessOreRecipe]
+    eq.matchOre = CraftingHelper.matchOre(currentRecipe)
 
     var found = 0
     for (i <- 9 until 27) {
@@ -202,8 +201,7 @@ class TileAutoCrafter
     val eq = new ItemEquality
     eq.matchMeta = !item.makeStack(0).isItemStackDamageable
     eq.matchNBT = false
-    eq.matchOre = currentRecipe.isInstanceOf[ShapedOreRecipe] || currentRecipe
-      .isInstanceOf[ShapelessOreRecipe]
+    eq.matchOre = matchOre
 
     var left = amount
     for (i <- 9 until 27) {

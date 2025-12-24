@@ -294,8 +294,7 @@ class SlotProjectCrafting(
     val eq = new ItemEquality
     eq.matchMeta = !stack1.isItemStackDamageable
     eq.matchNBT = false
-    eq.matchOre = recipe.isInstanceOf[ShapedOreRecipe] || recipe
-      .isInstanceOf[ShapelessOreRecipe]
+    eq.matchOre = CraftingHelper.matchOre(recipe)
     eq.matches(ItemKey.get(stack1), ItemKey.get(stack2))
   }
 
@@ -490,5 +489,24 @@ object RenderProjectBench extends TCubeMapRender {
     side2 = reg.registerIcon("projectred:mechanical/projectbench/side2")
 
     iconT = new MultiIconTransformation(bottom, top, side1, side1, side2, side2)
+  }
+}
+
+object CraftingHelper {
+  def matchOre (recipe : IRecipe) : Boolean = {
+    recipe match {
+      case r: ShapedOreRecipe =>
+        r.getInput.exists(isOreIngredient)
+      case r: ShapelessOreRecipe =>
+        r.getInput.exists(isOreIngredient)
+      case _ =>
+        false
+    }
+  }
+
+  def isOreIngredient(in: Any): Boolean = in match {
+    case _: String            => true
+    case l: java.util.List[_] => true // ore stack list
+    case _                    => false
   }
 }

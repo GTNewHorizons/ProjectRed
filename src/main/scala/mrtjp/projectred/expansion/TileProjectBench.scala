@@ -241,7 +241,68 @@ class SlotProjectCrafting(
     )
     onCrafting(stack)
 
+    for (i <- 0 until 9) {
+
+      val gridStack = tile.invCrafting.getStackInSlot(
+        i
+      ) // current real item in grid (maybe null or decreased)
+      val remainder = getRemaining(i, tile.invCrafting)
+
+      if (remainder != null && gridStack != null) {
+        // Case 1: No plan active AND this grid slot is now empty → put remainder back in grid
+        if (!tile.isPlanRecipe && (gridStack.isItemEqual(remainder))) {
+          tile.setInventorySlotContents(i, remainder)
+        }
+        // Case 2: Try to merge remainder into storage slots (9-26) or player inventory
+        else if (
+          !tryAddToStorageSlots(remainder) &&
+          !player.inventory.addItemStackToInventory(remainder)
+        ) {
+          // If no space anywhere, drop it
+          player.dropPlayerItemWithRandomChoice(remainder, false)
+        }
+      }
+    }
     tile.updateRecipe()
+
+  }
+  def tryAddToStorageSlots(stack: ItemStack): Boolean = {
+    // Try to merge into storage slots 9-26
+    for (j <- 9 until 27) {
+      val slotStack = tile.getStackInSlot(j)
+      if (
+        slotStack != null && slotStack.isItemEqual(stack) &&
+        ItemStack.areItemStackTagsEqual(slotStack, stack) &&
+        slotStack.stackSize < slotStack.getMaxStackSize
+      ) {
+        val space = slotStack.getMaxStackSize - slotStack.stackSize
+        val toAdd = Math.min(space, stack.stackSize)
+        slotStack.stackSize += toAdd
+        stack.stackSize -= toAdd
+        if (stack.stackSize <= 0) return true
+      }
+    }
+
+    // Try to place in empty storage slot
+    for (j <- 9 until 27) {
+      if (tile.getStackInSlot(j) == null) {
+        tile.setInventorySlotContents(j, stack)
+        return true
+      }
+    }
+
+    false
+  }
+
+  def getRemaining(i: Int, invCrafting: InventoryCrafting): ItemStack = {
+    val stack = invCrafting.getStackInSlot(i)
+
+    if (stack != null) {
+      val item = stack.getItem
+      if (item != null && item.hasContainerItem(stack)) {
+        item.getContainerItem(stack)
+      } else null
+    } else null
   }
 
   def searchFor(

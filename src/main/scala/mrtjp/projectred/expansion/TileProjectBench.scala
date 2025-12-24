@@ -254,7 +254,8 @@ class SlotProjectCrafting(
     for (i <- 0 until 9) {
       val item = inputs(i)
       if (item != null) {
-        if (!eatResource(recipe, item, storage)) return false
+        val eatenItem = eatResource(recipe, item, storage)
+        if (eatenItem == null) return false
         tile.invCrafting.setInventorySlotContents(i, eatenItem)
       }
     }
@@ -266,25 +267,24 @@ class SlotProjectCrafting(
       recipe: IRecipe,
       stack1: ItemStack,
       storage: Array[ItemStack]
-  ): Boolean = {
+  ): ItemStack = {
     def increment() = { i = (i + 1) % storage.length; i }
     if (i < 18) i = 0 else increment()
     val start = i
     do {
       val stack2 = storage(i)
       if (stack2 != null && ingredientMatch(recipe, stack1, stack2)) {
-        if (stack2.getItem.hasContainerItem(stack2)) {
-          val cStack = stack2.getItem.getContainerItem(stack2)
-          storage(i) =
-            if (cStack.getItemDamage < cStack.getMaxDamage) cStack else null
-          return true
-        } else if (stack2.stackSize >= 1) {
-          stack2.stackSize -= 1
-          return true
+        stack2.stackSize -= 1;
+        if (stack2.stackSize <= 0) {
+          storage(i) = null;
         }
+
+        val copy = stack2.copy();
+        copy.stackSize = 1;
+        return copy;
       }
     } while (increment() != start)
-    false
+    null
   }
 
   private def ingredientMatch(

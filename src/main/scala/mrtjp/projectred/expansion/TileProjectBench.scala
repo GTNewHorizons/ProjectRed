@@ -234,12 +234,11 @@ class SlotProjectCrafting(
       }
     }
 
-    val invCrafting = new InventoryCrafting(new NodeContainer, 3, 3)
-    for (i <- 0 until 9)
-      invCrafting.setInventorySlotContents(i, tile.currentInputs(i))
-    FMLCommonHandler
-      .instance()
-      .firePlayerCraftingEvent(player, stack, invCrafting)
+    FMLCommonHandler.instance.firePlayerCraftingEvent(
+      player,
+      stack,
+      tile.invCrafting
+    )
     onCrafting(stack)
 
     tile.updateRecipe()
@@ -252,15 +251,14 @@ class SlotProjectCrafting(
       storage: Array[ItemStack]
   ): Boolean = {
     i = 0
-    val invCrafting = new InventoryCrafting(new NodeContainer, 3, 3)
     for (i <- 0 until 9) {
       val item = inputs(i)
       if (item != null) {
         if (!eatResource(recipe, item, storage)) return false
-        invCrafting.setInventorySlotContents(i, item)
+        tile.invCrafting.setInventorySlotContents(i, eatenItem)
       }
     }
-    recipe.matches(invCrafting, world)
+    recipe.matches(tile.invCrafting, world)
   }
 
   private var i = 0

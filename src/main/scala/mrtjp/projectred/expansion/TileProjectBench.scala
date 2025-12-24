@@ -337,17 +337,6 @@ class ContainerProjectBench(player: EntityPlayer, tile: TileProjectBench)
     detectAndSendChanges()
   }
 
-  override def slotClick(
-      id: Int,
-      mouse: Int,
-      shift: Int,
-      player: EntityPlayer
-  ) = {
-    var mode = shift
-    if (id == 28 && mode == 6) mode = 0
-    super.slotClick(id, mouse, mode, player)
-  }
-
   override def transferStackInSlot(player: EntityPlayer, i: Int): ItemStack = {
     if (i == 28 && !getSlot(28).canTakeStack(player))
       null

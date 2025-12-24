@@ -6,7 +6,6 @@
 package mrtjp.projectred.expansion
 
 import java.util.{List => JList}
-
 import codechicken.lib.data.MCDataInput
 import codechicken.lib.gui.GuiDraw
 import codechicken.lib.render.uv.{MultiIconTransformation, UVTransformation}
@@ -36,7 +35,6 @@ import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.util.IIcon
 import net.minecraft.world.{IBlockAccess, World}
 import net.minecraftforge.oredict.{ShapedOreRecipe, ShapelessOreRecipe}
-import org.lwjgl.input.Keyboard
 
 import scala.collection.JavaConversions._
 
@@ -353,6 +351,7 @@ class SlotProjectCrafting(
       stack1: ItemStack,
       stack2: ItemStack
   ) = {
+
     val eq = new ItemEquality
     eq.matchMeta = !stack1.isItemStackDamageable
     eq.matchNBT = false
@@ -555,7 +554,7 @@ object RenderProjectBench extends TCubeMapRender {
 }
 
 object CraftingHelper {
-  def matchOre (recipe : IRecipe) : Boolean = {
+  def matchOre(recipe: IRecipe): Boolean = {
     recipe match {
       case r: ShapedOreRecipe =>
         r.getInput.exists(isOreIngredient)

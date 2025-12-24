@@ -21,7 +21,11 @@ import mrtjp.projectred.api.IScrewdriver
 import net.minecraft.client.Minecraft
 import net.minecraft.client.model.{ModelBiped, ModelRenderer}
 import net.minecraft.client.renderer.texture.IIconRegister
-import net.minecraft.enchantment.{Enchantment, EnchantmentHelper, EnumEnchantmentType}
+import net.minecraft.enchantment.{
+  Enchantment,
+  EnchantmentHelper,
+  EnumEnchantmentType
+}
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.{Entity, EntityLivingBase}
 import net.minecraft.init.Blocks

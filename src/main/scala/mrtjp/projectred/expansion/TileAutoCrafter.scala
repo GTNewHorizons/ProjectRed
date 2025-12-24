@@ -201,7 +201,7 @@ class TileAutoCrafter
     val eq = new ItemEquality
     eq.matchMeta = !item.makeStack(0).isItemStackDamageable
     eq.matchNBT = false
-    eq.matchOre = matchOre
+    eq.matchOre = CraftingHelper.matchOre(currentRecipe)
 
     var left = amount
     for (i <- 9 until 27) {

@@ -350,7 +350,7 @@ class ContainerProjectBench(player: EntityPlayer, tile: TileProjectBench)
         if (tryMergeItemStack(stack, 9, 27, false))
           return true // merge to storage
         if (tryMergeItemStack(stack, 29, 65, false))
-          return true // merge to inventory)
+          return true // merge to inventory
       } else if (9 until 27 contains from) // storage
       {
         if (stack.getItem.isInstanceOf[ItemPlan]) {
@@ -371,7 +371,7 @@ class ContainerProjectBench(player: EntityPlayer, tile: TileProjectBench)
         if (tryMergeItemStack(stack, 9, 27, true))
           return true // merge to storage
         if (tryMergeItemStack(stack, 29, 65, false))
-          return true // merge to inventory)
+          return true // merge to inventory
       } else if (from == 28) // output slot
       {
         if (tryMergeItemStack(stack, 29, 65, true))

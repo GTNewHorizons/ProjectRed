@@ -24,7 +24,11 @@ import net.minecraft.client.model.{ModelBiped, ModelRenderer}
 import net.minecraft.client.renderer.RenderHelper
 import net.minecraft.client.renderer.entity.RenderItem
 import net.minecraft.client.renderer.texture.IIconRegister
-import net.minecraft.enchantment.{Enchantment, EnchantmentHelper, EnumEnchantmentType}
+import net.minecraft.enchantment.{
+  Enchantment,
+  EnchantmentHelper,
+  EnumEnchantmentType
+}
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.{Entity, EntityLivingBase}
 import net.minecraft.init.Blocks
@@ -180,7 +184,8 @@ class ItemElectronicScrewdriver
 
 class ItemPlan extends ItemCore("projectred.expansion.plan") {
   setCreativeTab(ProjectRedExpansion.tabExpansion)
-  if (FMLCommonHandler.instance().getEffectiveSide.isClient) MinecraftForgeClient.registerItemRenderer(this, new ItemPlanRenderer)
+  if (FMLCommonHandler.instance().getEffectiveSide.isClient)
+    MinecraftForgeClient.registerItemRenderer(this, new ItemPlanRenderer)
 
   var iconBlank: IIcon = null
   var iconWritten: IIcon = null
@@ -229,35 +234,60 @@ class ItemPlan extends ItemCore("projectred.expansion.plan") {
         } else {
           tooltip.add(
             s" ${EnumChatFormatting.DARK_GRAY}- " +
-              s"${EnumChatFormatting.GRAY}Empty")
+              s"${EnumChatFormatting.GRAY}Empty"
+          )
         }
       }
     }
   }
 }
 
-class ItemPlanRenderer extends IItemRenderer  {
+class ItemPlanRenderer extends IItemRenderer {
   final private val ri = new RenderItem
   private var recursive = false
 
-  override def handleRenderType(item: ItemStack, `type`: IItemRenderer.ItemRenderType): Boolean = {
-    val isShiftHeld = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)
-    if (!this.recursive && (`type` eq IItemRenderer.ItemRenderType.INVENTORY) && isShiftHeld) {
+  override def handleRenderType(
+      item: ItemStack,
+      `type`: IItemRenderer.ItemRenderType
+  ): Boolean = {
+    val isShiftHeld =
+      Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(
+        Keyboard.KEY_RSHIFT
+      )
+    if (
+      !this.recursive && (`type` eq IItemRenderer.ItemRenderType.INVENTORY) && isShiftHeld
+    ) {
       if (ItemPlan.hasRecipeInside(item)) return true
     }
     false
   }
 
-  override def shouldUseRenderHelper(`type`: IItemRenderer.ItemRenderType, item: ItemStack, helper: IItemRenderer.ItemRendererHelper) = false
+  override def shouldUseRenderHelper(
+      `type`: IItemRenderer.ItemRenderType,
+      item: ItemStack,
+      helper: IItemRenderer.ItemRendererHelper
+  ) = false
 
-  override def renderItem(`type`: IItemRenderer.ItemRenderType, item: ItemStack, data: AnyRef*): Unit = {
+  override def renderItem(
+      `type`: IItemRenderer.ItemRenderType,
+      item: ItemStack,
+      data: AnyRef*
+  ): Unit = {
     this.recursive = true
 
     val is = ItemPlan.loadPlanOutput(item)
     val mc = Minecraft.getMinecraft
-    GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT)
+    GL11.glPushAttrib(
+      GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT
+    )
     RenderHelper.enableGUIStandardItemLighting()
-    this.ri.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager, is, 0, 0)
+    this.ri.renderItemAndEffectIntoGUI(
+      mc.fontRenderer,
+      mc.getTextureManager,
+      is,
+      0,
+      0
+    )
     RenderHelper.disableStandardItemLighting()
     GL11.glPopAttrib()
     this.recursive = false

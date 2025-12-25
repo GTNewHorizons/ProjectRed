@@ -354,7 +354,7 @@ class SlotProjectCrafting(
 
     val eq = new ItemEquality
     eq.matchMeta = !stack1.isItemStackDamageable
-    eq.matchNBT = false
+    eq.matchNBT = true
     eq.matchOre = CraftingHelper.matchOre(recipe)
     eq.matches(ItemKey.get(stack1), ItemKey.get(stack2))
   }

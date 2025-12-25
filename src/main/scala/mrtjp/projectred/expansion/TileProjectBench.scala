@@ -309,7 +309,7 @@ class SlotProjectCrafting(
       inputs: Array[ItemStack],
       storage: Array[ItemStack]
   ): Boolean = {
-    i = 0
+    if (tile.isPlanRecipe) i = 0 else i = 17
     for (i <- 0 until 9) {
       val item = inputs(i)
       if (item != null) {
@@ -328,7 +328,7 @@ class SlotProjectCrafting(
       storage: Array[ItemStack]
   ): ItemStack = {
     def increment() = { i = (i + 1) % storage.length; i }
-    if (i < 18) i = 0 else increment()
+    if (!tile.isPlanRecipe) increment()
     val start = i
     do {
       val stack2 = storage(i)

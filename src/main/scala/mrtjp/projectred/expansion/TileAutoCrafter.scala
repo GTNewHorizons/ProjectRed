@@ -21,6 +21,7 @@ import mrtjp.core.world.WorldLib
 import mrtjp.projectred.ProjectRedExpansion
 import mrtjp.projectred.core.libmc.PRResources
 import net.minecraft.client.renderer.texture.IIconRegister
+import net.minecraft.client.resources.I18n
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.inventory.{ICrafting, ISidedInventory, InventoryCrafting}
 import net.minecraft.item.ItemStack
@@ -346,8 +347,20 @@ class GuiAutoCrafter(tile: TileAutoCrafter, c: ContainerAutoCrafter)
         ItemPlan.loadPlanOutput(plan)
       )
 
-    GuiDraw.drawString("Auto Crafting Bench", 8, 6, Colors.GREY.argb, false)
-    GuiDraw.drawString("Inventory", 8, 120, Colors.GREY.argb, false)
+    GuiDraw.drawString(
+      I18n.format("gui.projectred.expansion.machine2|11.title"),
+      8,
+      6,
+      Colors.GREY.argb,
+      false
+    )
+    GuiDraw.drawString(
+      I18n.format("gui.projectred.expansion.machine.inventory.title"),
+      8,
+      120,
+      Colors.GREY.argb,
+      false
+    )
   }
 
   override def drawFront_Impl(mouse: Point, rframe: Float) {

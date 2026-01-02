@@ -104,7 +104,7 @@ item.projectred.expansion.solar_panel.name=Solar Panel
 enchantment.projectred.expansion.fuel_efficiency=Fuel Efficiency
 gui.projectred.expansion.machine.inventory.title=Inventory
 gui.projectred.expansion.machine1|1.title=Electrotine Generator
-
+gui.projectred.expansion.machine2|2.title=Block Placer
 
 itemGroup.transport=Project Red: Transportation
 

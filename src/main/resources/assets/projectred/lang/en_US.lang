@@ -522,7 +522,7 @@ gui.projectred.integration.icblock|0.title=IC Workbench
 gui.projectred.integration.icblock|0.detail=detail
 gui.projectred.integration.icblock|0.scale=scale
 gui.projectred.integration.icblock|0.redraw=redraw
-
+gui.projectred.integration.icblock|1.title=IC Printer
 
 
 itemGroup.trans=Project Red: Transmission

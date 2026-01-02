@@ -508,6 +508,14 @@ item.projectred.integration.gate|32.name=Segment Display Gate
 item.projectred.integration.gate|33.name=Dec Randomizer
 item.projectred.integration.gate|34.name=IC Gate
 
+tile.projectred.integration.icblock.name=IC Workbench/Printer
+tile.projectred.integration.icblock|0.name=IC Workbench
+tile.projectred.integration.icblock|1.name=IC Printer
+
+gui.projectred.integration.icblock|0.title=IC Workbench
+gui.projectred.integration.icblock|0.detail=detail
+gui.projectred.integration.icblock|0.scale=scale
+gui.projectred.integration.icblock|0.redraw=redraw
 
 
 
@@ -589,6 +597,3 @@ item.projectred.fabrication.icblueprint.name=IC Blueprint
 item.projectred.fabrication.icchip.name=IC Chip
 item.projectred.fabrication.icchip|0.name=IC Chip
 item.projectred.fabrication.icchip|1.name=Creative Mode IC Chip
-tile.projectred.integration.icblock.name=IC Workbench/Printer
-tile.projectred.integration.icblock|0.name=IC Workbench
-tile.projectred.integration.icblock|1.name=IC Printer

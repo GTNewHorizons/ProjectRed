@@ -21,6 +21,7 @@ import mrtjp.core.world.WorldLib
 import mrtjp.projectred.core.libmc.PRResources
 import mrtjp.projectred.transportation.PressurePayload
 import net.minecraft.client.renderer.texture.IIconRegister
+import net.minecraft.client.resources.I18n
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.inventory.{Container, ISidedInventory}
 import net.minecraft.item.ItemStack
@@ -164,8 +165,20 @@ class GuiFilteredImporter(c: Container, tile: TileFilteredImporter)
   override def drawBack_Impl(mouse: Point, frame: Float) {
     PRResources.guiFilteredImporter.bind()
     GuiDraw.drawTexturedModalRect(0, 0, 0, 0, 176, 168)
-    GuiDraw.drawString("Filtered Importer", 8, 6, Colors.GREY.argb, false)
-    GuiDraw.drawString("Inventory", 8, 75, Colors.GREY.argb, false)
+    GuiDraw.drawString(
+      I18n.format("gui.projectred.expansion.machine2|3.title"),
+      8,
+      6,
+      Colors.GREY.argb,
+      false
+    )
+    GuiDraw.drawString(
+      I18n.format("gui.projectred.expansion.machine.inventory.title"),
+      8,
+      75,
+      Colors.GREY.argb,
+      false
+    )
   }
 }
 

@@ -102,8 +102,8 @@ tile.projectred.expansion.machine2|11.name=Auto Crafting Bench
 tile.projectred.expansion.machine2|12.name=Diamond Block Breaker
 item.projectred.expansion.solar_panel.name=Solar Panel
 enchantment.projectred.expansion.fuel_efficiency=Fuel Efficiency
-
-
+gui.projectred.expansion.machine.inventory.title=Inventory
+gui.projectred.expansion.machine1|1.title=Electrotine Generator
 
 
 itemGroup.transport=Project Red: Transportation
@@ -507,11 +507,9 @@ item.projectred.integration.gate|31.name=Data Cell
 item.projectred.integration.gate|32.name=Segment Display Gate
 item.projectred.integration.gate|33.name=Dec Randomizer
 item.projectred.integration.gate|34.name=IC Gate
-
 tile.projectred.integration.icblock.name=IC Workbench/Printer
 tile.projectred.integration.icblock|0.name=IC Workbench
 tile.projectred.integration.icblock|1.name=IC Printer
-
 gui.projectred.integration.icblock|0.title=IC Workbench
 gui.projectred.integration.icblock|0.detail=detail
 gui.projectred.integration.icblock|0.scale=scale

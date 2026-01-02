@@ -20,6 +20,7 @@ import mrtjp.core.world.WorldLib
 import mrtjp.projectred.ProjectRedExpansion
 import mrtjp.projectred.core.libmc.PRResources
 import net.minecraft.client.renderer.texture.IIconRegister
+import net.minecraft.client.resources.I18n
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.inventory.{ICrafting, ISidedInventory}
 import net.minecraft.item.ItemStack
@@ -275,8 +276,20 @@ class GuiBatteryBox(tile: TileBatteryBox, c: ContainerBatteryBox)
     else if (tile.cond.charge < tile.getDrawFloor && tile.storage > 0)
       GuiDraw.drawTexturedModalRect(65, 30, 199, 0, 48, 18)
 
-    GuiDraw.drawString("Battery Box", 8, 6, Colors.GREY.argb, false)
-    GuiDraw.drawString("Inventory", 8, 79, Colors.GREY.argb, false)
+    GuiDraw.drawString(
+      I18n.format("gui.projectred.expansion.machine2|5.title"),
+      8,
+      6,
+      Colors.GREY.argb,
+      false
+    )
+    GuiDraw.drawString(
+      I18n.format("gui.projectred.expansion.machine.inventory.title"),
+      8,
+      79,
+      Colors.GREY.argb,
+      false
+    )
   }
 }
 

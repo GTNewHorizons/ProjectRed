@@ -284,7 +284,7 @@ class GuiBatteryBox(tile: TileBatteryBox, c: ContainerBatteryBox)
       false
     )
     GuiDraw.drawString(
-      I18n.format("gui.projectred.expansion.machine.inventory.title"),
+      I18n.format("container.inventory"),
       8,
       79,
       Colors.GREY.argb,

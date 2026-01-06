@@ -461,7 +461,7 @@ class GuiProjectBench(tile: TileProjectBench, c: ContainerProjectBench)
       false
     )
     GuiDraw.drawString(
-      I18n.format("gui.projectred.expansion.machine.inventory.title"),
+      I18n.format("container.inventory"),
       8,
       116,
       Colors.GREY.argb,

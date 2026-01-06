@@ -173,7 +173,7 @@ class GuiFilteredImporter(c: Container, tile: TileFilteredImporter)
       false
     )
     GuiDraw.drawString(
-      I18n.format("gui.projectred.expansion.machine.inventory.title"),
+      I18n.format("container.inventory"),
       8,
       75,
       Colors.GREY.argb,

@@ -255,7 +255,7 @@ class GuiChargingBench(tile: TileChargingBench, c: ContainerChargingBench)
       false
     )
     GuiDraw.drawString(
-      I18n.format("gui.projectred.expansion.machine.inventory.title"),
+      I18n.format("container.inventory"),
       8,
       91,
       Colors.GREY.argb,

@@ -102,7 +102,6 @@ tile.projectred.expansion.machine2|11.name=Auto Crafting Bench
 tile.projectred.expansion.machine2|12.name=Diamond Block Breaker
 item.projectred.expansion.solar_panel.name=Solar Panel
 enchantment.projectred.expansion.fuel_efficiency=Fuel Efficiency
-gui.projectred.expansion.machine.inventory.title=Inventory
 gui.projectred.expansion.machine1|0.title=Inductive Furnace
 gui.projectred.expansion.machine1|1.title=Electrotine Generator
 gui.projectred.expansion.machine2|2.title=Block Placer

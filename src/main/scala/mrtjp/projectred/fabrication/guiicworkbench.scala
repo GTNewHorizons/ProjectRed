@@ -22,7 +22,6 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Gui
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.EnumChatFormatting
-import net.minecraft.util.StatCollector
 import org.lwjgl.input.{Keyboard, Mouse}
 import org.lwjgl.opengl.GL11
 
@@ -616,14 +615,6 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
   var pref: PrefboardNode = null
   var toolSets = Seq[ICToolsetNode]()
 
-  private def localizedOrDefault(
-      key: String,
-      default: String,
-      args: AnyRef*
-  ) =
-    if (StatCollector.canTranslate(key)) I18n.format(key, args: _*)
-    else default
-
   override def onAddedToParent_Impl() {
     val clip = new ClipNode
     clip.position = Point(7, 18)
@@ -739,10 +730,7 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     val reqNew = new MCButtonNode
     reqNew.position = Point(272, 133)
     reqNew.size = Size(44, 12)
-    reqNew.text = localizedOrDefault(
-      "gui.projectred.integration.icblock|0.redraw",
-      "redraw"
-    )
+    reqNew.text = I18n.format("gui.projectred.integration.icblock|0.redraw")
     reqNew.clickDelegate = { () =>
       if (tile.hasBP) {
         val nic = new NewICNode
@@ -787,13 +775,8 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
       Colors.GREY.argb,
       false
     )
-    val detailValue = pref.detailLevel.toString
     GuiDraw.drawStringC(
-      localizedOrDefault(
-        "gui.projectred.integration.icblock|0.detail_value",
-        detailValue,
-        Int.box(pref.detailLevel)
-      ),
+      pref.detailLevel + "", // TODO: GuiText Integration
       279,
       175,
       30,
@@ -811,13 +794,11 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
       Colors.GREY.argb,
       false
     )
-    val scaleValue = BigDecimal(pref.scale, new MathContext(2)).toString
     GuiDraw.drawStringC(
-      localizedOrDefault(
-        "gui.projectred.integration.icblock|0.scale_value",
-        scaleValue,
-        scaleValue
-      ),
+      BigDecimal(
+        pref.scale,
+        new MathContext(2)
+      ) + "", // TODO: GuiText Integration
       279,
       207,
       30,

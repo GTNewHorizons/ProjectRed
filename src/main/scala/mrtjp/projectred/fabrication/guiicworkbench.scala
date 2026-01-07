@@ -6,7 +6,7 @@
 package mrtjp.projectred.fabrication
 
 import java.math.MathContext
-
+import net.minecraft.client.resources.I18n
 import codechicken.lib.data.MCDataInput
 import codechicken.lib.gui.GuiDraw
 import codechicken.lib.render.ColourMultiplier
@@ -730,7 +730,7 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     val reqNew = new MCButtonNode
     reqNew.position = Point(272, 133)
     reqNew.size = Size(44, 12)
-    reqNew.text = "redraw"
+    reqNew.text = I18n.format("gui.projectred.integration.icblock|0.redraw")
     reqNew.clickDelegate = { () =>
       if (tile.hasBP) {
         val nic = new NewICNode
@@ -758,11 +758,25 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     PRResources.guiPrototyper.bind()
     Gui.func_146110_a(0, 0, 0, 0, size.width, size.height, 512, 512)
 
-    GuiDraw.drawString("IC Workbench", 8, 6, Colors.GREY.argb, false)
+    GuiDraw.drawString(
+      I18n.format("gui.projectred.integration.icblock|0.title"),
+      8,
+      6,
+      Colors.GREY.argb,
+      false
+    )
 
-    GuiDraw.drawStringC("detail", 273, 162, 42, 14, Colors.GREY.argb, false)
     GuiDraw.drawStringC(
-      pref.detailLevel + "",
+      I18n.format("gui.projectred.integration.icblock|0.detail"),
+      273,
+      162,
+      42,
+      14,
+      Colors.GREY.argb,
+      false
+    )
+    GuiDraw.drawStringC(
+      pref.detailLevel + "", // TODO: GuiText Integration
       279,
       175,
       30,
@@ -771,9 +785,20 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
       false
     )
 
-    GuiDraw.drawStringC("scale", 273, 193, 42, 14, Colors.GREY.argb, false)
     GuiDraw.drawStringC(
-      BigDecimal(pref.scale, new MathContext(2)) + "",
+      I18n.format("gui.projectred.integration.icblock|0.scale"),
+      273,
+      193,
+      42,
+      14,
+      Colors.GREY.argb,
+      false
+    )
+    GuiDraw.drawStringC(
+      BigDecimal(
+        pref.scale,
+        new MathContext(2)
+      ) + "", // TODO: GuiText Integration
       279,
       207,
       30,

@@ -6,7 +6,6 @@
 package mrtjp.projectred.expansion
 
 import java.util.{List => JList}
-
 import codechicken.lib.data.MCDataInput
 import codechicken.lib.gui.GuiDraw
 import codechicken.lib.render.uv.{MultiIconTransformation, UVTransformation}
@@ -37,7 +36,6 @@ import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.util.IIcon
 import net.minecraft.world.{IBlockAccess, World}
 import net.minecraftforge.oredict.{ShapedOreRecipe, ShapelessOreRecipe}
-import org.lwjgl.input.Keyboard
 
 import scala.collection.JavaConversions._
 
@@ -201,15 +199,17 @@ class SlotProjectCrafting(
         tile.currentRecipe,
         tile.currentInputs,
         storage
-      )
+      ) && tile.currentRecipe.matches(tile.invCrafting, tile.world)
     }
 
     // copied from super for obfuscation bug
-    canRemoveDelegate()
+    canRemoveDelegate() && tile.currentRecipe.matches(
+      tile.invCrafting,
+      tile.world
+    )
   }
 
   override def onPickupFromSlot(player: EntityPlayer, stack: ItemStack) {
-    onCrafting(stack)
 
     val storage = ((9 until 27) ++ (0 until 9)).map { i =>
       val s = tile.getStackInSlot(i)
@@ -233,14 +233,75 @@ class SlotProjectCrafting(
       }
     }
 
-    val invCrafting = new InventoryCrafting(new NodeContainer, 3, 3)
-    for (i <- 0 until 9)
-      invCrafting.setInventorySlotContents(i, tile.currentInputs(i))
-    FMLCommonHandler
-      .instance()
-      .firePlayerCraftingEvent(player, stack, invCrafting)
+    FMLCommonHandler.instance.firePlayerCraftingEvent(
+      player,
+      stack,
+      tile.invCrafting
+    )
+    onCrafting(stack)
 
+    for (i <- 0 until 9) {
+
+      val gridStack = tile.invCrafting.getStackInSlot(
+        i
+      ) // current real item in grid (maybe null or decreased)
+      val remainder = getRemaining(i, tile.invCrafting)
+
+      if (remainder != null && gridStack != null) {
+        // Case 1: No plan active AND this grid slot is now empty → put remainder back in grid
+        if (!tile.isPlanRecipe && (gridStack.isItemEqual(remainder))) {
+          tile.setInventorySlotContents(i, remainder)
+        }
+        // Case 2: Try to merge remainder into storage slots (9-26) or player inventory
+        else if (
+          !tryAddToStorageSlots(remainder) &&
+          !player.inventory.addItemStackToInventory(remainder)
+        ) {
+          // If no space anywhere, drop it
+          player.dropPlayerItemWithRandomChoice(remainder, false)
+        }
+      }
+    }
     tile.updateRecipe()
+
+  }
+  def tryAddToStorageSlots(stack: ItemStack): Boolean = {
+    // Try to merge into storage slots 9-26
+    for (j <- 9 until 27) {
+      val slotStack = tile.getStackInSlot(j)
+      if (
+        slotStack != null && slotStack.isItemEqual(stack) &&
+        ItemStack.areItemStackTagsEqual(slotStack, stack) &&
+        slotStack.stackSize < slotStack.getMaxStackSize
+      ) {
+        val space = slotStack.getMaxStackSize - slotStack.stackSize
+        val toAdd = Math.min(space, stack.stackSize)
+        slotStack.stackSize += toAdd
+        stack.stackSize -= toAdd
+        if (stack.stackSize <= 0) return true
+      }
+    }
+
+    // Try to place in empty storage slot
+    for (j <- 9 until 27) {
+      if (tile.getStackInSlot(j) == null) {
+        tile.setInventorySlotContents(j, stack)
+        return true
+      }
+    }
+
+    false
+  }
+
+  def getRemaining(i: Int, invCrafting: InventoryCrafting): ItemStack = {
+    val stack = invCrafting.getStackInSlot(i)
+
+    if (stack != null) {
+      val item = stack.getItem
+      if (item != null && item.hasContainerItem(stack)) {
+        item.getContainerItem(stack)
+      } else null
+    } else null
   }
 
   def searchFor(
@@ -249,16 +310,16 @@ class SlotProjectCrafting(
       inputs: Array[ItemStack],
       storage: Array[ItemStack]
   ): Boolean = {
-    i = 0
-    val invCrafting = new InventoryCrafting(new NodeContainer, 3, 3)
+    if (tile.isPlanRecipe) i = 0 else i = 17
     for (i <- 0 until 9) {
       val item = inputs(i)
       if (item != null) {
-        if (!eatResource(recipe, item, storage)) return false
-        invCrafting.setInventorySlotContents(i, item)
+        val eatenItem = eatResource(recipe, item, storage)
+        if (eatenItem == null) return false
+        tile.invCrafting.setInventorySlotContents(i, eatenItem)
       }
     }
-    recipe.matches(invCrafting, world)
+    recipe.matches(tile.invCrafting, world)
   }
 
   private var i = 0
@@ -266,25 +327,24 @@ class SlotProjectCrafting(
       recipe: IRecipe,
       stack1: ItemStack,
       storage: Array[ItemStack]
-  ): Boolean = {
+  ): ItemStack = {
     def increment() = { i = (i + 1) % storage.length; i }
-    if (i < 18) i = 0 else increment()
+    if (!tile.isPlanRecipe) increment()
     val start = i
     do {
       val stack2 = storage(i)
       if (stack2 != null && ingredientMatch(recipe, stack1, stack2)) {
-        if (stack2.getItem.hasContainerItem(stack2)) {
-          val cStack = stack2.getItem.getContainerItem(stack2)
-          storage(i) =
-            if (cStack.getItemDamage < cStack.getMaxDamage) cStack else null
-          return true
-        } else if (stack2.stackSize >= 1) {
-          stack2.stackSize -= 1
-          return true
+        stack2.stackSize -= 1;
+        if (stack2.stackSize <= 0) {
+          storage(i) = null;
         }
+
+        val copy = stack2.copy();
+        copy.stackSize = 1;
+        return copy;
       }
     } while (increment() != start)
-    false
+    null
   }
 
   private def ingredientMatch(
@@ -292,11 +352,11 @@ class SlotProjectCrafting(
       stack1: ItemStack,
       stack2: ItemStack
   ) = {
+
     val eq = new ItemEquality
     eq.matchMeta = !stack1.isItemStackDamageable
-    eq.matchNBT = false
-    eq.matchOre = recipe.isInstanceOf[ShapedOreRecipe] || recipe
-      .isInstanceOf[ShapelessOreRecipe]
+    eq.matchNBT = true
+    eq.matchOre = false
     eq.matches(ItemKey.get(stack1), ItemKey.get(stack2))
   }
 
@@ -338,15 +398,11 @@ class ContainerProjectBench(player: EntityPlayer, tile: TileProjectBench)
     detectAndSendChanges()
   }
 
-  override def slotClick(
-      id: Int,
-      mouse: Int,
-      shift: Int,
-      player: EntityPlayer
-  ) = {
-    var mode = shift
-    if (id == 28 && mode == 6) mode = 0
-    super.slotClick(id, mouse, mode, player)
+  override def transferStackInSlot(player: EntityPlayer, i: Int): ItemStack = {
+    if (i == 28 && !getSlot(28).canTakeStack(player))
+      null
+    else
+      super.transferStackInSlot(player, i)
   }
 
   override def doMerge(stack: ItemStack, from: Int): Boolean = {
@@ -355,7 +411,7 @@ class ContainerProjectBench(player: EntityPlayer, tile: TileProjectBench)
         if (tryMergeItemStack(stack, 9, 27, false))
           return true // merge to storage
         if (tryMergeItemStack(stack, 29, 65, false))
-          return true // merge to inventory)
+          return true // merge to inventory
       } else if (9 until 27 contains from) // storage
       {
         if (stack.getItem.isInstanceOf[ItemPlan]) {
@@ -376,7 +432,7 @@ class ContainerProjectBench(player: EntityPlayer, tile: TileProjectBench)
         if (tryMergeItemStack(stack, 9, 27, true))
           return true // merge to storage
         if (tryMergeItemStack(stack, 29, 65, false))
-          return true // merge to inventory)
+          return true // merge to inventory
       } else if (from == 28) // output slot
       {
         if (tryMergeItemStack(stack, 29, 65, true))
@@ -468,15 +524,6 @@ class GuiProjectBench(tile: TileProjectBench, c: ContainerProjectBench)
       false
     )
   }
-
-  override def drawFront_Impl(mouse: Point, rframe: Float) {
-    if (
-      Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(
-        Keyboard.KEY_RSHIFT
-      )
-    )
-      GuiProjectBench.drawPlanOutputOverlay(c.slots)
-  }
 }
 
 object GuiProjectBench extends TGuiBuilder {
@@ -488,29 +535,6 @@ object GuiProjectBench extends TGuiBuilder {
       case t: TileProjectBench =>
         new GuiProjectBench(t, t.createContainer(player))
       case _ => null
-    }
-  }
-
-  def drawPlanOutputOverlay(slots: Iterable[TSlot3]) {
-    for (slot <- slots) if (slot.getHasStack) {
-      val stack = slot.getStack
-      if (ItemPlan.hasRecipeInside(stack)) {
-        val output = ItemPlan.loadPlanOutput(stack)
-        GuiDraw.drawRect(
-          slot.xDisplayPosition,
-          slot.yDisplayPosition,
-          16,
-          16,
-          Colors.LIGHT_BLUE.argb(0xcc)
-        )
-        ItemDisplayNode.renderItem(
-          Point(slot.xDisplayPosition + 1, slot.yDisplayPosition + 1),
-          Size(14, 14),
-          0,
-          true,
-          output
-        )
-      }
     }
   }
 }

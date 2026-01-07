@@ -172,9 +172,8 @@ class TileAutoCrafter
   def containsEnoughResource(item: ItemKey, amount: Int): Boolean = {
     val eq = new ItemEquality
     eq.matchMeta = !item.makeStack(0).isItemStackDamageable
-    eq.matchNBT = false
-    eq.matchOre = currentRecipe.isInstanceOf[ShapedOreRecipe] || currentRecipe
-      .isInstanceOf[ShapelessOreRecipe]
+    eq.matchNBT = true
+    eq.matchOre = false
 
     var found = 0
     for (i <- 9 until 27) {
@@ -202,9 +201,8 @@ class TileAutoCrafter
   def eatResource(item: ItemKey, amount: Int) {
     val eq = new ItemEquality
     eq.matchMeta = !item.makeStack(0).isItemStackDamageable
-    eq.matchNBT = false
-    eq.matchOre = currentRecipe.isInstanceOf[ShapedOreRecipe] || currentRecipe
-      .isInstanceOf[ShapelessOreRecipe]
+    eq.matchNBT = true
+    eq.matchOre = false
 
     var left = amount
     for (i <- 9 until 27) {
@@ -361,15 +359,6 @@ class GuiAutoCrafter(tile: TileAutoCrafter, c: ContainerAutoCrafter)
       Colors.GREY.argb,
       false
     )
-  }
-
-  override def drawFront_Impl(mouse: Point, rframe: Float) {
-    if (
-      Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(
-        Keyboard.KEY_RSHIFT
-      )
-    )
-      GuiProjectBench.drawPlanOutputOverlay(c.slots)
   }
 }
 

@@ -19,6 +19,7 @@ import mrtjp.core.world.WorldLib
 import mrtjp.projectred.ProjectRedExpansion
 import mrtjp.projectred.core.libmc.PRResources
 import net.minecraft.client.renderer.texture.IIconRegister
+import net.minecraft.client.resources.I18n
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.inventory.{ICrafting, ISidedInventory}
 import net.minecraft.item.ItemStack
@@ -246,8 +247,20 @@ class GuiChargingBench(tile: TileChargingBench, c: ContainerChargingBench)
     if (tile.containsUncharged && tile.storage > 0)
       GuiDraw.drawTexturedModalRect(63, 29, 210, 0, 17, 10)
 
-    GuiDraw.drawString("Charging Bench", 8, 6, Colors.GREY.argb, false)
-    GuiDraw.drawString("Inventory", 8, 91, Colors.GREY.argb, false)
+    GuiDraw.drawString(
+      I18n.format("gui.projectred.expansion.machine2|6.title"),
+      8,
+      6,
+      Colors.GREY.argb,
+      false
+    )
+    GuiDraw.drawString(
+      I18n.format("container.inventory"),
+      8,
+      91,
+      Colors.GREY.argb,
+      false
+    )
   }
 }
 

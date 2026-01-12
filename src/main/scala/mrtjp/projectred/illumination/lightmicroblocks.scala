@@ -80,5 +80,5 @@ trait LightMicroblock extends Microblock {
     }
   }
 
-override def getLightValue: Int = 15
+  override def getLightValue: Int = 15
 }

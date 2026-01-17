@@ -46,6 +46,8 @@ class BaseLightPart(obj: LightObject)
   protected var meta: Byte = 0
   var side: Byte = 0
 
+  override def shouldRenderDynamic: Boolean = true
+
   def preparePlacement(side: Int, meta: Int, inv: Boolean) {
     this.inverted = inv
     this.side = side.asInstanceOf[Byte]

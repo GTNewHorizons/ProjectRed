@@ -362,15 +362,6 @@ class GuiAutoCrafter(tile: TileAutoCrafter, c: ContainerAutoCrafter)
       false
     )
   }
-
-  override def drawFront_Impl(mouse: Point, rframe: Float) {
-    if (
-      Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(
-        Keyboard.KEY_RSHIFT
-      )
-    )
-      GuiProjectBench.drawPlanOutputOverlay(c.slots)
-  }
 }
 
 object GuiAutoCrafter extends TGuiBuilder {

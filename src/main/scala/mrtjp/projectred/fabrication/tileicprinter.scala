@@ -32,6 +32,7 @@ import mrtjp.projectred.transmission.WireDef
 import net.minecraft.client.renderer.RenderBlocks
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer
+import net.minecraft.client.resources.I18n
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.init.{Blocks, Items}
 import net.minecraft.item.ItemStack
@@ -596,7 +597,13 @@ class GuiICPrinter(c: ContainerPrinter, tile: TileICPrinter)
       val dx = 37 * tile.progress
       GuiDraw.drawTexturedModalRect(86, 32, 176, 0, dx.toInt, 18)
     }
-    GuiDraw.drawString("IC Printer", 8, 6, Colors.GREY.argb, false)
+    GuiDraw.drawString(
+      I18n.format("gui.projectred.integration.icblock|1.title"),
+      8,
+      6,
+      Colors.GREY.argb,
+      false
+    )
   }
 }
 

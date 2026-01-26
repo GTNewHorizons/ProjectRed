@@ -172,7 +172,7 @@ class TileAutoCrafter
   def containsEnoughResource(item: ItemKey, amount: Int): Boolean = {
     val eq = new ItemEquality
     eq.matchMeta = !item.makeStack(0).isItemStackDamageable
-    eq.matchNBT = false
+    eq.matchNBT = true
     eq.matchOre = currentRecipe.isInstanceOf[ShapedOreRecipe] || currentRecipe
       .isInstanceOf[ShapelessOreRecipe]
 
@@ -202,7 +202,7 @@ class TileAutoCrafter
   def eatResource(item: ItemKey, amount: Int) {
     val eq = new ItemEquality
     eq.matchMeta = !item.makeStack(0).isItemStackDamageable
-    eq.matchNBT = false
+    eq.matchNBT = true
     eq.matchOre = currentRecipe.isInstanceOf[ShapedOreRecipe] || currentRecipe
       .isInstanceOf[ShapelessOreRecipe]
 

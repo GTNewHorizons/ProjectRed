@@ -28,6 +28,8 @@ object Configurator extends ModConfig("ProjRed|Core") {
   var routerUpdateThreadCount = 4
   var maxPipesWandered = 0
 
+  var dimmLampParts = true
+
   var enchantment_fuel_efficiencty_id = 80
 
   /** Machines * */
@@ -132,6 +134,11 @@ object Configurator extends ModConfig("ProjRed|Core") {
       "Routed Pipes: Max Wander Distance",
       maxPipesWandered,
       "Maximum distance an item may aimlessly wander in a pipe before being erased. 0 for unlimited."
+    )
+    dimmLampParts = general.put(
+      "Dimm Lamp Microblocks",
+      dimmLampParts,
+      "If Lamps should emit less light when being cut down in Microblocks."
     )
 
     enchantment_fuel_efficiencty_id = general.put(

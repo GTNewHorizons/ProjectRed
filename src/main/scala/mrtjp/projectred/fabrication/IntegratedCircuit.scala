@@ -8,12 +8,8 @@ package mrtjp.projectred.fabrication
 import codechicken.lib.data.{MCDataInput, MCDataOutput}
 import mrtjp.core.vec.{Point, Rect, Size}
 import mrtjp.projectred.ProjectRedCore.log
-import mrtjp.projectred.fabrication.circuitparts.io.TIOCircuitPart
-import mrtjp.projectred.fabrication.circuitparts.{
-  CircuitPart,
-  TClientNetCircuitPart,
-  TErrorCircuitPart
-}
+import mrtjp.projectred.fabrication.circuitparts.io.{IOGateICPart, TIOCircuitPart}
+import mrtjp.projectred.fabrication.circuitparts.{CircuitPart, TClientNetCircuitPart, TErrorCircuitPart}
 import mrtjp.projectred.fabrication.operations.CircuitOp
 import net.minecraft.nbt.{NBTTagCompound, NBTTagList}
 
@@ -42,6 +38,11 @@ class IntegratedCircuit {
 
   def setOutput(r: Int, state: Int) {
     iostate(r) = iostate(r) & 0xffff | (state & 0xffff) << 16
+  }
+
+  def firstSetup(): Unit = {
+    val ioparts = parts.values.collect { case io: IOGateICPart => io }
+    ioparts.foreach(_.onOutputChange(0xf))
   }
 
   def onInputChanged(mask: Int) {

@@ -5,8 +5,12 @@
  */
 package mrtjp.projectred.fabrication.operations
 
+import codechicken.lib.render.uv.{UVScale, UVTranslation}
+import codechicken.lib.vec.Translation
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.vec.{Point, Vec2}
+import mrtjp.projectred.core.libmc.PRResources
+import mrtjp.projectred.fabrication.ICComponentStore.{dynamicIdx, faceModels, finishRender, orthoGridT, prepairRender}
 import mrtjp.projectred.fabrication.IntegratedCircuit
 import mrtjp.projectred.fabrication.circuitparts.CircuitPart
 import mrtjp.projectred.fabrication.operations.OpAreaBase.clipboard
@@ -73,6 +77,26 @@ abstract class OpAreaBase extends CircuitOp {
     )
     bottomRight = bottomRight.add(1, 1)
     CircuitOp.renderHolo(topLeft, bottomRight, scale, 0x44ffffff)
+  }
+
+  protected def renderImage(
+     x: Double,
+     y: Double,
+     width: Double,
+     height: Double,
+     texTranslation: UVTranslation
+   ): Unit = {
+    val t = orthoGridT(width, height) `with` new Translation(x, y, 0)
+
+    prepairRender()
+    PRResources.guiPrototyper.bind()
+    faceModels(dynamicIdx(0, true)).render(
+      t,
+      new UVScale(32) `with` texTranslation `with` new UVScale(
+        1 / 512d
+      )
+    )
+    finishRender()
   }
 
   def rotateClipboard(): Unit = {

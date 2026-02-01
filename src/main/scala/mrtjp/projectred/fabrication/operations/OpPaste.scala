@@ -6,6 +6,7 @@
 package mrtjp.projectred.fabrication.operations
 
 import codechicken.lib.data.{MCDataInput, MCDataOutput}
+import codechicken.lib.render.uv.UVTranslation
 import mrtjp.core.vec.{Point, Vec2}
 import mrtjp.projectred.fabrication.IntegratedCircuit
 
@@ -68,6 +69,6 @@ class OpPaste extends OpAreaBase {
       width: Double,
       height: Double
   ): Unit = {
-    // TODO render paste icon
+    renderImage(x, y, width, height, new UVTranslation(330, 138))
   }
 }

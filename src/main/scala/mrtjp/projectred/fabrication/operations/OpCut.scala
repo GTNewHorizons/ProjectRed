@@ -6,6 +6,7 @@
 package mrtjp.projectred.fabrication.operations
 
 import codechicken.lib.data.MCDataOutput
+import codechicken.lib.render.uv.UVTranslation
 import mrtjp.core.vec.Point
 import mrtjp.projectred.fabrication.IntegratedCircuit
 
@@ -30,7 +31,9 @@ class OpCut extends OpErase {
       y: Double,
       width: Double,
       height: Double
-  ): Unit = {}
+  ): Unit = {
+    renderImage(x, y, width, height, new UVTranslation(330, 202))
+  }
 
   override def getOpName: String = "gui.projectred.fabrication.cut"
 }

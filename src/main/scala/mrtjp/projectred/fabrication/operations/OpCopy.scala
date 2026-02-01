@@ -6,6 +6,7 @@
 package mrtjp.projectred.fabrication.operations
 
 import codechicken.lib.data.{MCDataInput, MCDataOutput}
+import codechicken.lib.render.uv.UVTranslation
 import mrtjp.core.vec.{Point, Vec2}
 import mrtjp.projectred.fabrication.IntegratedCircuit
 
@@ -46,5 +47,7 @@ class OpCopy extends OpAreaBase {
       y: Double,
       width: Double,
       height: Double
-  ): Unit = {}
+  ): Unit = {
+    renderImage(x, y, width, height, new UVTranslation(330, 104))
+  }
 }

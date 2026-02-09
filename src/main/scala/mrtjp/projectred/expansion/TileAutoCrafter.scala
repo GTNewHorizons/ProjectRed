@@ -6,7 +6,6 @@
 package mrtjp.projectred.expansion
 
 import java.util.{List => JList}
-
 import codechicken.lib.data.MCDataInput
 import codechicken.lib.gui.GuiDraw
 import codechicken.lib.render.uv.{MultiIconTransformation, UVTransformation}
@@ -24,7 +23,7 @@ import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.client.resources.I18n
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.inventory.{ICrafting, ISidedInventory, InventoryCrafting}
-import net.minecraft.item.ItemStack
+import net.minecraft.item.{Item, ItemStack}
 import net.minecraft.item.crafting.{CraftingManager, IRecipe}
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.util.IIcon
@@ -50,6 +49,11 @@ class TileAutoCrafter
   private var recipeNeedsRefresh = true
   private var cycleTimer1 = getUnpoweredCycleTimer
   private var cycleTimer2 = getPoweredCycleTimer
+
+  private var recipeEquality: ItemEquality = _
+  private val recipeCache = new java.util.HashMap[String, IRecipe]()
+  private lazy val allRecipes =
+    CraftingManager.getInstance().getRecipeList.asInstanceOf[JList[IRecipe]]
 
   override def save(tag: NBTTagCompound) {
     super.save(tag)
@@ -132,22 +136,38 @@ class TileAutoCrafter
     currentRecipe = null
     currentInputs.clear()
     currentOutput = null
+    recipeEquality = null
 
     val plan = getStackInSlot(planSlot)
-    if (plan != null && ItemPlan.hasRecipeInside(plan)) {
-      val inputs = ItemPlan.loadPlanInputs(plan)
-      for (i <- 0 until 9) invCrafting.setInventorySlotContents(i, inputs(i))
-      val recipes =
-        CraftingManager.getInstance().getRecipeList.asInstanceOf[JList[IRecipe]]
-      currentRecipe = recipes.find(_.matches(invCrafting, world)).orNull
-      if (currentRecipe != null) {
-        inputs
-          .map { ItemKey.getOrNull }
-          .filter(_ != null)
-          .foreach(currentInputs.add(_, 1))
-        currentOutput =
-          ItemKeyStack.getOrNull(currentRecipe.getCraftingResult(invCrafting))
-      }
+    if (plan == null || !ItemPlan.hasRecipeInside(plan)) return
+
+    val inputs = ItemPlan.loadPlanInputs(plan)
+    for (i <- 0 until 9) invCrafting.setInventorySlotContents(i, inputs(i))
+
+    val key = planKey(inputs)
+    currentRecipe = recipeCache.get(key)
+
+    if (currentRecipe == null) {
+      currentRecipe = allRecipes.find(_.matches(invCrafting, world)).orNull
+      if (currentRecipe != null)
+        recipeCache.put(key, currentRecipe)
+    }
+
+    if (currentRecipe != null) {
+      inputs
+        .map(ItemKey.getOrNull)
+        .filter(_ != null)
+        .foreach(currentInputs.add(_, 1))
+
+      currentOutput =
+        ItemKeyStack.getOrNull(currentRecipe.getCraftingResult(invCrafting))
+
+      recipeEquality = new ItemEquality
+      recipeEquality.matchNBT = true
+      recipeEquality.matchMeta =
+        !currentOutput.key.makeStack(0).isItemStackDamageable
+      recipeEquality.matchOre = currentRecipe.isInstanceOf[ShapedOreRecipe] ||
+        currentRecipe.isInstanceOf[ShapelessOreRecipe]
     }
   }
 
@@ -156,17 +176,34 @@ class TileAutoCrafter
     recipeNeedsRefresh = true
   }
 
-  def tryCraft(): Boolean = {
-    if (currentRecipe != null && checkSpaceForOutput)
-      if (
-        currentInputs.result.forall(p => containsEnoughResource(p._1, p._2))
-      ) {
-        for ((item, amount) <- currentInputs.result)
-          eatResource(item, amount)
-        produceOutput()
-        return true
+  private def buildStorageMap(): Map[ItemKey, Int] = {
+    val map = scala.collection.mutable.Map.empty[ItemKey, Int]
+    for (i <- 9 until 27) {
+      val s = getStackInSlot(i)
+      if (s != null) {
+        val k = ItemKey.get(s)
+        map(k) = map.getOrElse(k, 0) + s.stackSize
       }
-    false
+    }
+    map.toMap
+  }
+
+  def tryCraft(): Boolean = {
+    if (currentRecipe == null || !checkSpaceForOutput)
+      return false
+
+    val storage = buildStorageMap()
+    if (
+      !currentInputs.result.forall { case (k, amt) =>
+        storage.getOrElse(k, 0) >= amt
+      }
+    ) return false
+
+    for ((item, amount) <- currentInputs.result)
+      eatResource(item, amount)
+
+    produceOutput()
+    true
   }
 
   def containsEnoughResource(item: ItemKey, amount: Int): Boolean = {
@@ -200,16 +237,10 @@ class TileAutoCrafter
   }
 
   def eatResource(item: ItemKey, amount: Int) {
-    val eq = new ItemEquality
-    eq.matchMeta = !item.makeStack(0).isItemStackDamageable
-    eq.matchNBT = true
-    eq.matchOre = currentRecipe.isInstanceOf[ShapedOreRecipe] || currentRecipe
-      .isInstanceOf[ShapelessOreRecipe]
-
     var left = amount
-    for (i <- 9 until 27) {
+    for (i <- 9 until 27 if left > 0) {
       val s = getStackInSlot(i)
-      if (s != null && eq.matches(item, ItemKey.get(s))) {
+      if (s != null && recipeEquality.matches(item, ItemKey.get(s))) {
         if (s.getItem.hasContainerItem(s)) {
           val cStack = s.getItem.getContainerItem(s)
           setInventorySlotContents(i, cStack)
@@ -221,8 +252,6 @@ class TileAutoCrafter
           if (s.stackSize <= 0) setInventorySlotContents(i, null)
           else markDirty()
         }
-
-        if (left <= 0) return
       }
     }
   }
@@ -238,6 +267,15 @@ class TileAutoCrafter
 
   override def createContainer(player: EntityPlayer) =
     new ContainerAutoCrafter(player, this)
+
+  def planKey(inputs: Array[ItemStack]): String =
+    inputs
+      .map {
+        case null => "null"
+        case s    => Item.getIdFromItem(s.getItem) + ":" + s.getItemDamage
+      }
+      .mkString("|")
+
 }
 
 class ContainerAutoCrafter(player: EntityPlayer, tile: TileAutoCrafter)

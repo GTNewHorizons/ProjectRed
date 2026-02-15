@@ -14,6 +14,7 @@ import codechicken.microblock.MicroblockGenerator.IGeneratedMaterial
 import codechicken.microblock._
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.projectred.ProjectRedIllumination
+import mrtjp.projectred.core.Configurator
 import mrtjp.projectred.core.RenderHalo
 
 class LightMicroMaterial(meta: Int)
@@ -81,10 +82,13 @@ trait LightMicroblock extends Microblock {
   }
 
   override def getLightValue = {
-    val totalSize = tile.partList
-      .collect { case p: LightMicroblock => p }
-      .map(_.getSize / 8.0)
-      .sum
-    math.min(15, (15 * totalSize).toInt)
+    if (Configurator.dimmLampParts) {
+      val totalSize = tile.partList
+        .collect { case p: LightMicroblock => p }
+        .map(_.getSize / 8.0)
+        .sum
+      math.min(15, (15 * totalSize).toInt)
+    } else if (tile.partList.exists(_.isInstanceOf[LightMicroblock])) 15
+    else 0
   }
 }

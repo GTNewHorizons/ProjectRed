@@ -349,6 +349,13 @@ class ContainerProjectBench(player: EntityPlayer, tile: TileProjectBench)
     super.slotClick(id, mouse, mode, player)
   }
 
+  override def transferStackInSlot(player: EntityPlayer, i: Int): ItemStack = {
+    if (i == 28 && !getSlot(28).canTakeStack(player))
+      null
+    else
+      super.transferStackInSlot(player, i)
+  }
+
   override def doMerge(stack: ItemStack, from: Int): Boolean = {
     if (0 until 9 contains from) // crafting grid
       {

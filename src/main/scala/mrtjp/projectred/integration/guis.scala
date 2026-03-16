@@ -11,6 +11,7 @@ import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.gui.{GuiLib, MCButtonNode, NodeGui, TGuiBuilder}
 import mrtjp.core.vec.{Point, Size}
 import net.minecraft.client.Minecraft
+import net.minecraft.client.resources.I18n
 import net.minecraft.entity.player.EntityPlayer
 
 class GuiTimer(part: GatePart) extends NodeGui(256, 55) {
@@ -48,7 +49,10 @@ class GuiTimer(part: GatePart) extends NodeGui(256, 55) {
 
   override def drawBack_Impl(mouse: Point, frame: Float) {
     GuiLib.drawGuiBox(0, 0, xSize, ySize, 0)
-    val s = "Timer interval: " + "%.2f".format(logic.getTimerMax * 0.05) + "s"
+    val s = I18n.format(
+      "gui.projectred.integration.timer_interval",
+      "%.2f".format(logic.getTimerMax * 0.05)
+    )
     val sw = fontRendererObj.getStringWidth(s)
     fontRendererObj.drawString(s, (xSize - sw) / 2, 8, 0x404040)
   }
@@ -104,28 +108,41 @@ class GuiCounter(part: GatePart) extends NodeGui(256, 145) {
 
   override def drawBack_Impl(mouse: Point, frame: Float) = {
     GuiLib.drawGuiBox(0, 0, xSize, ySize, 0)
-    var s = "Maximum: " + logic.getCounterMax
+    var s =
+      I18n.format(
+        "gui.projectred.integration.maixmum",
+        Integer.valueOf(logic.getCounterMax)
+      )
     fontRendererObj.drawString(
       s,
       (xSize - fontRendererObj.getStringWidth(s)) / 2,
       5,
       0x404040
     )
-    s = "Increment: " + logic.getCounterIncr
+    s = I18n.format(
+      "gui.projectred.integration.increment",
+      Integer.valueOf(logic.getCounterIncr)
+    )
     fontRendererObj.drawString(
       s,
       (xSize - fontRendererObj.getStringWidth(s)) / 2,
       45,
       0x404040
     )
-    s = "Decrement: " + logic.getCounterDecr
+    s = I18n.format(
+      "gui.projectred.integration.decrement",
+      Integer.valueOf(logic.getCounterDecr)
+    )
     fontRendererObj.drawString(
       s,
       (xSize - fontRendererObj.getStringWidth(s)) / 2,
       85,
       0x404040
     )
-    s = "State: " + logic.getCounterValue
+    s = I18n.format(
+      "gui.projectred.integration.state",
+      Integer.valueOf(logic.getCounterValue)
+    )
     fontRendererObj.drawString(
       s,
       (xSize - fontRendererObj.getStringWidth(s)) / 2,

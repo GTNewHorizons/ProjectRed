@@ -16,9 +16,6 @@ public class BlockMossyCobblestone extends Block {
     @Override
     public void updateTick(World worldIn, int x, int y, int z, Random random) {
         super.updateTick(worldIn, x, y, z, random);
-        if (!worldIn.checkChunksExist(x, 0, z, x, 0, z)) {
-            return;
-        }
-        MossSpreadHandler.onBlockUpdate(worldIn, x, y, z, this);
+        MossSpreadHandler.tickMossyCobble(worldIn, x, y, z, random);
     }
 }

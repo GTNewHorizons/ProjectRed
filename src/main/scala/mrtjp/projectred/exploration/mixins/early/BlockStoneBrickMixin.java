@@ -29,9 +29,7 @@ public class BlockStoneBrickMixin extends Block {
 
     @Override
     public void updateTick(World worldIn, int x, int y, int z, Random random) {
-        if (!worldIn.checkChunksExist(x, 0, z, x, 0, z)) {
-            return;
-        }
-        MossSpreadHandler.onBlockUpdate(worldIn, x, y, z, this);
+        super.updateTick(worldIn, x, y, z, random);
+        MossSpreadHandler.tickStoneBricks(worldIn, x, y, z, random);
     }
 }

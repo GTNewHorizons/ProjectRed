@@ -10,12 +10,10 @@ import net.minecraftforge.common.util.ForgeDirection;
 public final class MossSpreadHandler {
 
     public static void tickMossyCobble(World w, int x, int y, int z, Random rand) {
-        // TODO add chunk check
         doMossSpread(w, x, y, z, rand);
     }
 
     public static void tickStoneBricks(World w, int x, int y, int z, Random rand) {
-        // TODO add chunk check
         final int meta = w.getBlockMetadata(x, y, z);
         if (meta == 0) {
             crackFromHeat(w, x, y, z, rand);
@@ -25,12 +23,19 @@ public final class MossSpreadHandler {
     }
 
     private static void crackFromHeat(World w, int x, int y, int z, Random rand) {
-        if (rand.nextInt(3) == 0 && isBlockWet(w, x, y, z) && isBlockHot(w, x, y, z)) {
-            w.setBlock(x, y, z, Blocks.stonebrick, 2, 3);
+        if (rand.nextInt(3) == 0) {
+            if (w.checkChunksExist(x - 1, y - 1, z - 1, x + 1, y + 1, z + 1)) {
+                if (isBlockWet(w, x, y, z) && isBlockHot(w, x, y, z)) {
+                    w.setBlock(x, y, z, Blocks.stonebrick, 2, 3);
+                }
+            }
         }
     }
 
     private static void doMossSpread(World w, int x, int y, int z, Random rand) {
+        if (!w.checkChunksExist(x - 2, y - 2, z - 2, x + 2, y + 2, z + 2)) {
+            return;
+        }
         if (w.canBlockSeeTheSky(x, y + 1, z) || !isBlockTouchingAir(w, x, y, z)) {
             return;
         }

@@ -1,16 +1,18 @@
 package mrtjp.projectred.exploration.mixins.early;
 
-import mrtjp.projectred.exploration.MossSpreadHandler;
+import java.util.Random;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockStoneBrick;
 import net.minecraft.block.material.Material;
 import net.minecraft.world.World;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Random;
+import mrtjp.projectred.exploration.MossSpreadHandler;
 
 @Mixin(BlockStoneBrick.class)
 public class BlockStoneBrickMixin extends Block {
@@ -30,4 +32,3 @@ public class BlockStoneBrickMixin extends Block {
         MossSpreadHandler.onBlockUpdate(worldIn, x, y, z, this);
     }
 }
-

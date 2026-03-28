@@ -1,12 +1,13 @@
 package mrtjp.projectred.exploration;
 
+import java.util.Random;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.world.World;
 
-import java.util.Random;
-
 public class BlockMossyCobblestone extends Block {
+
     public BlockMossyCobblestone(Material materialIn) {
         super(Material.rock);
         this.setTickRandomly(true);

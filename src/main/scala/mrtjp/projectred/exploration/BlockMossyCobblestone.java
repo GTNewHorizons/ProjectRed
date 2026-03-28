@@ -1,0 +1,20 @@
+package mrtjp.projectred.exploration;
+
+import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
+import net.minecraft.world.World;
+
+import java.util.Random;
+
+public class BlockMossyCobblestone extends Block {
+    public BlockMossyCobblestone(Material materialIn) {
+        super(Material.rock);
+        this.setTickRandomly(true);
+    }
+
+    @Override
+    public void updateTick(World worldIn, int x, int y, int z, Random random) {
+        super.updateTick(worldIn, x, y, z, random);
+        MossSpreadHandler.onBlockUpdate(worldIn, x, y, z, this);
+    }
+}

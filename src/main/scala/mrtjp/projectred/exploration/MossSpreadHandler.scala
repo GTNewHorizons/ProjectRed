@@ -13,8 +13,8 @@ import net.minecraft.block.Block
 import net.minecraft.init.Blocks
 import net.minecraft.world.World
 
-object MossSpreadHandler extends IBlockEventHandler {
-  override def onBlockUpdate(w: World, x: Int, y: Int, z: Int, b: Block) = {
+object MossSpreadHandler {
+  def onBlockUpdate(w: World, x: Int, y: Int, z: Int, b: Block) = {
     b match {
       case Blocks.mossy_cobblestone => doMossSpread(w, x, y, z, w.rand)
       case Blocks.stonebrick =>

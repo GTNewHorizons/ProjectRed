@@ -16,7 +16,7 @@ import net.minecraft.item.ItemStack
 
 @Mod(
   modid = "ProjRed|Exploration",
-  dependencies = "required-after:ProjRed|Core;required-after:gtnhlib@[0.2.0,);",
+  dependencies = "required-after:ProjRed|Core",
   modLanguage = "scala",
   acceptedMinecraftVersions = "[1.7.10]",
   name = "ProjectRed Exploration",

@@ -21,7 +21,6 @@ public class BlockMixin {
             slice = @Slice(
                     from = @At(value = "CONSTANT", args = "stringValue=mossy_cobblestone"),
                     to = @At(value = "CONSTANT", args = "stringValue=stoneMoss")),
-            require = 1,
             remap = false)
     private static Block replaceBaseMossyCobble(Material materialIn) {
         return new BlockMossyCobblestone(materialIn);

@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import mrtjp.projectred.core.Configurator;
 import mrtjp.projectred.exploration.MossSpreadHandler;
 
 @Mixin(BlockStoneBrick.class)
@@ -19,17 +20,16 @@ public class BlockStoneBrickMixin extends Block {
 
     protected BlockStoneBrickMixin(Material materialIn) {
         super(materialIn);
-        throw new RuntimeException("Direct instantiation of BlockStoneBrickMixin is not allowed");
     }
 
-    @Inject(method = "<init>", at = @At("TAIL"))
-    private void enableRandomTicking$ProjRed(CallbackInfo ci) {
-        ((BlockStoneBrick) ((Object) this)).setTickRandomly(true);
+    @Inject(method = "<init>", at = @At("TAIL"), remap = false)
+    private void enableRandomTicking(CallbackInfo ci) {
+        this.setTickRandomly(true);
     }
 
     @Override
     public void updateTick(World worldIn, int x, int y, int z, Random random) {
-        if (!worldIn.checkChunksExist(x, 0, z, x, 0, z)) {
+        if (!Configurator.gen_SpreadingMoss() || !worldIn.checkChunksExist(x - 1, 0, z - 1, x + 1, 0, z + 1)) {
             return;
         }
         MossSpreadHandler.onBlockUpdate(worldIn, x, y, z, this);

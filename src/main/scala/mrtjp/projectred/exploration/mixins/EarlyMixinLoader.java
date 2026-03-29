@@ -1,11 +1,11 @@
 package mrtjp.projectred.exploration.mixins;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.gtnewhorizon.gtnhmixins.IEarlyMixinLoader;
-import com.gtnewhorizon.gtnhmixins.builders.IMixins;
 
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 
@@ -19,7 +19,7 @@ public class EarlyMixinLoader implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
     @Override
     public List<String> getMixins(Set<String> loadedCoreMods) {
-        return IMixins.getEarlyMixins(Mixins.class, loadedCoreMods);
+        return Arrays.asList("BlockMixin", "BlockStoneBrickMixin");
     }
 
     @Override

@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import mrtjp.projectred.core.Configurator;
 import mrtjp.projectred.exploration.MossSpreadHandler;
 
 @Mixin(BlockStoneBrick.class)
@@ -29,9 +28,7 @@ public class BlockStoneBrickMixin extends Block {
 
     @Override
     public void updateTick(World worldIn, int x, int y, int z, Random random) {
-        if (!Configurator.gen_SpreadingMoss() || !worldIn.checkChunksExist(x - 1, 0, z - 1, x + 1, 0, z + 1)) {
-            return;
-        }
-        MossSpreadHandler.onBlockUpdate(worldIn, x, y, z, this);
+        super.updateTick(worldIn, x, y, z, random);
+        MossSpreadHandler.tickStoneBricks(worldIn, x, y, z, random);
     }
 }

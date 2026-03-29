@@ -7,18 +7,24 @@ import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import mrtjp.projectred.core.Configurator;
+
 public final class MossSpreadHandler {
 
     public static void tickMossyCobble(World w, int x, int y, int z, Random rand) {
-        doMossSpread(w, x, y, z, rand);
+        if (Configurator.gen_SpreadingMoss()) {
+            doMossSpread(w, x, y, z, rand);
+        }
     }
 
     public static void tickStoneBricks(World w, int x, int y, int z, Random rand) {
-        final int meta = w.getBlockMetadata(x, y, z);
-        if (meta == 0) {
-            crackFromHeat(w, x, y, z, rand);
-        } else if (meta == 1) {
-            doMossSpread(w, x, y, z, rand);
+        if (Configurator.gen_SpreadingMoss()) {
+            final int meta = w.getBlockMetadata(x, y, z);
+            if (meta == 0) {
+                crackFromHeat(w, x, y, z, rand);
+            } else if (meta == 1) {
+                doMossSpread(w, x, y, z, rand);
+            }
         }
     }
 

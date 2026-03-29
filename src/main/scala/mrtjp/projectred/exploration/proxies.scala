@@ -307,9 +307,6 @@ class ExplorationProxy_server extends IProxy {
   }
 
   override def postinit() {
-    if (Configurator.gen_SpreadingMoss)
-      BlockUpdateHandler.register(MossSpreadHandler)
-
     InvWrapper.register(BarrelInvWrapper)
   }
 

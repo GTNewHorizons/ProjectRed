@@ -3,6 +3,7 @@ package mrtjp.projectred.transportation
 import mrtjp.core.inventory.InvWrapper
 import mrtjp.core.item.ItemKey
 
+import scala.collection.JavaConversions.asJavaCollection
 import scala.collection.mutable.ListBuffer
 
 class ChipItemResponder
@@ -74,6 +75,8 @@ class ChipDynamicItemResponder extends ChipItemResponder {
 
   override def enableFilter = false
 
-  override def filterAllows(item: ItemKey) =
-    applyFilter(InvWrapper.wrap(invProvider.getInventory)).hasItem(item)
+  override def filterAllows(item: ItemKey): Boolean = {
+    applyFilter(InvWrapper.wrap(invProvider.getInventory)).getAllItemStacks.keys
+      .contains(item)
+  }
 }

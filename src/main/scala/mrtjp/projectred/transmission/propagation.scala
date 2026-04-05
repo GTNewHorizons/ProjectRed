@@ -13,6 +13,7 @@ import net.minecraft.world.World
 import scala.collection.immutable.HashSet
 
 object WirePropagator {
+
   private val wiresProvidePower = {
     try {
       val c = classOf[BlockRedstoneWire].getDeclaredFields.apply(0)
@@ -20,6 +21,7 @@ object WirePropagator {
       c
     } catch { case e: Exception => throw new RuntimeException(e) }
   }
+
   def setDustProvidePower(b: Boolean) {
     try { wiresProvidePower.setBoolean(Blocks.redstone_wire, b) }
     catch { case t: Throwable => }
@@ -28,6 +30,7 @@ object WirePropagator {
   private val rwConnectable = {
     val b = new ThreadLocal[Boolean]; b.set(true); b
   }
+
   def redwiresConnectable = rwConnectable.get
   def setRedwiresConnectable(b: Boolean) { rwConnectable.set(b) }
 
@@ -37,6 +40,9 @@ object WirePropagator {
     setDustProvidePower(true)
     setRedwiresConnectable(true)
     redwiresProvidePower = true
+    reusableRuns.clear()
+    currentRun = null
+    finishing = null
   }
 
   val reusableRuns = new JStack[PropagationRun]()
@@ -95,9 +101,11 @@ class PropagationRun {
   def clear() {
     partChanges.clear()
     neighborChanges.clear()
+    world = null
+    parent = null
+    lastCaller = null
     count = 0
     recalcs = 0
-    lastCaller = null
     WirePropagator.reusableRuns.add(this)
   }
 

@@ -3,6 +3,7 @@ package mrtjp.projectred
 import cpw.mods.fml.common.Mod
 import cpw.mods.fml.common.event._
 import mrtjp.projectred.api.ProjectRedAPI
+import mrtjp.projectred.fabrication.ICPropagator
 import mrtjp.projectred.transmission._
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.item.ItemStack
@@ -46,7 +47,8 @@ object ProjectRedTransmission {
   }
 
   @Mod.EventHandler
-  def serverStopping(event: FMLServerAboutToStartEvent) {
+  def serverStopping(event: FMLServerStoppedEvent) {
     WirePropagator.reset()
+    ICPropagator.reset()
   }
 }

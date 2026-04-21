@@ -241,9 +241,11 @@ abstract class ComponentModel {
 
 abstract class SingleComponentModel(m: CCModel, pos: Vector3 = Vector3.zero)
     extends ComponentModel {
-  def models(orient: Int) = {
+  val models = {
+    val xs = new Array[CCModel](48)
     val t = pos.copy.multiply(1 / 16d).translation
-    bakeCopy(m.copy.apply(t), orient)
+    for (i <- 0 until 48) xs(i) = bakeCopy(m.copy.apply(t), i)
+    xs
   }
 
   def getUVT: UVTransformation

@@ -257,7 +257,7 @@ abstract class ComponentModel {
 abstract class SingleComponentModel(m: CCModel, pos: Vector3 = Vector3.zero)
     extends ComponentModel {
   // instead of creating 48 models, only make 2 (original + flipped orientation)
-  val model_pair = {
+  private val modelPair = {
     val t = pos.copy.multiply(1 / 16d).translation
     bakeDynamic(m.copy.apply(t))
   }
@@ -269,7 +269,7 @@ abstract class SingleComponentModel(m: CCModel, pos: Vector3 = Vector3.zero)
   def getUVT: UVTransformation
 
   override def renderModel(t: Transformation, orient: Int) {
-    model_pair(if (orient < 24) 0 else 1).render(
+    modelPair(if (orient < 24) 0 else 1).render(
       new TransformationList(extraTransformModel(orient), t),
       getUVT,
       LightModel.standardLightModel

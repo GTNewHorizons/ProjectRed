@@ -107,6 +107,7 @@ object ComponentStore {
       t
     })
     .toArray
+  val redundantUVTransformation = new UVTransformationList()
 
   def registerIcons(reg: IIconRegister) {
     val baseTex = "projectred:integration/"
@@ -266,12 +267,14 @@ abstract class SingleComponentModel(m: CCModel, pos: Vector3 = Vector3.zero)
     orient
   )
 
+  def extraTransformModelUV(orient: Int): UVTransformation = redundantUVTransformation
+
   def getUVT: UVTransformation
 
   override def renderModel(t: Transformation, orient: Int) {
     modelPair(if (orient < 24) 0 else 1).render(
       new TransformationList(extraTransformModel(orient), t),
-      getUVT,
+      new UVTransformationList(extraTransformModelUV(orient), getUVT),
       LightModel.standardLightModel
     )
   }
@@ -632,12 +635,9 @@ abstract class BundledCableModel(
 ) extends SingleComponentModel(model, pos) {
   private val newTransforms = (0 until 48).map((orient: Int) => {
     val t = bundledCablePrecomputed(orient)
-    new TransformationList(
-      super.extraTransformModel(orient),
-      t.at(new Vector3(uCenter, 0, vCenter))
-    )
+    new UVT(t.at(new Vector3(uCenter, 0, vCenter)))
   })
-  override def extraTransformModel(orient: Int): Transformation = newTransforms(
+  override def extraTransformModelUV(orient: Int): UVTransformation = newTransforms(
     orient
   )
 }
@@ -687,8 +687,8 @@ class SigLightPanelModel(pos: Vector3, rotY: Boolean) extends ComponentModel {
     this(new Vector3(x, 0, z), rotY)
 
   val displayModels = new Array[CCModel](16)
-  val models = new Array[CCModel](48)
-  val modelsSI = new Array[CCModel](48)
+  val modelsPair = new Array[CCModel](2)
+  val modelsSIPair = new Array[CCModel](2)
 
   var sideInd = true
 
@@ -733,15 +733,19 @@ class SigLightPanelModel(pos: Vector3, rotY: Boolean) extends ComponentModel {
     base.apply(pos.translation())
     baseSI.apply(pos.translation())
 
-    for (i <- 0 until 48) {
-      models(i) = bakeCopy(base, i)
-      modelsSI(i) = bakeCopy(baseSI, i)
+    val model = bakeDynamic(base)
+    val modelSI = bakeDynamic(baseSI)
+
+    for (i <- 0 until 2) {
+      modelsPair(i) = model(i)
+      modelsSIPair(i) = modelSI(i)
     }
   }
 
   override def renderModel(t: Transformation, orient: Int) {
     val icont = new IconTransformation(busXcvrIcon)
-    (if (sideInd) modelsSI else models) (orient).render(t, icont)
+    (if (sideInd) modelsSIPair else modelsPair) (if (orient < 24) 0 else 1).render(
+      new TransformationList(orientPrecomputed(orient), t), icont, LightModel.standardLightModel)
 
     val dPos = pos.copy
     if (orient >= 24) dPos.x = 1 - dPos.x

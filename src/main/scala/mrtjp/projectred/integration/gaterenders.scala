@@ -931,7 +931,8 @@ class RenderSynchronizer extends GateRenderer[SequentialGatePart] {
   val torch = new RedstoneTorchModel(8, 3, 6)
   val chips = Seq(new RedChipModel(4.5, 9), new RedChipModel(11.5, 9))
 
-  override val coreModels = wires ++ chips ++ Seq(torch, BaseComponentModel.model)
+  override val coreModels =
+    wires ++ chips ++ Seq(torch, BaseComponentModel.model)
 
   override def prepareInv() {
     wires(0).on = true
@@ -1103,7 +1104,8 @@ class RenderBusInputPanel extends GateRenderer[BundledGatePart] {
   val buttons = new InputPanelButtonsModel
   val cable = new BusInputPanelCableModel
 
-  override val coreModels = wires ++ Seq(buttons, cable, BaseComponentModel.model)
+  override val coreModels =
+    wires ++ Seq(buttons, cable, BaseComponentModel.model)
 
   override def prepareInv() {
     wires(0).on = false
@@ -1238,7 +1240,11 @@ class RenderANDCell extends GateRenderer[ArrayGatePart] {
   val topWire = new CellTopWireModel(nullCellWireTop)
 
   override val coreModels =
-    wires ++ torches ++ Seq(topWire, new CellFrameModel, BaseComponentModel.model)
+    wires ++ torches ++ Seq(
+      topWire,
+      new CellFrameModel,
+      BaseComponentModel.model
+    )
 
   override def prepareInv() {
     topWire.signal = 0
@@ -1356,7 +1362,8 @@ class RenderDecodingRand extends GateRenderer[ComboGatePart] {
     new RedstoneTorchModel(9, 8, 6)
   )
 
-  override val coreModels = wires ++ chips ++ torches :+ BaseComponentModel.model
+  override val coreModels =
+    wires ++ chips ++ torches :+ BaseComponentModel.model
 
   override def prepareInv() {
     wires(0).on = false

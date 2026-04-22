@@ -917,14 +917,11 @@ object CellTopWireModel {
 }
 
 class CellTopWireModel(wireTop: CCModel) extends CellWireModel {
-  val top = new Array[CCModel](24)
   var conn = 0
-
-  for (i <- 0 until 24) top(i) = bakeCopy(wireTop, i)
 
   override def renderModel(t: Transformation, orient: Int) {
     val icont = new IconTransformation(cellIcon)
-    top(orient).render(t, icont, colourMult)
+    wireTop.render(new TransformationList(orientPrecomputed(orient), t), icont, colourMult)
     import mrtjp.projectred.integration.CellTopWireModel._
     if ((conn & 2) == 0) right(orient).render(t, icont, colourMult)
     if ((conn & 8) == 0) left(orient).render(t, icont, colourMult)
@@ -932,12 +929,9 @@ class CellTopWireModel(wireTop: CCModel) extends CellWireModel {
 }
 
 class CellBottomWireModel(wireBottom: CCModel) extends CellWireModel {
-  val bottom = new Array[CCModel](24)
-
-  for (i <- 0 until 24) bottom(i) = bakeCopy(wireBottom, i)
 
   override def renderModel(t: Transformation, orient: Int) {
-    bottom(orient).render(t, new IconTransformation(cellIcon), colourMult)
+    wireBottom.render(new TransformationList(orientPrecomputed(orient), t), new IconTransformation(cellIcon), colourMult)
   }
 }
 

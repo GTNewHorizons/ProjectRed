@@ -94,17 +94,19 @@ object ComponentStore {
   var icHousingIcon: IIcon = null
 
   val orientPrecomputed = (0 until 48).map(orientT).toArray
-  val bundledCablePrecomputed = (0 until 48).map((orient: Int) => {
-    val side = orient % 24 >> 2
-    val r = orient & 3
-    val reflect = orient >= 24
-    val rotate = (r + WireModelGen.reorientSide(side)) % 4 >= 2
+  val bundledCablePrecomputed = (0 until 48)
+    .map((orient: Int) => {
+      val side = orient % 24 >> 2
+      val r = orient & 3
+      val reflect = orient >= 24
+      val rotate = (r + WireModelGen.reorientSide(side)) % 4 >= 2
 
-    var t: Transformation = new RedundantTransformation
-    if (reflect) t = t.`with`(new Scale(-1, 0, 1))
-    if (rotate) t = t.`with`(Rotation.quarterRotations(2))
-    t
-  }).toArray
+      var t: Transformation = new RedundantTransformation
+      if (reflect) t = t.`with`(new Scale(-1, 0, 1))
+      if (rotate) t = t.`with`(Rotation.quarterRotations(2))
+      t
+    })
+    .toArray
 
   def registerIcons(reg: IIconRegister) {
     val baseTex = "projectred:integration/"
@@ -260,12 +262,18 @@ abstract class SingleComponentModel(m: CCModel, pos: Vector3 = Vector3.zero)
     bakeDynamic(m.copy.apply(t))
   }
 
-  def extraTransformModel(orient: Int): Transformation = orientPrecomputed(orient)
+  def extraTransformModel(orient: Int): Transformation = orientPrecomputed(
+    orient
+  )
 
   def getUVT: UVTransformation
 
   override def renderModel(t: Transformation, orient: Int) {
-    model_pair(if (orient < 24) 0 else 1).render(new TransformationList(extraTransformModel(orient), t), getUVT, LightModel.standardLightModel)
+    model_pair(if (orient < 24) 0 else 1).render(
+      new TransformationList(extraTransformModel(orient), t),
+      getUVT,
+      LightModel.standardLightModel
+    )
   }
 }
 
@@ -622,11 +630,16 @@ abstract class BundledCableModel(
     uCenter: Double,
     vCenter: Double
 ) extends SingleComponentModel(model, pos) {
-  private val newTransforms = (0 until 48).map((orient: Int) =>{
+  private val newTransforms = (0 until 48).map((orient: Int) => {
     val t = bundledCablePrecomputed(orient)
-    new TransformationList(super.extraTransformModel(orient), t.at(new Vector3(uCenter, 0, vCenter)))
+    new TransformationList(
+      super.extraTransformModel(orient),
+      t.at(new Vector3(uCenter, 0, vCenter))
+    )
   })
-  override def extraTransformModel(orient: Int): Transformation = newTransforms(orient)
+  override def extraTransformModel(orient: Int): Transformation = newTransforms(
+    orient
+  )
 }
 
 class BusXcvrCableModel

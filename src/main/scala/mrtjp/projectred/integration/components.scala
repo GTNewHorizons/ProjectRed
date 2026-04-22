@@ -267,7 +267,8 @@ abstract class SingleComponentModel(m: CCModel, pos: Vector3 = Vector3.zero)
     orient
   )
 
-  def extraTransformModelUV(orient: Int): UVTransformation = redundantUVTransformation
+  def extraTransformModelUV(orient: Int): UVTransformation =
+    redundantUVTransformation
 
   def getUVT: UVTransformation
 
@@ -637,9 +638,10 @@ abstract class BundledCableModel(
     val t = bundledCablePrecomputed(orient)
     new UVT(t.at(new Vector3(uCenter, 0, vCenter)))
   })
-  override def extraTransformModelUV(orient: Int): UVTransformation = newTransforms(
-    orient
-  )
+  override def extraTransformModelUV(orient: Int): UVTransformation =
+    newTransforms(
+      orient
+    )
 }
 
 class BusXcvrCableModel
@@ -744,8 +746,12 @@ class SigLightPanelModel(pos: Vector3, rotY: Boolean) extends ComponentModel {
 
   override def renderModel(t: Transformation, orient: Int) {
     val icont = new IconTransformation(busXcvrIcon)
-    (if (sideInd) modelsSIPair else modelsPair) (if (orient < 24) 0 else 1).render(
-      new TransformationList(orientPrecomputed(orient), t), icont, LightModel.standardLightModel)
+    (if (sideInd) modelsSIPair else modelsPair) (if (orient < 24) 0 else 1)
+      .render(
+        new TransformationList(orientPrecomputed(orient), t),
+        icont,
+        LightModel.standardLightModel
+      )
 
     val dPos = pos.copy
     if (orient >= 24) dPos.x = 1 - dPos.x
@@ -921,7 +927,11 @@ class CellTopWireModel(wireTop: CCModel) extends CellWireModel {
 
   override def renderModel(t: Transformation, orient: Int) {
     val icont = new IconTransformation(cellIcon)
-    wireTop.render(new TransformationList(orientPrecomputed(orient), t), icont, colourMult)
+    wireTop.render(
+      new TransformationList(orientPrecomputed(orient), t),
+      icont,
+      colourMult
+    )
     import mrtjp.projectred.integration.CellTopWireModel._
     if ((conn & 2) == 0) right(orient).render(t, icont, colourMult)
     if ((conn & 8) == 0) left(orient).render(t, icont, colourMult)
@@ -931,7 +941,11 @@ class CellTopWireModel(wireTop: CCModel) extends CellWireModel {
 class CellBottomWireModel(wireBottom: CCModel) extends CellWireModel {
 
   override def renderModel(t: Transformation, orient: Int) {
-    wireBottom.render(new TransformationList(orientPrecomputed(orient), t), new IconTransformation(cellIcon), colourMult)
+    wireBottom.render(
+      new TransformationList(orientPrecomputed(orient), t),
+      new IconTransformation(cellIcon),
+      colourMult
+    )
   }
 }
 

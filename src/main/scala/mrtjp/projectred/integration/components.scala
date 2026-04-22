@@ -323,6 +323,10 @@ class BaseComponentModel extends SingleComponentModel(base) {
   override def getUVT = new IconTransformation(baseIcon)
 }
 
+object BaseComponentModel {
+  val model = new BaseComponentModel
+}
+
 trait TWireModel extends ComponentModel {
   var on = false
   var disabled = false

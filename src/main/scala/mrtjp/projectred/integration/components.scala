@@ -284,11 +284,10 @@ abstract class SingleComponentModel(m: CCModel, pos: Vector3 = Vector3.zero)
 abstract class MultiComponentModel(m: Seq[CCModel], pos: Vector3 = Vector3.zero)
     extends ComponentModel {
   val models = {
-    val xs = Array.ofDim[CCModel](m.length, 48)
+    val xs = Array.ofDim[CCModel](m.length, 2)
     val t = pos.copy.multiply(1 / 16d).translation
     for (i <- m.indices)
-      for (j <- 0 until 48)
-        xs(i)(j) = bakeCopy(m.apply(i).copy.apply(t), j)
+      xs(i) = bakeDynamic(m.apply(i).copy.apply(t))
     xs
   }
 
@@ -297,7 +296,8 @@ abstract class MultiComponentModel(m: Seq[CCModel], pos: Vector3 = Vector3.zero)
   def getUVT: UVTransformation
 
   override def renderModel(t: Transformation, orient: Int) {
-    models(state)(orient).render(t, getUVT)
+    models(state)(if (orient < 24) 0 else 1)
+      .render(new TransformationList(orientPrecomputed(orient), t), getUVT)
   }
 }
 
@@ -781,7 +781,6 @@ class SigLightPanelModel(pos: Vector3, rotY: Boolean) extends ComponentModel {
 }
 
 class SignalBarModel(x: Double, z: Double) extends ComponentModel {
-  val models = new Array[CCModel](48)
   val bars = new Array[CCModel](16)
   val barsInv = new Array[CCModel](16)
   var barsBg: CCModel = null
@@ -792,7 +791,7 @@ class SignalBarModel(x: Double, z: Double) extends ComponentModel {
   var signal = 0
   var inverted = false
 
-  {
+  val model = {
     for (i <- 1 to 16) {
       val bar = CCModel.quadModel(4)
       val y = 12 / 32d + 0.0001d
@@ -821,15 +820,17 @@ class SignalBarModel(x: Double, z: Double) extends ComponentModel {
     barsBg = bars(15).copy.apply(t)
     barsBgInv = barsInv(15).copy.apply(t)
 
-    val base = signalPanel.copy.apply(pos.translation())
-    for (i <- 0 until 48) models(i) = bakeCopy(base, i)
+    signalPanel.copy.apply(pos.translation())
   }
 
   def renderModel(t: Transformation, orient: Int) {
     val iconT = new IconTransformation(busConvIcon)
-    models(orient % 24).render(t, iconT)
+    model.render(
+      new TransformationList(orientPrecomputed(orient % 24), t),
+      iconT
+    )
     val position = new TransformationList(pos.translation)
-      .`with`(orientT(orient % 24))
+      .`with`(orientPrecomputed(orient % 24))
       .`with`(t)
     (if (inverted) barsBgInv else barsBg).render(
       position,

@@ -10,6 +10,7 @@ import java.util.{List => JList}
 import codechicken.lib.render.uv.{MultiIconTransformation, UVTransformation}
 import codechicken.multipart.IRedstoneConnector
 import mrtjp.core.block.TInstancedBlockRender
+import mrtjp.core.inventory.TInventory
 import mrtjp.core.item.ItemKey
 import mrtjp.core.render.TCubeMapRender
 import mrtjp.core.world.WorldLib
@@ -18,6 +19,8 @@ import net.minecraft.block.Block
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.init.Blocks
+import net.minecraft.inventory.ISidedInventory
+import net.minecraft.item.ItemStack
 import net.minecraft.util.IIcon
 import net.minecraft.world.IBlockAccess
 
@@ -26,10 +29,19 @@ import scala.collection.JavaConversions._
 class TileBlockBreaker
     extends TileMachine
     with TPressureActiveDevice
-    with IRedstoneConnector {
+    with IRedstoneConnector
+    with TInventory
+    with ISidedInventory {
   override def getBlock = ProjectRedExpansion.machine2
   override def doesRotate = false
   override def doesOrient = true
+
+  override def size = 1
+  override def name = "block_breaker"
+  override def isItemValidForSlot(slot: Int, item: ItemStack) = false
+  def getAccessibleSlotsFromSide(s: Int) = Array(0)
+  def canInsertItem(slot: Int, itemstack: ItemStack, side: Int) = false
+  def canExtractItem(slot: Int, itemstack: ItemStack, side: Int) = false
 
   override def canAcceptInput(item: ItemKey, side: Int) = false
   override def canAcceptBacklog(item: ItemKey, side: Int) = side == this.side

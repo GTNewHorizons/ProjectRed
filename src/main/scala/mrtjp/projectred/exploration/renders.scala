@@ -165,6 +165,7 @@ object RenderLily extends TInstancedBlockRender {
           new IconTransformation(iconC),
           new ColourMultiplier(Colors(te.meta).rgba)
         )
+      state.lightMatrix.access = null;
     }
   }
 

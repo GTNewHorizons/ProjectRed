@@ -673,6 +673,7 @@ object RenderICPrinter extends TInstancedBlockRender {
       * with screwdriver to see the issue.
       */
     // lowerBoxes(0).render(Rotation.quarterRotations(tile.rotation) at Vector3.center `with` new Translation(x, y, z), iconT, CCRenderState.lightMatrix)
+    state.lightMatrix.access = null
   }
 
   override def getIcon(side: Int, meta: Int) = side match {

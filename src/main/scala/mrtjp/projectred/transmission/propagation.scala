@@ -27,8 +27,8 @@ object WirePropagator {
     catch { case t: Throwable => }
   }
 
-  private val rwConnectable = {
-    val b = new ThreadLocal[Boolean]; b.set(true); b
+  private val rwConnectable = new ThreadLocal[Boolean] {
+    override def initialValue(): Boolean = true
   }
 
   def redwiresConnectable = rwConnectable.get

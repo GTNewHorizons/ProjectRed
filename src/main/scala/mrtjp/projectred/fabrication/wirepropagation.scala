@@ -20,6 +20,14 @@ object ICPropagator {
   var currentRun: ICPropagationRun = null
   var finishing: ICPropagationRun = null
 
+  def reset() {
+    redwiresProvidePower = true
+    redwiresConnectable = true
+    reusableRuns.clear()
+    currentRun = null
+    finishing = null
+  }
+
   val notApart = new CircuitPart {
     override def getPartType = null
     @SideOnly(Side.CLIENT)
@@ -72,11 +80,13 @@ class ICPropagationRun {
   var analogDrops = Seq.newBuilder[ICPropagation]
 
   def clear() {
-    partChanges.clear()
-    neighborChanges.clear()
+    world = null
+    parent = null
+    lastCaller = null
     count = 0
     recalcs = 0
-    lastCaller = null
+    partChanges.clear()
+    neighborChanges.clear()
     ICPropagator.reusableRuns.add(this)
   }
 

@@ -287,7 +287,7 @@ class RenderCircuitGate extends GateRenderer[CircuitGatePart] {
   var name = "untitled"
 
   override val coreModels = Seq(
-    new integration.BaseComponentModel,
+    integration.BaseComponentModel.model,
     simp,
     analog,
     bundled,

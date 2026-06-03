@@ -26,6 +26,7 @@ import mrtjp.projectred.ProjectRedExpansion
 import mrtjp.projectred.core.libmc.PRResources
 import mrtjp.projectred.expansion.TileBlockPlacer._
 import net.minecraft.client.renderer.texture.IIconRegister
+import net.minecraft.client.resources.I18n
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.{Entity, EntityLivingBase}
 import net.minecraft.item.{ItemBlock, ItemStack}
@@ -344,8 +345,20 @@ class GuiBlockPlacer(c: ContainerBlockPlacer) extends NodeGui(c, 176, 168) {
   override def drawBack_Impl(mouse: Point, frame: Float) {
     PRResources.guiBlockPlacer.bind()
     GuiDraw.drawTexturedModalRect(0, 0, 0, 0, 176, 168)
-    GuiDraw.drawString("Block Placer", 8, 6, Colors.GREY.argb, false)
-    GuiDraw.drawString("Inventory", 8, 75, Colors.GREY.argb, false)
+    GuiDraw.drawString(
+      I18n.format("gui.projectred.expansion.machine2|2.title"),
+      8,
+      6,
+      Colors.GREY.argb,
+      false
+    )
+    GuiDraw.drawString(
+      I18n.format("container.inventory"),
+      8,
+      75,
+      Colors.GREY.argb,
+      false
+    )
   }
 }
 

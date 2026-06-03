@@ -166,8 +166,7 @@ class TileAutoCrafter
       recipeEquality.matchNBT = true
       recipeEquality.matchMeta =
         !currentOutput.key.makeStack(0).isItemStackDamageable
-      recipeEquality.matchOre = currentRecipe.isInstanceOf[ShapedOreRecipe] ||
-        currentRecipe.isInstanceOf[ShapelessOreRecipe]
+      recipeEquality.matchOre = false
     }
   }
 

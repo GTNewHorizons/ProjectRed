@@ -35,6 +35,7 @@ import net.minecraft.init.Blocks
 import net.minecraft.item.ItemArmor.ArmorMaterial
 import net.minecraft.item.{Item, ItemArmor, ItemStack}
 import net.minecraft.nbt.{NBTTagCompound, NBTTagList}
+import net.minecraft.client.resources.I18n
 import net.minecraft.util.{DamageSource, EnumChatFormatting, IIcon}
 import net.minecraft.world.World
 import net.minecraftforge.client.{IItemRenderer, MinecraftForgeClient}
@@ -215,13 +216,17 @@ class ItemPlan extends ItemCore("projectred.expansion.plan") {
 
       // Output line (with amount)
       tooltip.add(
-        s"${EnumChatFormatting.BLUE}Output: " +
-          s"${EnumChatFormatting.GRAY}${output.stackSize}x ${output.getDisplayName}"
+        s"${EnumChatFormatting.BLUE}" +
+          I18n.format(
+            "item.projectred.expansion.plan.tooltip.output",
+            s"${EnumChatFormatting.GRAY}${output.stackSize}x ${output.getDisplayName}"
+          )
       )
 
       // Inputs header
       tooltip.add(
-        s"${EnumChatFormatting.BLUE}Inputs:"
+        s"${EnumChatFormatting.BLUE}" +
+          I18n.format("item.projectred.expansion.plan.tooltip.inputs")
       )
 
       // Each input item
@@ -234,7 +239,8 @@ class ItemPlan extends ItemCore("projectred.expansion.plan") {
         } else {
           tooltip.add(
             s" ${EnumChatFormatting.DARK_GRAY}- " +
-              s"${EnumChatFormatting.GRAY}Empty"
+              s"${EnumChatFormatting.GRAY}" +
+              I18n.format("item.projectred.expansion.plan.tooltip.empty")
           )
         }
       }

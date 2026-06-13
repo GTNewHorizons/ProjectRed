@@ -53,7 +53,7 @@ class ItemStorage {
   }
 
   def load(tag: NBTTagCompound) {
-    val nbttaglist = tag.getTagList("itemFlow", 0)
+    val nbttaglist = tag.getTagList("itemFlow", 10)
     for (j <- 0 until nbttaglist.tagCount) {
       try {
         val payloadData = nbttaglist.getCompoundTagAt(j)

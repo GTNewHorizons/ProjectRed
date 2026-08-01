@@ -661,7 +661,7 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
       addToolsetRange("Bundled cables", NeutralBundledCable, BlackBundledCable)
       addToolset("IOs", Seq(SimpleIO, BundledIO, AnalogIO))
       addToolset(
-        "Primatives",
+        "Primitives",
         Seq(
           ORGate,
           NORGate,

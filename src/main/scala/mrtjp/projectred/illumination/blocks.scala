@@ -88,6 +88,13 @@ class BlockLamp
   override def getIcon(side: Int, meta: Int) =
     if (meta > 15) BlockLamp.on(meta % 16) else BlockLamp.off(meta)
 
+  override def getLightValue(w: IBlockAccess, x: Int, y: Int, z: Int) =
+    w match {
+      case world: World =>
+        BlockLamp.getLightValue(world, x, y, z)
+      case _ => super.getLightValue(w, x, y, z)
+    }
+
   def getConnectionMask(
       world: IBlockAccess,
       x: Int,
@@ -108,11 +115,198 @@ class BlockLamp
 object BlockLamp {
   var on: Seq[IIcon] = null
   var off: Seq[IIcon] = null
+
+  private val cache = new LampLightCache
+
+  def getLightValue(world: World, x: Int, y: Int, z: Int) =
+    cache.get(world, x, y, z) >> 4
+  def setLightValue(
+      world: World,
+      x: Int,
+      y: Int,
+      z: Int,
+      light: Int,
+      color: Int
+  ) =
+    cache.put(world, x, y, z, (light << 4) | color)
+  def clearLightValue(world: World, x: Int, y: Int, z: Int) =
+    cache.remove(world, x, y, z)
+  def foreachLitHalo(world: World)(f: Int4Consumer) =
+    cache.foreachLit(world)(f)
+  def cacheVersion(world: World): Long =
+    cache.version(world)
+}
+
+trait Int4Consumer {
+  def apply(x: Int, y: Int, z: Int, color: Int): Unit
+}
+
+private class LampLightCache {
+  private val tables = new java.util.WeakHashMap[World, LampLightTable]()
+
+  def get(world: World, x: Int, y: Int, z: Int): Int = {
+    val t = find(world)
+    if (t == null) 0 else t.get(pack(x, y, z))
+  }
+
+  def put(world: World, x: Int, y: Int, z: Int, v: Int): Unit =
+    tableFor(world).put(pack(x, y, z), v)
+
+  def remove(world: World, x: Int, y: Int, z: Int): Unit = {
+    val t = find(world)
+    if (t != null) t.remove(pack(x, y, z))
+  }
+
+  def foreachLit(world: World)(f: Int4Consumer): Unit = {
+    val t = find(world)
+    if (t != null) t.foreachLit(f)
+  }
+
+  def version(world: World): Long = {
+    val t = find(world)
+    if (t == null) -1 else t.version
+  }
+
+  private def find(world: World): LampLightTable =
+    tables.synchronized(tables.get(world))
+
+  private def tableFor(world: World): LampLightTable = tables.synchronized {
+    var table = tables.get(world)
+    if (table == null) {
+      table = new LampLightTable
+      tables.put(world, table)
+    }
+    table
+  }
+
+  private def pack(x: Int, y: Int, z: Int) =
+    ((x.toLong & 0x3ffffffL) << 38) | ((z.toLong & 0x3ffffffL) << 12) |
+      (y.toLong & 0xfffL)
+}
+
+private class LampLightTable {
+  private val EMPTY = Long.MinValue
+  private val TOMB = Long.MinValue + 1
+  private var keys = Array.fill(8)(EMPTY)
+  private var vals = new Array[Int](8)
+  private var used = 0
+  private var mask = 7
+  private[illumination] var version: Long = 0
+
+  def get(key: Long): Int = {
+    var i = hash(key) & mask
+    var n = 0
+    while (n < keys.length) {
+      val k = keys(i)
+      if (k == key) return vals(i)
+      if (k == EMPTY) return 0
+      i = (i + 1) & mask
+      n += 1
+    }
+    0
+  }
+
+  def put(key: Long, v: Int): Unit = {
+    var i = hash(key) & mask
+    var n = 0
+    var tomb = -1
+    while (n < keys.length) {
+      val k = keys(i)
+      if (k == key) {
+        if (vals(i) != v) {
+          vals(i) = v
+          version += 1
+        }
+        return
+      }
+      if (k == TOMB && tomb < 0) tomb = i
+      else if (k == EMPTY) {
+        insert(if (tomb < 0) i else tomb, key, v)
+        return
+      }
+      i = (i + 1) & mask
+      n += 1
+    }
+    if (tomb >= 0) insert(tomb, key, v)
+  }
+
+  private def insert(i: Int, key: Long, v: Int): Unit = {
+    if (keys(i) == EMPTY) used += 1
+    keys(i) = key
+    vals(i) = v
+    if (used >= keys.length - keys.length / 3) grow()
+    version += 1
+  }
+
+  def remove(key: Long): Unit = {
+    var i = hash(key) & mask
+    var n = 0
+    while (n < keys.length) {
+      val k = keys(i)
+      if (k == key) {
+        keys(i) = TOMB
+        version += 1
+        return
+      }
+      if (k == EMPTY) return
+      i = (i + 1) & mask
+      n += 1
+    }
+  }
+
+  private def grow(): Unit = {
+    val oldKeys = keys
+    val oldVals = vals
+    val size = oldKeys.length * 2
+    keys = Array.fill(size)(EMPTY)
+    vals = new Array[Int](size)
+    mask = size - 1
+    used = 0
+    var i = 0
+    while (i < oldKeys.length) {
+      val oldKey = oldKeys(i)
+      if (oldKey != EMPTY && oldKey != TOMB) {
+        var j = hash(oldKey) & mask
+        var n = 0
+        while (n < size && keys(j) != EMPTY) {
+          j = (j + 1) & mask
+          n += 1
+        }
+        if (keys(j) == EMPTY) {
+          keys(j) = oldKey
+          vals(j) = oldVals(i)
+          used += 1
+        }
+      }
+      i += 1
+    }
+  }
+
+  private def hash(key: Long): Int = {
+    val h = key * 0x9e3779b97f4a7c15L
+    (h ^ (h >>> 32)).toInt
+  }
+
+  def foreachLit(f: Int4Consumer): Unit = {
+    var i = 0
+    while (i < keys.length) {
+      val k = keys(i)
+      if (k != EMPTY && k != TOMB && (vals(i) >>> 4) > 0) {
+        val x = ((k >>> 38).toInt << 6) >> 6
+        val y = (k & 0xfffL).toInt
+        val z = (((k >>> 12).toInt & 0x3ffffff) << 6) >> 6
+        f(x, y, z, vals(i) & 0xf)
+      }
+      i += 1
+    }
+  }
 }
 
 class TileLamp extends InstancedBlockTile with ILight {
   var inverted = false
   var powered = false
+  private var lightCache = 0
+  private var lightDirty = true
 
   override def getBlock = ProjectRedIllumination.blockLamp
   override def getMetaData = getColor + (if (inverted) 16 else 0)
@@ -125,14 +319,47 @@ class TileLamp extends InstancedBlockTile with ILight {
       hit: Vector3
   ) {
     inverted = meta > 15
+    lightDirty = true
     scheduleTick(2)
   }
-  override def getLightValue = if (inverted != powered)
-    IlluminationProxy.getLightValue(getColor, 15)
-  else 0
+  override def getLightValue = {
+    if (lightDirty) recomputeLight()
+    lightCache
+  }
+
+  private def recomputeLight() {
+    lightCache =
+      if (inverted != powered)
+        IlluminationProxy.getLightValue(getColor, 15)
+      else 0
+    lightDirty = false
+    BlockLamp.setLightValue(
+      world,
+      x,
+      y,
+      z,
+      lightCache,
+      getColor
+    )
+  }
 
   override def onNeighborChange(b: Block) {
     if (!world.isRemote) scheduleTick(2)
+  }
+
+  override def onBlockRemoval() {
+    super.onBlockRemoval()
+    BlockLamp.clearLightValue(world, x, y, z)
+  }
+
+  override def onChunkUnload() {
+    super.onChunkUnload()
+    BlockLamp.clearLightValue(world, x, y, z)
+  }
+
+  override def invalidate() {
+    super.invalidate()
+    BlockLamp.clearLightValue(world, x, y, z)
   }
 
   def checkPower = {
@@ -141,10 +368,29 @@ class TileLamp extends InstancedBlockTile with ILight {
   }
 
   override def onScheduledTick() {
-    val old = powered
+    val oldInv = inverted
+    val oldPow = powered
+    inverted = getBlockMetadata > 15
     powered = checkPower
-    if (old != powered) {
+    if (oldInv != inverted || oldPow != powered) {
+      recomputeLight()
       markDescUpdate()
+      markLight()
+    }
+  }
+
+  override def update() {
+    super.update()
+    if (lightDirty) {
+      recomputeLight()
+      markLight()
+    }
+  }
+
+  override def updateClient() {
+    super.updateClient()
+    if (lightDirty) {
+      recomputeLight()
       markLight()
     }
   }
@@ -152,6 +398,7 @@ class TileLamp extends InstancedBlockTile with ILight {
   override def readDesc(in: MCDataInput) {
     inverted = in.readBoolean()
     powered = in.readBoolean()
+    recomputeLight()
     markRender()
     markLight()
   }
@@ -163,6 +410,12 @@ class TileLamp extends InstancedBlockTile with ILight {
   override def load(tag: NBTTagCompound) {
     inverted = tag.getBoolean("inv")
     powered = tag.getBoolean("pow")
+    lightDirty = true
+  }
+
+  override def validate() {
+    super.validate()
+    scheduleTick(2)
   }
 
   override def save(tag: NBTTagCompound) {

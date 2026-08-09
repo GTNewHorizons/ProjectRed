@@ -39,7 +39,6 @@ object Configurator extends ModConfig("ProjRed|Core") {
   var logicwires3D = true
   var staticWires = true
   var staticGates = true
-  var lightHaloMax = -1
   var pipeRoutingFX = true
 
   /** World Gen * */
@@ -175,11 +174,6 @@ object Configurator extends ModConfig("ProjRed|Core") {
       "Static Gates",
       staticGates,
       "If set to false, gates will be rendered in the TESR rather than the WorldRenderer."
-    )
-    lightHaloMax = rendering.put(
-      "Light Halo Render Count",
-      lightHaloMax,
-      "Number of lights to render, -1 for unlimited"
     )
     pipeRoutingFX = rendering.put(
       "Routed Pipe FX",

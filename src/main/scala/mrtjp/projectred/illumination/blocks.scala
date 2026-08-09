@@ -202,6 +202,7 @@ private class LampLightTable {
   def put(key: Long, v: Int): Unit = {
     var i = hash(key) & mask
     var n = 0
+    var tomb = -1
     while (n < keys.length) {
       val k = keys(i)
       if (k == key) {
@@ -211,17 +212,23 @@ private class LampLightTable {
         }
         return
       }
-      if (k == EMPTY || k == TOMB) {
-        keys(i) = key
-        vals(i) = v
-        used += 1
-        if (used >= keys.length - keys.length / 3) grow()
-        version += 1
+      if (k == TOMB && tomb < 0) tomb = i
+      else if (k == EMPTY) {
+        insert(if (tomb < 0) i else tomb, key, v)
         return
       }
       i = (i + 1) & mask
       n += 1
     }
+    if (tomb >= 0) insert(tomb, key, v)
+  }
+
+  private def insert(i: Int, key: Long, v: Int): Unit = {
+    keys(i) = key
+    vals(i) = v
+    used += 1
+    if (used >= keys.length - keys.length / 3) grow()
+    version += 1
   }
 
   def remove(key: Long): Unit = {

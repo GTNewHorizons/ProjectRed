@@ -319,9 +319,9 @@ object RenderHalo {
         b.position(cursors(cc))
         var i = 0
         while (i < 72) {
-          b.putFloat(haloFaceVerts(i) + x - anchorX.toFloat)
-          b.putFloat(haloFaceVerts(i + 1) + y - anchorY.toFloat)
-          b.putFloat(haloFaceVerts(i + 2) + z - anchorZ.toFloat)
+          b.putFloat((x.toDouble - anchorX + haloFaceVerts(i)).toFloat)
+          b.putFloat((y.toDouble - anchorY + haloFaceVerts(i + 1)).toFloat)
+          b.putFloat((z.toDouble - anchorZ + haloFaceVerts(i + 2)).toFloat)
           i += 3
         }
         cursors(cc) += 24 * 12

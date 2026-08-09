@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.culling.Frustrum
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.world.World
 import net.minecraftforge.client.event.RenderWorldLastEvent
+import net.minecraftforge.event.world.WorldEvent
 import java.nio.{BufferOverflowException, ByteBuffer}
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11._
@@ -92,6 +93,11 @@ object RenderHalo {
     lc.set(x, y, z, color, box)
     lightArray(lightCount) = lc
     lightCount += 1
+  }
+
+  @SubscribeEvent
+  def onWorldUnload(event: WorldEvent.Unload) {
+    batchWorld = null
   }
 
   @SubscribeEvent

@@ -120,7 +120,14 @@ object BlockLamp {
 
   def getLightValue(world: World, x: Int, y: Int, z: Int) =
     cache.get(world, x, y, z) >> 4
-  def setLightValue(world: World, x: Int, y: Int, z: Int, light: Int, color: Int) =
+  def setLightValue(
+      world: World,
+      x: Int,
+      y: Int,
+      z: Int,
+      light: Int,
+      color: Int
+  ) =
     cache.put(world, x, y, z, (light << 4) | color)
   def clearLightValue(world: World, x: Int, y: Int, z: Int) =
     cache.remove(world, x, y, z)

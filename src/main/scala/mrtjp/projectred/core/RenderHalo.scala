@@ -332,8 +332,10 @@ object RenderHalo {
     } catch {
       case _: BufferOverflowException => return
     }
-    batchVerts = b.position() / 12
+    val batchBytes = ranges(16)
+    batchVerts = batchBytes / 12
     batchRanges = ranges
+    b.position(batchBytes)
     b.flip()
     if (batchVBO == 0) batchVBO = GL15.glGenBuffers()
     GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, batchVBO)

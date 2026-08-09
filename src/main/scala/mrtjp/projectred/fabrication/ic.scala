@@ -152,6 +152,11 @@ class IntegratedCircuit {
     iostate(r) = iostate(r) & 0xffff | (state & 0xffff) << 16
   }
 
+  def firstSetup(): Unit = {
+    val ioparts = parts.values.collect { case io: IOGateICPart => io }
+    ioparts.foreach(_.onOutputChange(0xf))
+  }
+
   def onInputChanged(mask: Int) {
     val ioparts = parts.values.collect { case io: IIOCircuitPart => io }
     for (r <- 0 until 4) if ((mask & 1 << r) != 0) {

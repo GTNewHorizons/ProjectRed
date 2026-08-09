@@ -72,7 +72,31 @@ class StorageDrawersInvWrapper(inv: IInventory) extends InvWrapper(inv) {
     stored
   }
 
-  override def hasItem(item: ItemKey) = getItemCount(item) > 0
+  override def hasItem(item: ItemKey): Boolean = {
+    return hasPrototype(item)
+  }
+
+  def hasPrototype(item: ItemKey): Boolean = {
+    val totalDrawers = getDrawers.getDrawerCount
+    var i = 0
+
+    while (i < totalDrawers) {
+      val drawer = getDrawers.getDrawer(i)
+
+      if (drawer != null) {
+        val prototypeStack = drawer.getStoredItemPrototype
+        val prototypeKey = ItemKey.get(prototypeStack)
+
+        if (prototypeKey != null) {
+          if (prototypeKey == item) {
+            return true
+          }
+        }
+      }
+      i = i + 1
+    }
+    return false
+  }
 
   override def injectItem(item: ItemKey, toAdd: Int): Int = {
     var added = 0

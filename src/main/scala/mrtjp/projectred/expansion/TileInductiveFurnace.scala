@@ -14,6 +14,7 @@ import mrtjp.core.world.WorldLib
 import mrtjp.projectred.ProjectRedExpansion
 import mrtjp.projectred.core.libmc.PRResources
 import net.minecraft.client.renderer.texture.IIconRegister
+import net.minecraft.client.resources.I18n
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.inventory.Container
 import net.minecraft.item.ItemStack
@@ -126,8 +127,20 @@ class GuiInductiveFurnace(tile: TileInductiveFurnace, c: Container)
       GuiDraw.drawTexturedModalRect(27, 16, 185, 18, 7, 9)
     GuiLib.drawVerticalTank(27, 26, 185, 27, 7, 48, tile.cond.getFlowScaled(48))
 
-    GuiDraw.drawString("Inductive Furnace", 8, 6, Colors.GREY.argb, false)
-    GuiDraw.drawString("Inventory", 8, 79, Colors.GREY.argb, false)
+    GuiDraw.drawString(
+      I18n.format("gui.projectred.expansion.machine1|0.title"),
+      8,
+      6,
+      Colors.GREY.argb,
+      false
+    )
+    GuiDraw.drawString(
+      I18n.format("container.inventory"),
+      8,
+      79,
+      Colors.GREY.argb,
+      false
+    )
   }
 }
 

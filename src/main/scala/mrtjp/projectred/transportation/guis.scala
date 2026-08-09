@@ -54,6 +54,9 @@ object GuiInterfacePipe extends TGuiBuilder {
 }
 
 class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
+  private val MAX_COUNT = 999999999
+  private val MAX_COUNT_LENGTH = 9
+
   var clip: ClipNode = null
   var pan: PanNode = null
   var list: ItemListNode = null
@@ -122,6 +125,10 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
     textCount.text = "1"
     textCount.phantom = "1"
     textCount.allowedcharacters = "0123456789"
+    textCount.textChangedDelegate = { () =>
+      if (textCount.text.length > MAX_COUNT_LENGTH)
+        textCount.text = textCount.text.substring(0, MAX_COUNT_LENGTH)
+    }
     textCount.focusChangeDelegate = { () =>
       if (!textCount.focused)
         if (textCount.text.isEmpty || Integer.parseInt(textCount.text) < 1)
@@ -183,7 +190,7 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
 
   def refreshList() {
     list.items = itemMap
-      .map(p => ItemKeyStack.get(p._1, p._2))
+      .map { case (key, count) => ItemKeyStack.get(key, count) }
       .toSeq
       .filter(filterAllows)
       .sorted
@@ -193,14 +200,30 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
       selectedItem = null
 
     def filterAllows(stack: ItemKeyStack): Boolean = {
-      def stringMatch(name: String, filter: String): Boolean = {
+      val searchText = textFilter.text
+      if (searchText.isEmpty) return true
+
+      def fallbackStringMatch(name: String, filter: String): Boolean = {
         for (s <- filter.split(" ")) if (!name.contains(s)) return false
         true
       }
 
-      if (stringMatch(stack.key.getName.toLowerCase, textFilter.text)) true
-      else false
+      if (!NEISearchFieldHelper.existsSearchField())
+        return fallbackStringMatch(stack.key.getName.toLowerCase, searchText)
+
+      Option(NEISearchFieldHelper.getFilter(searchText)) match {
+        case Some(filter) =>
+          try {
+            filter.test(stack.key.makeStack(1))
+          } catch {
+            case _: Throwable =>
+              fallbackStringMatch(stack.key.getName.toLowerCase, searchText)
+          }
+        case None =>
+          fallbackStringMatch(stack.key.getName.toLowerCase, searchText)
+      }
     }
+
   }
 
   override def drawBack_Impl(mouse: Point, frame: Float) {
@@ -212,6 +235,37 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
     GuiDraw.drawString("Pull", 218, 144, Colors.GREY.rgb, false)
     GuiDraw.drawString("Craft", 218, 159, Colors.GREY.rgb, false)
     GuiDraw.drawString("Partial", 218, 174, Colors.GREY.rgb, false)
+    drawCountBreakdownHint()
+  }
+
+  private def drawCountBreakdownHint() {
+    val countHint =
+      try {
+        val count = textCount.text.toInt
+        if (count <= 0) return ""
+
+        val stacks = count / 64
+        val remainder = count % 64
+
+        if (stacks > 0 && remainder > 0) {
+          s"$stacks × 64 + $remainder"
+        } else if (stacks > 0) {
+          s"$stacks × 64"
+        } else {
+          "" // Don't show anything for counts less than 64
+        }
+      } catch {
+        case _: NumberFormatException => ""
+      }
+
+    if (countHint.nonEmpty) {
+      val textWidth = GuiDraw.getStringWidth(countHint)
+      val x =
+        102 + (50 - textWidth) / 2 // Center below textCount (102 is textCount x position, 50 is width)
+      val y =
+        158 + 16 + 2 // Below textCount (158 is textCount y position, 16 is textCount height, 4 is padding)
+      GuiDraw.drawString(countHint, x, y, Colors.GREY.rgb, false)
+    }
   }
 
   override def onAddedToParent_Impl() {
@@ -252,33 +306,38 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
     packet.sendToServer()
   }
 
+  private def getModifierIncrement: Int = {
+    if (
+      Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(
+        Keyboard.KEY_RCONTROL
+      )
+    )
+      64
+    else if (
+      Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(
+        Keyboard.KEY_RSHIFT
+      )
+    )
+      10
+    else
+      1
+  }
+
   private def countUp() {
     var current = 0
     val s = textCount.text
     if (s != null && !s.isEmpty) current = Integer.parseInt(s)
 
-    val newCount =
-      if (
-        Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(
-          Keyboard.KEY_RSHIFT
-        )
-      ) current + 10
-      else current + 1
+    val newCount = current + getModifierIncrement
 
-    if (newCount < 999999999) textCount.text = "" + newCount
+    if (newCount <= MAX_COUNT) textCount.text = "" + newCount
   }
 
   private def countDown() {
     val s = textCount.text
     val current = if (s.nonEmpty) Integer.parseInt(s) else 1
 
-    val newCount =
-      (if (
-         Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(
-           Keyboard.KEY_RSHIFT
-         )
-       ) current - 10
-       else current - 1) max 1
+    val newCount = (current - getModifierIncrement) max 1
 
     textCount.text = "" + newCount
   }

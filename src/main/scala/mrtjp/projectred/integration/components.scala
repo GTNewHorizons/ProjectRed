@@ -93,6 +93,22 @@ object ComponentStore {
   var icChipIconOff: IIcon = null
   var icHousingIcon: IIcon = null
 
+  val orientPrecomputed = (0 until 48).map(orientT).toArray
+  val bundledCablePrecomputed = (0 until 48)
+    .map((orient: Int) => {
+      val side = orient % 24 >> 2
+      val r = orient & 3
+      val reflect = orient >= 24
+      val rotate = (r + WireModelGen.reorientSide(side)) % 4 >= 2
+
+      var t: Transformation = new RedundantTransformation
+      if (reflect) t = t.`with`(new Scale(-1, 0, 1))
+      if (rotate) t = t.`with`(Rotation.quarterRotations(2))
+      t
+    })
+    .toArray
+  val redundantUVTransformation = new UVTransformationList()
+
   def registerIcons(reg: IIconRegister) {
     val baseTex = "projectred:integration/"
     def register(path: String) = reg.registerIcon(baseTex + path)
@@ -241,28 +257,37 @@ abstract class ComponentModel {
 
 abstract class SingleComponentModel(m: CCModel, pos: Vector3 = Vector3.zero)
     extends ComponentModel {
-  val models = {
-    val xs = new Array[CCModel](48)
+  // instead of creating 48 models, only make 2 (original + flipped orientation)
+  private val modelPair = {
     val t = pos.copy.multiply(1 / 16d).translation
-    for (i <- 0 until 48) xs(i) = bakeCopy(m.copy.apply(t), i)
-    xs
+    bakeDynamic(m.copy.apply(t))
   }
+
+  def extraTransformModel(orient: Int): Transformation = orientPrecomputed(
+    orient
+  )
+
+  def extraTransformModelUV(orient: Int): UVTransformation =
+    redundantUVTransformation
 
   def getUVT: UVTransformation
 
   override def renderModel(t: Transformation, orient: Int) {
-    models(orient).render(t, getUVT)
+    modelPair(if (orient < 24) 0 else 1).render(
+      new TransformationList(extraTransformModel(orient), t),
+      new UVTransformationList(extraTransformModelUV(orient), getUVT),
+      LightModel.standardLightModel
+    )
   }
 }
 
 abstract class MultiComponentModel(m: Seq[CCModel], pos: Vector3 = Vector3.zero)
     extends ComponentModel {
   val models = {
-    val xs = Array.ofDim[CCModel](m.length, 48)
+    val xs = Array.ofDim[CCModel](m.length, 2)
     val t = pos.copy.multiply(1 / 16d).translation
     for (i <- m.indices)
-      for (j <- 0 until 48)
-        xs(i)(j) = bakeCopy(m.apply(i).copy.apply(t), j)
+      xs(i) = bakeDynamic(m.apply(i).copy.apply(t))
     xs
   }
 
@@ -271,7 +296,8 @@ abstract class MultiComponentModel(m: Seq[CCModel], pos: Vector3 = Vector3.zero)
   def getUVT: UVTransformation
 
   override def renderModel(t: Transformation, orient: Int) {
-    models(state)(orient).render(t, getUVT)
+    models(state)(if (orient < 24) 0 else 1)
+      .render(new TransformationList(orientPrecomputed(orient), t), getUVT)
   }
 }
 
@@ -295,6 +321,10 @@ abstract class StateIconModel(m: CCModel, pos: Vector3 = Vector3.zero)
 
 class BaseComponentModel extends SingleComponentModel(base) {
   override def getUVT = new IconTransformation(baseIcon)
+}
+
+object BaseComponentModel {
+  val model = new BaseComponentModel
 }
 
 trait TWireModel extends ComponentModel {
@@ -608,19 +638,14 @@ abstract class BundledCableModel(
     uCenter: Double,
     vCenter: Double
 ) extends SingleComponentModel(model, pos) {
-  for (orient <- 0 until 48) {
-    val side = orient % 24 >> 2
-    val r = orient & 3
-    val reflect = orient >= 24
-    val rotate = (r + WireModelGen.reorientSide(side)) % 4 >= 2
-
-    var t: Transformation = new RedundantTransformation
-    if (reflect) t = t.`with`(new Scale(-1, 0, 1))
-    if (rotate) t = t.`with`(Rotation.quarterRotations(2))
-
-    if (!t.isInstanceOf[RedundantTransformation])
-      models(orient).apply(new UVT(t.at(new Vector3(uCenter, 0, vCenter))))
-  }
+  private val newTransforms = (0 until 48).map((orient: Int) => {
+    val t = bundledCablePrecomputed(orient)
+    new UVT(t.at(new Vector3(uCenter, 0, vCenter)))
+  })
+  override def extraTransformModelUV(orient: Int): UVTransformation =
+    newTransforms(
+      orient
+    )
 }
 
 class BusXcvrCableModel
@@ -668,8 +693,8 @@ class SigLightPanelModel(pos: Vector3, rotY: Boolean) extends ComponentModel {
     this(new Vector3(x, 0, z), rotY)
 
   val displayModels = new Array[CCModel](16)
-  val models = new Array[CCModel](48)
-  val modelsSI = new Array[CCModel](48)
+  val modelsPair = new Array[CCModel](2)
+  val modelsSIPair = new Array[CCModel](2)
 
   var sideInd = true
 
@@ -714,15 +739,23 @@ class SigLightPanelModel(pos: Vector3, rotY: Boolean) extends ComponentModel {
     base.apply(pos.translation())
     baseSI.apply(pos.translation())
 
-    for (i <- 0 until 48) {
-      models(i) = bakeCopy(base, i)
-      modelsSI(i) = bakeCopy(baseSI, i)
+    val model = bakeDynamic(base)
+    val modelSI = bakeDynamic(baseSI)
+
+    for (i <- 0 until 2) {
+      modelsPair(i) = model(i)
+      modelsSIPair(i) = modelSI(i)
     }
   }
 
   override def renderModel(t: Transformation, orient: Int) {
     val icont = new IconTransformation(busXcvrIcon)
-    (if (sideInd) modelsSI else models) (orient).render(t, icont)
+    (if (sideInd) modelsSIPair else modelsPair) (if (orient < 24) 0 else 1)
+      .render(
+        new TransformationList(orientPrecomputed(orient), t),
+        icont,
+        LightModel.standardLightModel
+      )
 
     val dPos = pos.copy
     if (orient >= 24) dPos.x = 1 - dPos.x
@@ -748,7 +781,6 @@ class SigLightPanelModel(pos: Vector3, rotY: Boolean) extends ComponentModel {
 }
 
 class SignalBarModel(x: Double, z: Double) extends ComponentModel {
-  val models = new Array[CCModel](48)
   val bars = new Array[CCModel](16)
   val barsInv = new Array[CCModel](16)
   var barsBg: CCModel = null
@@ -759,7 +791,7 @@ class SignalBarModel(x: Double, z: Double) extends ComponentModel {
   var signal = 0
   var inverted = false
 
-  {
+  val model = {
     for (i <- 1 to 16) {
       val bar = CCModel.quadModel(4)
       val y = 12 / 32d + 0.0001d
@@ -788,15 +820,17 @@ class SignalBarModel(x: Double, z: Double) extends ComponentModel {
     barsBg = bars(15).copy.apply(t)
     barsBgInv = barsInv(15).copy.apply(t)
 
-    val base = signalPanel.copy.apply(pos.translation())
-    for (i <- 0 until 48) models(i) = bakeCopy(base, i)
+    signalPanel.copy.apply(pos.translation())
   }
 
   def renderModel(t: Transformation, orient: Int) {
     val iconT = new IconTransformation(busConvIcon)
-    models(orient % 24).render(t, iconT)
+    model.render(
+      new TransformationList(orientPrecomputed(orient % 24), t),
+      iconT
+    )
     val position = new TransformationList(pos.translation)
-      .`with`(orientT(orient % 24))
+      .`with`(orientPrecomputed(orient % 24))
       .`with`(t)
     (if (inverted) barsBgInv else barsBg).render(
       position,
@@ -894,14 +928,15 @@ object CellTopWireModel {
 }
 
 class CellTopWireModel(wireTop: CCModel) extends CellWireModel {
-  val top = new Array[CCModel](24)
   var conn = 0
-
-  for (i <- 0 until 24) top(i) = bakeCopy(wireTop, i)
 
   override def renderModel(t: Transformation, orient: Int) {
     val icont = new IconTransformation(cellIcon)
-    top(orient).render(t, icont, colourMult)
+    wireTop.render(
+      new TransformationList(orientPrecomputed(orient), t),
+      icont,
+      colourMult
+    )
     import mrtjp.projectred.integration.CellTopWireModel._
     if ((conn & 2) == 0) right(orient).render(t, icont, colourMult)
     if ((conn & 8) == 0) left(orient).render(t, icont, colourMult)
@@ -909,12 +944,13 @@ class CellTopWireModel(wireTop: CCModel) extends CellWireModel {
 }
 
 class CellBottomWireModel(wireBottom: CCModel) extends CellWireModel {
-  val bottom = new Array[CCModel](24)
-
-  for (i <- 0 until 24) bottom(i) = bakeCopy(wireBottom, i)
 
   override def renderModel(t: Transformation, orient: Int) {
-    bottom(orient).render(t, new IconTransformation(cellIcon), colourMult)
+    wireBottom.render(
+      new TransformationList(orientPrecomputed(orient), t),
+      new IconTransformation(cellIcon),
+      colourMult
+    )
   }
 }
 

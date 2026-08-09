@@ -353,7 +353,7 @@ class StockChipPanel(chip: TChipStock) extends ChipPanelNode(chip) {
         drawTexturedModalRect(
           position.x,
           position.y,
-          81 + 16 * chip.requestMode,
+          81 + 16 * chip.requestMode.id,
           102,
           14,
           14
@@ -363,11 +363,12 @@ class StockChipPanel(chip: TChipStock) extends ChipPanelNode(chip) {
     b.position = Point(75, 32)
     b.size = Size(14, 14)
     b.tooltipBuilder = { list =>
+      import RequestMode._
       list += "Fill mode"
       list += EnumChatFormatting.GRAY + (chip.requestMode match {
-        case 0 => "refill when items missing"
-        case 1 => "refill when items empty"
-        case 2 => "refill infinitely"
+        case WHEN_MISSING => "refill when items missing"
+        case WHEN_EMPTY   => "refill when items empty"
+        case INFINITE     => "refill infinitely"
       })
     }
     b.clickDelegate = { () =>

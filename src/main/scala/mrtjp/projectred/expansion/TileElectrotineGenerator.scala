@@ -19,6 +19,7 @@ import mrtjp.projectred.core.PartDefs
 import mrtjp.projectred.core.libmc.PRResources
 import mrtjp.projectred.{ProjectRedCore, ProjectRedExpansion}
 import net.minecraft.client.renderer.texture.IIconRegister
+import net.minecraft.client.resources.I18n
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.inventory.ICrafting
 import net.minecraft.item.ItemStack
@@ -240,8 +241,20 @@ class GuiElectrotineGenerator(
     )
       GuiDraw.drawTexturedModalRect(69, 45, 211, 10, 23, 9)
 
-    GuiDraw.drawString("Electrotine Generator", 8, 6, Colors.GREY.argb, false)
-    GuiDraw.drawString("Inventory", 8, 79, Colors.GREY.argb, false)
+    GuiDraw.drawString(
+      I18n.format("gui.projectred.expansion.machine1|1.title"),
+      8,
+      6,
+      Colors.GREY.argb,
+      false
+    )
+    GuiDraw.drawString(
+      I18n.format("container.inventory"),
+      8,
+      79,
+      Colors.GREY.argb,
+      false
+    )
   }
 }
 

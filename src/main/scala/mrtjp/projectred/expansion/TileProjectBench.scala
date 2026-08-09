@@ -23,6 +23,7 @@ import mrtjp.projectred.ProjectRedExpansion
 import mrtjp.projectred.core.libmc.PRResources
 import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.texture.IIconRegister
+import net.minecraft.client.resources.I18n
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.inventory.{
   ISidedInventory,
@@ -348,6 +349,13 @@ class ContainerProjectBench(player: EntityPlayer, tile: TileProjectBench)
     super.slotClick(id, mouse, mode, player)
   }
 
+  override def transferStackInSlot(player: EntityPlayer, i: Int): ItemStack = {
+    if (i == 28 && !getSlot(28).canTakeStack(player))
+      null
+    else
+      super.transferStackInSlot(player, i)
+  }
+
   override def doMerge(stack: ItemStack, from: Int): Boolean = {
     if (0 until 9 contains from) // crafting grid
       {
@@ -452,8 +460,20 @@ class GuiProjectBench(tile: TileProjectBench, c: ContainerProjectBench)
         }
       }
 
-    GuiDraw.drawString("Project Bench", 8, 6, Colors.GREY.argb, false)
-    GuiDraw.drawString("Inventory", 8, 116, Colors.GREY.argb, false)
+    GuiDraw.drawString(
+      I18n.format("gui.projectred.expansion.machine2|10.title"),
+      8,
+      6,
+      Colors.GREY.argb,
+      false
+    )
+    GuiDraw.drawString(
+      I18n.format("container.inventory"),
+      8,
+      116,
+      Colors.GREY.argb,
+      false
+    )
   }
 
   override def drawFront_Impl(mouse: Point, rframe: Float) {

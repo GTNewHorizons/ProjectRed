@@ -224,9 +224,9 @@ private class LampLightTable {
   }
 
   private def insert(i: Int, key: Long, v: Int): Unit = {
+    if (keys(i) == EMPTY) used += 1
     keys(i) = key
     vals(i) = v
-    used += 1
     if (used >= keys.length - keys.length / 3) grow()
     version += 1
   }
@@ -254,6 +254,7 @@ private class LampLightTable {
     keys = Array.fill(size)(EMPTY)
     vals = new Array[Int](size)
     mask = size - 1
+    used = 0
     var i = 0
     while (i < oldKeys.length) {
       val oldKey = oldKeys(i)
@@ -267,6 +268,7 @@ private class LampLightTable {
         if (keys(j) == EMPTY) {
           keys(j) = oldKey
           vals(j) = oldVals(i)
+          used += 1
         }
       }
       i += 1

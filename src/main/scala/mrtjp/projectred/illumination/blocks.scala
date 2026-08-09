@@ -91,7 +91,7 @@ class BlockLamp
   override def getLightValue(w: IBlockAccess, x: Int, y: Int, z: Int) =
     w match {
       case world: World =>
-        BlockLamp.getLightValue(world.provider.dimensionId, x, y, z)
+        BlockLamp.getLightValue(world, x, y, z)
       case _ => super.getLightValue(w, x, y, z)
     }
 
@@ -118,16 +118,16 @@ object BlockLamp {
 
   private val cache = new LampLightCache
 
-  def getLightValue(dim: Int, x: Int, y: Int, z: Int) =
-    cache.get(dim, x, y, z) >> 4
-  def setLightValue(dim: Int, x: Int, y: Int, z: Int, light: Int, color: Int) =
-    cache.put(dim, x, y, z, (light << 4) | color)
-  def clearLightValue(dim: Int, x: Int, y: Int, z: Int) =
-    cache.remove(dim, x, y, z)
-  def foreachLitHalo(dim: Int)(f: Int4Consumer) =
-    cache.foreachLit(dim)(f)
-  def cacheVersion(dim: Int): Long =
-    cache.version(dim)
+  def getLightValue(world: World, x: Int, y: Int, z: Int) =
+    cache.get(world, x, y, z) >> 4
+  def setLightValue(world: World, x: Int, y: Int, z: Int, light: Int, color: Int) =
+    cache.put(world, x, y, z, (light << 4) | color)
+  def clearLightValue(world: World, x: Int, y: Int, z: Int) =
+    cache.remove(world, x, y, z)
+  def foreachLitHalo(world: World)(f: Int4Consumer) =
+    cache.foreachLit(world)(f)
+  def cacheVersion(world: World): Long =
+    cache.version(world)
 }
 
 trait Int4Consumer {
@@ -135,57 +135,40 @@ trait Int4Consumer {
 }
 
 private class LampLightCache {
-  private var dims = new Array[Int](2)
-  private var tables = new Array[LampLightTable](2)
-  private var count = 0
+  private val tables = new java.util.WeakHashMap[World, LampLightTable]()
 
-  def get(dim: Int, x: Int, y: Int, z: Int): Int = {
-    val t = find(dim)
+  def get(world: World, x: Int, y: Int, z: Int): Int = {
+    val t = find(world)
     if (t == null) 0 else t.get(pack(x, y, z))
   }
 
-  def put(dim: Int, x: Int, y: Int, z: Int, v: Int): Unit =
-    tableFor(dim).put(pack(x, y, z), v)
+  def put(world: World, x: Int, y: Int, z: Int, v: Int): Unit =
+    tableFor(world).put(pack(x, y, z), v)
 
-  def remove(dim: Int, x: Int, y: Int, z: Int): Unit = {
-    val t = find(dim)
+  def remove(world: World, x: Int, y: Int, z: Int): Unit = {
+    val t = find(world)
     if (t != null) t.remove(pack(x, y, z))
   }
 
-  def foreachLit(dim: Int)(f: Int4Consumer): Unit = {
-    val t = find(dim)
+  def foreachLit(world: World)(f: Int4Consumer): Unit = {
+    val t = find(world)
     if (t != null) t.foreachLit(f)
   }
 
-  def version(dim: Int): Long = {
-    val t = find(dim)
+  def version(world: World): Long = {
+    val t = find(world)
     if (t == null) -1 else t.version
   }
 
-  private def find(dim: Int): LampLightTable = {
-    var i = 0
-    while (i < count) {
-      if (dims(i) == dim) return tables(i)
-      i += 1
-    }
-    null
-  }
+  private def find(world: World): LampLightTable =
+    tables.synchronized(tables.get(world))
 
-  private def tableFor(dim: Int): LampLightTable = {
-    val t = find(dim)
-    if (t != null) return t
-    if (count == dims.length) {
-      val newDims = new Array[Int](dims.length * 2)
-      val newTables = new Array[LampLightTable](tables.length * 2)
-      System.arraycopy(dims, 0, newDims, 0, count)
-      System.arraycopy(tables, 0, newTables, 0, count)
-      dims = newDims
-      tables = newTables
+  private def tableFor(world: World): LampLightTable = tables.synchronized {
+    var table = tables.get(world)
+    if (table == null) {
+      table = new LampLightTable
+      tables.put(world, table)
     }
-    val table = new LampLightTable
-    dims(count) = dim
-    tables(count) = table
-    count += 1
     table
   }
 
@@ -335,7 +318,7 @@ class TileLamp extends InstancedBlockTile with ILight {
       else 0
     lightDirty = false
     BlockLamp.setLightValue(
-      world.provider.dimensionId,
+      world,
       x,
       y,
       z,
@@ -350,17 +333,17 @@ class TileLamp extends InstancedBlockTile with ILight {
 
   override def onBlockRemoval() {
     super.onBlockRemoval()
-    BlockLamp.clearLightValue(world.provider.dimensionId, x, y, z)
+    BlockLamp.clearLightValue(world, x, y, z)
   }
 
   override def onChunkUnload() {
     super.onChunkUnload()
-    BlockLamp.clearLightValue(world.provider.dimensionId, x, y, z)
+    BlockLamp.clearLightValue(world, x, y, z)
   }
 
   override def invalidate() {
     super.invalidate()
-    BlockLamp.clearLightValue(world.provider.dimensionId, x, y, z)
+    BlockLamp.clearLightValue(world, x, y, z)
   }
 
   def checkPower = {

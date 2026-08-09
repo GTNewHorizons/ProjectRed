@@ -8,6 +8,7 @@ import mrtjp.projectred.illumination.{BlockLamp, Int4Consumer}
 import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.culling.Frustrum
 import net.minecraft.util.AxisAlignedBB
+import net.minecraft.world.World
 import net.minecraftforge.client.event.RenderWorldLastEvent
 import java.nio.{BufferOverflowException, ByteBuffer}
 import org.lwjgl.BufferUtils
@@ -47,7 +48,7 @@ object RenderHalo {
   }
 
   private var batchVBO = 0
-  private var batchDim = Int.MinValue
+  private var batchWorld: World = null
   private var batchVersion = -1L
   private var batchVerts = 0
   private var batchBuf: ByteBuffer = null
@@ -126,17 +127,16 @@ object RenderHalo {
 
     if (world != null) {
       val entity = Minecraft.getMinecraft.renderViewEntity
-      val dim = world.provider.dimensionId
-      val ver = BlockLamp.cacheVersion(dim)
+      val ver = BlockLamp.cacheVersion(world)
       val dx = entity.posX - anchorX
       val dy = entity.posY - anchorY
       val dz = entity.posZ - anchorZ
       if (
-        dim != batchDim || ver != batchVersion ||
+        (world ne batchWorld) || ver != batchVersion ||
         dx * dx + dy * dy + dz * dz > 1073741824.0d
       ) {
-        rebuildBatch(dim)
-        batchDim = dim
+        rebuildBatch(world)
+        batchWorld = world
         batchVersion = ver
       }
       if (batchVerts > 0) {
@@ -283,7 +283,7 @@ object RenderHalo {
     vbo
   }
 
-  private def rebuildBatch(dim: Int) {
+  private def rebuildBatch(world: World) {
     val entity = Minecraft.getMinecraft.renderViewEntity
     anchorX = entity.posX
     anchorY = entity.posY
@@ -296,7 +296,7 @@ object RenderHalo {
         colorCounts(color & 15) += 1
       }
     }
-    BlockLamp.foreachLitHalo(dim)(counter)
+    BlockLamp.foreachLitHalo(world)(counter)
     if (count == 0) {
       batchVerts = 0
       return
@@ -328,7 +328,7 @@ object RenderHalo {
       }
     }
     try {
-      BlockLamp.foreachLitHalo(dim)(filler)
+      BlockLamp.foreachLitHalo(world)(filler)
     } catch {
       case _: BufferOverflowException => return
     }

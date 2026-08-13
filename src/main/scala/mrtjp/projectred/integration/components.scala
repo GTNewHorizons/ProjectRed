@@ -72,51 +72,52 @@ private[integration] object ComponentModelBakery {
 }
 
 object ComponentStore {
-  val base = loadBase("base")
-  val lightChip = loadModel("chip")
-  val leverOn = loadModel("leveron")
-  val leverOff = loadModel("leveroff")
-  val solarArray = loadModel("solar")
-  val rainSensor = loadModel("rainsensor")
-  val pointer = loadModel("pointer")
-  val busXcvr = loadModel("array/busxcvr")
-  val lightPanel1 = loadModel("array/lightpanel1")
-  val lightPanel2 = loadModel("array/lightpanel2")
-  val busRand = loadModel("array/busrand")
-  val busConv = loadModel("array/busconv")
-  val signalPanel = loadModel("array/signalpanel")
-  val busInput = loadModel("array/businput")
-  val icBundled = loadModel("array/icbundled")
+  lazy val base = loadBase("base")
+  lazy val lightChip = loadModel("chip")
+  lazy val leverOn = loadModel("leveron")
+  lazy val leverOff = loadModel("leveroff")
+  lazy val solarArray = loadModel("solar")
+  lazy val rainSensor = loadModel("rainsensor")
+  lazy val pointer = loadModel("pointer")
+  lazy val busXcvr = loadModel("array/busxcvr")
+  lazy val lightPanel1 = loadModel("array/lightpanel1")
+  lazy val lightPanel2 = loadModel("array/lightpanel2")
+  lazy val busRand = loadModel("array/busrand")
+  lazy val busConv = loadModel("array/busconv")
+  lazy val signalPanel = loadModel("array/signalpanel")
+  lazy val busInput = loadModel("array/businput")
+  lazy val icBundled = loadModel("array/icbundled")
 
-  val nullCellWireBottom =
+  lazy val nullCellWireBottom =
     loadModel("array/nullcellbottomwire").apply(new Translation(0.5, 0, 0.5))
-  val nullCellWireTop =
+  lazy val nullCellWireTop =
     loadModel("array/nullcelltopwire").apply(new Translation(0.5, 0, 0.5))
-  val nullCellBase = loadBase("array/nullcellbase")
-  val extendedCellWireBottom = loadModel("array/extendedcellbottomwire").apply(
-    new Translation(0.5, 0, 0.5)
-  )
-  val extendedCellWireTop =
+  lazy val nullCellBase = loadBase("array/nullcellbase")
+  lazy val extendedCellWireBottom =
+    loadModel("array/extendedcellbottomwire").apply(
+      new Translation(0.5, 0, 0.5)
+    )
+  lazy val extendedCellWireTop =
     loadModel("array/extendedcelltopwire").apply(new Translation(0.5, 0, 0.5))
-  val extendedCellBase = loadBase("array/extendedcellbase")
-  val cellWireSide =
+  lazy val extendedCellBase = loadBase("array/extendedcellbase")
+  lazy val cellWireSide =
     loadModel("array/cellsidewire").apply(new Translation(0.5, 0, 0.5))
-  val cellFrame =
+  lazy val cellFrame =
     loadModel("array/cellstand").apply(new Translation(0.5, 0, 0.5))
-  val cellPlate =
+  lazy val cellPlate =
     loadModel("array/cellplate").apply(new Translation(0.5, 0, 0.5))
 
-  val stackLatchWireBottom =
+  lazy val stackLatchWireBottom =
     loadModel("array/stacklatchwire").apply(new Translation(0.5, 0, 0.5))
-  val stackStand = loadModel("array/latchstand")
+  lazy val stackStand = loadModel("array/latchstand")
 
-  val sevenSeg = loadCorrectedModels("array/7seg")
-  val sixteenSeg = loadCorrectedModels("array/16seg")
-  val segbus = loadModel("array/segbus")
+  lazy val sevenSeg = loadCorrectedModels("array/7seg")
+  lazy val sixteenSeg = loadCorrectedModels("array/16seg")
+  lazy val segbus = loadModel("array/segbus")
 
-  val icChip = loadCorrectedModel("icchip")
-  val icGlass = loadCorrectedModel("icglass")
-  val icHousing = loadCorrectedModel("ichousing")
+  lazy val icChip = loadCorrectedModel("icchip")
+  lazy val icGlass = loadCorrectedModel("icglass")
+  lazy val icHousing = loadCorrectedModel("ichousing")
 
   var baseIcon: IIcon = null
   var wireIcons: Array[IIcon] = new Array[IIcon](3)

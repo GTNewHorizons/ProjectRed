@@ -402,6 +402,43 @@ object TWireModel {
     if (border.y + border.h >= 32) border.h -= border.y + border.h - 32
     border
   }
+
+  private[integration] def buildTexMap(wireRectangles: Seq[Rectangle4i]) = {
+    val texMap = new Array[Int](1024)
+    for (rect <- wireRectangles) {
+      fillMask(texMap, rect, 2)
+      fillMask(texMap, border(rect), 1)
+    }
+    texMap
+  }
+
+  private[integration] def buildTexture(
+      texMap: Array[Int],
+      wireData: Array[Array[Colour]],
+      tex: Int
+  ) = {
+    val pSize = Math.sqrt(wireData(0).length).asInstanceOf[Int]
+    val size = Math.max(32, pSize)
+    val relM = size / 32
+    val relP = size / pSize
+    val imageData = new Array[Int](size * size)
+
+    for (i <- 0 until imageData.length) {
+      val x = i % size
+      val y = i / size
+      val t = texMap(y / relM * 32 + x / relM)
+      if (t != 0)
+        imageData(i) =
+          wireData(if (t == 1) 0 else tex)(y / relP * pSize + x / relP).argb()
+    }
+    imageData
+  }
+
+  private def fillMask(map: Array[Int], r: Rectangle4i, v: Int) {
+    for (i <- r.x until r.x + r.w)
+      for (j <- r.y until r.y + r.h)
+        if (map(j * 32 + i) < v) map(j * 32 + i) = v
+  }
 }
 
 class WireModel3D(data: Array[Colour])
@@ -464,42 +501,21 @@ class WireModel2D(data: Array[Colour]) extends ComponentModel with TWireModel {
 
   override def registerIcons(reg: IIconRegister) {
     val wireRectangles = TWireModel.rectangulate(data)
+    val texMap = TWireModel.buildTexMap(wireRectangles)
     icons = new Array[TextureSpecial](wireData.length)
     for (tex <- 0 until icons.length) {
-      val texMap = new Array[Int](1024)
-      for (rect <- wireRectangles) {
-        fillMask(texMap, rect, 2)
-        fillMask(texMap, TWireModel.border(rect), 1)
-      }
-
-      val pSize = Math.sqrt(wireData(0).length).asInstanceOf[Int]
-      val size = Math.max(32, pSize)
-      val relM = size / 32
-      val relP = size / pSize
-
-      val imageData = new Array[Int](size * size)
-      for (i <- 0 until imageData.length) {
-        val x = i % size
-        val y = i / size
-        val t = texMap(y / relM * 32 + x / relM)
-        if (t != 0)
-          imageData(i) =
-            wireData(if (t == 1) 0 else tex)(y / relP * pSize + x / relP).argb()
-      }
-
       icons(tex) = TextureUtils
         .getTextureSpecial(
           reg,
           "projectred:integration/wire2d_" + iconIndex + "_" + tex
         )
-        .addTexture(new TextureDataHolder(imageData, size))
+        .addTexture(
+          new TextureDataHolder(
+            TWireModel.buildTexture(texMap, wireData, tex),
+            Math.max(32, Math.sqrt(wireData(0).length).asInstanceOf[Int])
+          )
+        )
     }
-  }
-
-  def fillMask(map: Array[Int], r: Rectangle4i, v: Int) {
-    for (i <- r.x until r.x + r.w)
-      for (j <- r.y until r.y + r.h)
-        if (map(j * 32 + i) < v) map(j * 32 + i) = v
   }
 }
 

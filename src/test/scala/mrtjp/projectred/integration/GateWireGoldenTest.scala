@@ -29,6 +29,18 @@ class GateWireGoldenTest {
   }
 
   @Test
+  def wire2DOutputMatchesGoldenOutput(): Unit = {
+    val wireData = GateWireGoldenTest.materialNames.map(loadImage).toArray
+    val planeDigest = digest { out =>
+      WireModel2D.models.foreach(writeModel(out, _))
+    }
+    val actual = ("plane " + planeDigest) +: GateWireGoldenTest.maskNames.map {
+      name => characterize2D(name, wireData)
+    }
+    assertGolden("2d", GateWireGoldenTest.twoDHeader, actual)
+  }
+
+  @Test
   def bakedModelsDoNotShareMutableGeometry(): Unit = {
     val base = WireModel3D.generateModel(loadMask("OR-0"))
     val pair = ComponentModelBakery.bakeDynamic(base)
@@ -72,7 +84,24 @@ class GateWireGoldenTest {
     name + " " + modelPair(0).verts.length + " " + orientedDigest
   }
 
+  private def characterize2D(name: String, wireData: Array[Array[Colour]]) = {
+    val texMap = TWireModel.buildTexMap(TWireModel.rectangulate(loadMask(name)))
+    val textures = wireData.indices.map { tex =>
+      digestInts(TWireModel.buildTexture(texMap, wireData, tex))
+    }
+    (name +: digestInts(texMap) +: textures).mkString(" ")
+  }
+
   private def loadMask(name: String): Array[Colour] = {
+    val (width, height, data) = loadImageData(name)
+    assertEquals("Unexpected width for " + name, 32, width)
+    assertEquals("Unexpected height for " + name, 32, height)
+    data
+  }
+
+  private def loadImage(name: String): Array[Colour] = loadImageData(name)._3
+
+  private def loadImageData(name: String): (Int, Int, Array[Colour]) = {
     val path = GateWireGoldenTest.maskPath + name + ".png"
     val stream = getClass.getResourceAsStream(path)
     assertNotNull("Missing wire mask " + path, stream)
@@ -81,12 +110,10 @@ class GateWireGoldenTest {
       try ImageIO.read(stream)
       finally stream.close()
     assertNotNull("Invalid wire mask " + path, image)
-    assertEquals("Unexpected width for " + name, 32, image.getWidth)
-    assertEquals("Unexpected height for " + name, 32, image.getHeight)
-
-    image
+    val data = image
       .getRGB(0, 0, image.getWidth, image.getHeight, null, 0, image.getWidth)
       .map(new ColourARGB(_): Colour)
+    (image.getWidth, image.getHeight, data)
   }
 
   private def digestRectangles(rectangles: Seq[Rectangle4i]): String = digest {
@@ -101,6 +128,11 @@ class GateWireGoldenTest {
   }
 
   private def digestModel(model: CCModel): String = digest(writeModel(_, model))
+
+  private def digestInts(values: Array[Int]): String = digest { out =>
+    out.writeInt(values.length)
+    values.foreach(out.writeInt)
+  }
 
   private def writeModel(out: DataOutputStream, model: CCModel): Unit = {
     val normals = model.normals()
@@ -182,6 +214,9 @@ object GateWireGoldenTest {
   val header = "# gate-wire-geometry-v1 scale=1e-9 masks=120"
   val bakingHeader =
     "# gate-wire-baking-v1 scale=1e-9 masks=120 orientations=48"
+  val twoDHeader =
+    "# gate-wire-2d-v1 scale=1e-9 masks=120 textures=3 orientations=48"
+  val materialNames = Seq("bordermatte", "wirematte-OFF", "wirematte-ON")
 
   val maskNames = Seq(
     "OR" -> 4,

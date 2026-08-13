@@ -6,6 +6,7 @@
 package mrtjp.projectred.integration
 
 import java.util.Random
+import java.util.concurrent.atomic.AtomicReferenceArray
 
 import codechicken.lib.math.MathHelper
 import codechicken.lib.render.{CCRenderState, TextureUtils}
@@ -15,6 +16,32 @@ import mrtjp.projectred.core.TFaceOrient.flipMaskZ
 import mrtjp.projectred.integration.ComponentStore._
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.item.ItemStack
+
+private[integration] class LazyRendererSlots[A <: AnyRef](
+    factories: Array[() => A]
+) {
+  private val builders = factories.clone()
+  private val values = new AtomicReferenceArray[A](factories.length)
+
+  def length = builders.length
+
+  def apply(index: Int): A = {
+    var value = values.get(index)
+    if (value == null) synchronized {
+      value = values.get(index)
+      if (value == null) {
+        value = builders(index)()
+        values.set(index, value)
+      }
+    }
+    value
+  }
+
+  def replace(index: Int, factory: () => A): Unit = synchronized {
+    builders(index) = factory
+    values.set(index, null.asInstanceOf[A])
+  }
+}
 
 object RenderGate {
   var renderers = buildRenders()

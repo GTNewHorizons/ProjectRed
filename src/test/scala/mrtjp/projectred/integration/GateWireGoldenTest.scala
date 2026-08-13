@@ -9,7 +9,7 @@ import javax.imageio.ImageIO
 import codechicken.lib.colour.{Colour, ColourARGB}
 import codechicken.lib.render.CCModel
 import codechicken.lib.vec.Rectangle4i
-import org.junit.Assert.{assertEquals, assertNotNull}
+import org.junit.Assert.{assertEquals, assertNotNull, assertNotSame}
 import org.junit.Test
 
 import scala.io.Source
@@ -19,21 +19,29 @@ class GateWireGoldenTest {
   @Test
   def wireGeometryMatchesGoldenOutput(): Unit = {
     val actual = GateWireGoldenTest.maskNames.map(characterize)
-    val actualText = (GateWireGoldenTest.header +: actual).mkString("\n") + "\n"
-    val actualDigest = sha256(actualText.getBytes(StandardCharsets.UTF_8))
-    val expectedDigest = readResource(GateWireGoldenTest.goldenPath).trim
+    assertGolden("geometry", GateWireGoldenTest.header, actual)
+  }
 
-    if (actualDigest != expectedDigest) {
-      val report = new File("build/reports/wire-golden/actual-v1.txt")
-      report.getParentFile.mkdirs()
-      Files.write(report.toPath, actualText.getBytes(StandardCharsets.UTF_8))
-    }
+  @Test
+  def wireBakingMatchesGoldenOutput(): Unit = {
+    val actual = GateWireGoldenTest.maskNames.map(characterizeBaking)
+    assertGolden("baking", GateWireGoldenTest.bakingHeader, actual)
+  }
 
-    assertEquals(
-      "Wire geometry changed; see build/reports/wire-golden/actual-v1.txt",
-      expectedDigest,
-      actualDigest
-    )
+  @Test
+  def bakedModelsDoNotShareMutableGeometry(): Unit = {
+    val base = WireModel3D.generateModel(loadMask("OR-0"))
+    val pair = ComponentModelBakery.bakeDynamic(base)
+
+    assertNotSame(pair(0), pair(1))
+    assertNotSame(pair(0).verts(0), pair(1).verts(0))
+    assertNotSame(pair(0).verts(0).vec, pair(1).verts(0).vec)
+    assertNotSame(pair(0).verts(0).uv, pair(1).verts(0).uv)
+    assertNotSame(pair(0).normals()(0), pair(1).normals()(0))
+
+    val originalX = pair(0).verts(0).vec.x
+    pair(1).verts(0).vec.x += 1
+    assertEquals(originalX, pair(0).verts(0).vec.x, 0)
   }
 
   private def characterize(name: String): String = {
@@ -48,6 +56,20 @@ class GateWireGoldenTest {
       digestRectangles(rectangles),
       digestModel(model)
     ).mkString(" ")
+  }
+
+  private def characterizeBaking(name: String): String = {
+    val modelPair = ComponentModelBakery.bakeDynamic(
+      WireModel3D.generateModel(loadMask(name))
+    )
+    val orientedDigest = digest { out =>
+      for (orient <- 0 until 48) {
+        val model = modelPair(if (orient < 24) 0 else 1).copy
+        model.apply(ComponentModelBakery.orientPrecomputed(orient))
+        writeModel(out, model)
+      }
+    }
+    name + " " + modelPair(0).verts.length + " " + orientedDigest
   }
 
   private def loadMask(name: String): Array[Colour] = {
@@ -78,7 +100,9 @@ class GateWireGoldenTest {
       }
   }
 
-  private def digestModel(model: CCModel): String = digest { out =>
+  private def digestModel(model: CCModel): String = digest(writeModel(_, model))
+
+  private def writeModel(out: DataOutputStream, model: CCModel): Unit = {
     val normals = model.normals()
     out.writeInt(model.vertexMode)
     out.writeInt(model.vp)
@@ -125,12 +149,39 @@ class GateWireGoldenTest {
     try source.mkString
     finally source.close()
   }
+
+  private def assertGolden(
+      kind: String,
+      header: String,
+      actual: Seq[String]
+  ): Unit = {
+    val actualText = (header +: actual).mkString("\n") + "\n"
+    val actualDigest = sha256(actualText.getBytes(StandardCharsets.UTF_8))
+    val goldenPath =
+      "/mrtjp/projectred/integration/gate-wire-" + kind + "-v1.txt"
+    val expectedDigest = readResource(goldenPath).trim
+
+    if (actualDigest != expectedDigest) {
+      val report = new File(
+        "build/reports/wire-golden/actual-" + kind + "-v1.txt"
+      )
+      report.getParentFile.mkdirs()
+      Files.write(report.toPath, actualText.getBytes(StandardCharsets.UTF_8))
+    }
+
+    assertEquals(
+      "Wire " + kind + " changed; see build/reports/wire-golden/actual-" + kind + "-v1.txt",
+      expectedDigest,
+      actualDigest
+    )
+  }
 }
 
 object GateWireGoldenTest {
-  val goldenPath = "/mrtjp/projectred/integration/gate-wire-golden-v1.txt"
   val maskPath = "/assets/projectred/textures/blocks/integration/surface/"
-  val header = "# gate-wire-golden-v1 scale=1e-9 masks=120"
+  val header = "# gate-wire-geometry-v1 scale=1e-9 masks=120"
+  val bakingHeader =
+    "# gate-wire-baking-v1 scale=1e-9 masks=120 orientations=48"
 
   val maskNames = Seq(
     "OR" -> 4,

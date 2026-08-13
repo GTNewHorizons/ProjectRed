@@ -23,6 +23,55 @@ import net.minecraft.util.{IIcon, ResourceLocation}
 import scala.collection.JavaConversions._
 import scala.util.control.Breaks
 
+private[integration] object ComponentModelBakery {
+  val orientPrecomputed = (0 until 48).map(orientT).toArray
+  val bundledCablePrecomputed = (0 until 48)
+    .map((orient: Int) => {
+      val side = orient % 24 >> 2
+      val r = orient & 3
+      val reflect = orient >= 24
+      val rotate = (r + WireModelGen.reorientSide(side)) % 4 >= 2
+
+      var t: Transformation = new RedundantTransformation
+      if (reflect) t = t.`with`(new Scale(-1, 0, 1))
+      if (rotate) t = t.`with`(Rotation.quarterRotations(2))
+      t
+    })
+    .toArray
+  val redundantUVTransformation = new UVTransformationList()
+
+  def orientT(orient: Int) = {
+    var t = Rotation.sideOrientation(orient % 24 >> 2, orient & 3)
+    if (orient >= 24) t = new Scale(-1, 1, 1).`with`(t)
+    t.at(Vector3.center)
+  }
+
+  def dynamicT(orient: Int) =
+    if (orient == 0) new RedundantTransformation
+    else new Scale(-1, 1, 1).at(Vector3.center)
+
+  def bakeCopy(base: CCModel, orient: Int) = {
+    val m = base.copy
+    if (orient >= 24) reverseFacing(m)
+    m.apply(orientT(orient)).computeLighting(LightModel.standardLightModel)
+    m
+  }
+
+  def bakeDynamic(base: CCModel) = Array(base.copy, reverseFacing(base.copy))
+
+  private def reverseFacing(m: CCModel) = {
+    for (i <- 0 until m.verts.length by 4) {
+      val vtmp = m.verts(i + 1)
+      val ntmp = m.normals()(i + 1)
+      m.verts(i + 1) = m.verts(i + 3)
+      m.normals()(i + 1) = m.normals()(i + 3)
+      m.verts(i + 3) = vtmp
+      m.normals()(i + 3) = ntmp
+    }
+    m
+  }
+}
+
 object ComponentStore {
   val base = loadBase("base")
   val lightChip = loadModel("chip")
@@ -92,22 +141,6 @@ object ComponentStore {
   var icChipIcon: IIcon = null
   var icChipIconOff: IIcon = null
   var icHousingIcon: IIcon = null
-
-  val orientPrecomputed = (0 until 48).map(orientT).toArray
-  val bundledCablePrecomputed = (0 until 48)
-    .map((orient: Int) => {
-      val side = orient % 24 >> 2
-      val r = orient & 3
-      val reflect = orient >= 24
-      val rotate = (r + WireModelGen.reorientSide(side)) % 4 >= 2
-
-      var t: Transformation = new RedundantTransformation
-      if (reflect) t = t.`with`(new Scale(-1, 0, 1))
-      if (rotate) t = t.`with`(Rotation.quarterRotations(2))
-      t
-    })
-    .toArray
-  val redundantUVTransformation = new UVTransformationList()
 
   def registerIcons(reg: IIconRegister) {
     val baseTex = "projectred:integration/"
@@ -198,37 +231,6 @@ object ComponentStore {
     m
   }
 
-  def orientT(orient: Int) = {
-    var t = Rotation.sideOrientation(orient % 24 >> 2, orient & 3)
-    if (orient >= 24) t = new Scale(-1, 1, 1).`with`(t)
-    t.at(Vector3.center)
-  }
-
-  def dynamicT(orient: Int) =
-    if (orient == 0) new RedundantTransformation
-    else new Scale(-1, 1, 1).at(Vector3.center)
-
-  def bakeCopy(base: CCModel, orient: Int) = {
-    val m = base.copy
-    if (orient >= 24) reverseFacing(m)
-    m.apply(orientT(orient)).computeLighting(LightModel.standardLightModel)
-    m
-  }
-
-  def bakeDynamic(base: CCModel) = Array(base.copy, reverseFacing(base.copy))
-
-  private def reverseFacing(m: CCModel) = {
-    for (i <- 0 until m.verts.length by 4) {
-      val vtmp = m.verts(i + 1)
-      val ntmp = m.normals()(i + 1)
-      m.verts(i + 1) = m.verts(i + 3)
-      m.normals()(i + 1) = m.normals()(i + 3)
-      m.verts(i + 3) = vtmp
-      m.normals()(i + 3) = ntmp
-    }
-    m
-  }
-
   def generateWireModels(name: String, count: Int) = {
     val xs = Seq.newBuilder[TWireModel]
     for (i <- 0 until count) xs += generateWireModel(name + "-" + i)
@@ -248,6 +250,7 @@ object ComponentStore {
 }
 
 import mrtjp.projectred.integration.ComponentStore._
+import mrtjp.projectred.integration.ComponentModelBakery._
 
 abstract class ComponentModel {
   def renderModel(t: Transformation, orient: Int)

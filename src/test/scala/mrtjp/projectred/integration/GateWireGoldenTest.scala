@@ -1,6 +1,7 @@
 package mrtjp.projectred.integration
 
 import java.io.{ByteArrayOutputStream, DataOutputStream, File}
+import java.awt.image.BufferedImage
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.security.MessageDigest
@@ -92,16 +93,21 @@ class GateWireGoldenTest {
     (name +: digestInts(texMap) +: textures).mkString(" ")
   }
 
-  private def loadMask(name: String): Array[Colour] = {
-    val (width, height, data) = loadImageData(name)
-    assertEquals("Unexpected width for " + name, 32, width)
-    assertEquals("Unexpected height for " + name, 32, height)
-    data
+  private def loadMask(name: String): Array[Int] = {
+    val image = loadImageData(name)
+    assertEquals("Unexpected width for " + name, 32, image.getWidth)
+    assertEquals("Unexpected height for " + name, 32, image.getHeight)
+    image.getRGB(0, 0, image.getWidth, image.getHeight, null, 0, image.getWidth)
   }
 
-  private def loadImage(name: String): Array[Colour] = loadImageData(name)._3
+  private def loadImage(name: String): Array[Colour] = {
+    val image = loadImageData(name)
+    image
+      .getRGB(0, 0, image.getWidth, image.getHeight, null, 0, image.getWidth)
+      .map(new ColourARGB(_): Colour)
+  }
 
-  private def loadImageData(name: String): (Int, Int, Array[Colour]) = {
+  private def loadImageData(name: String): BufferedImage = {
     val path = GateWireGoldenTest.maskPath + name + ".png"
     val stream = getClass.getResourceAsStream(path)
     assertNotNull("Missing wire mask " + path, stream)
@@ -110,10 +116,7 @@ class GateWireGoldenTest {
       try ImageIO.read(stream)
       finally stream.close()
     assertNotNull("Invalid wire mask " + path, image)
-    val data = image
-      .getRGB(0, 0, image.getWidth, image.getHeight, null, 0, image.getWidth)
-      .map(new ColourARGB(_): Colour)
-    (image.getWidth, image.getHeight, data)
+    image
   }
 
   private def digestRectangles(rectangles: Seq[Rectangle4i]): String = digest {

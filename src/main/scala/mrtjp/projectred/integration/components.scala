@@ -237,7 +237,7 @@ object ComponentStore {
   }
 
   def generateWireModel(name: String) = {
-    val data = TextureUtils.loadTextureColours(
+    val data = TextureUtils.loadTextureData(
       new ResourceLocation(
         "projectred:textures/blocks/integration/surface/" + name + ".png"
       )
@@ -335,14 +335,14 @@ trait TWireModel extends ComponentModel {
 }
 
 object TWireModel {
-  def rectangulate(data: Array[Colour]) = {
+  def rectangulate(data: Array[Int]) = {
     val wireCorners = new Array[Boolean](1024)
 
     var y = 0
     while (y <= 30) {
       var x = 0
       while (x <= 30) {
-        if (data(y * 32 + x).rgba == -1 && !overlap(wireCorners, x, y)) {
+        if (data(y * 32 + x) == -1 && !overlap(wireCorners, x, y)) {
           if (!segment2x2(data, x, y))
             throw new RuntimeException(
               "Wire segment not 2x2 at (" + x + ", " + y + ")"
@@ -400,10 +400,10 @@ object TWireModel {
       (y - 1) * 32 + x
     )) || (y > 0 && wireCorners((y - 1) * 32 + x - 1))
 
-  def segment2x2(data: Array[Colour], x: Int, y: Int) =
-    data(y * 32 + x + 1).rgba == -1 && data(
+  def segment2x2(data: Array[Int], x: Int, y: Int) =
+    data(y * 32 + x + 1) == -1 && data(
       (y + 1) * 32 + x
-    ).rgba == -1 && data((y + 1) * 32 + x + 1).rgba == -1
+    ) == -1 && data((y + 1) * 32 + x + 1) == -1
 
   def border(wire: Rectangle4i) = {
     val border = new Rectangle4i(wire.x - 2, wire.y - 2, wire.w + 4, wire.h + 4)
@@ -452,7 +452,7 @@ object TWireModel {
   }
 }
 
-class WireModel3D(data: Array[Colour])
+class WireModel3D(data: Array[Int])
     extends SingleComponentModel(WireModel3D.generateModel(data))
     with TWireModel {
   override def getUVT =
@@ -462,7 +462,7 @@ class WireModel3D(data: Array[Colour])
 }
 
 object WireModel3D {
-  def generateModel(data: Array[Colour]) = {
+  def generateModel(data: Array[Int]) = {
     val wireRectangles = TWireModel.rectangulate(data)
     val model = CCModel.quadModel(wireRectangles.length * 40)
     var i = 0
@@ -497,7 +497,7 @@ object WireModel3D {
   }
 }
 
-class WireModel2D(data: Array[Colour]) extends ComponentModel with TWireModel {
+class WireModel2D(data: Array[Int]) extends ComponentModel with TWireModel {
   var icons: Array[TextureSpecial] = _
   private val iconIndex = WireModel2D.claimIdx()
 

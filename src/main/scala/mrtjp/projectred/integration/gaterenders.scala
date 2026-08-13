@@ -13,6 +13,7 @@ import codechicken.lib.render.{CCRenderState, TextureUtils}
 import codechicken.lib.vec.{RedundantTransformation, Transformation, Vector3}
 import mrtjp.core.color.Colors
 import mrtjp.projectred.core.TFaceOrient.flipMaskZ
+import mrtjp.projectred.core.Configurator
 import mrtjp.projectred.integration.ComponentStore._
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.item.ItemStack
@@ -44,48 +45,49 @@ private[integration] class LazyRendererSlots[A <: AnyRef](
 }
 
 object RenderGate {
-  var renderers = buildRenders()
-
-  def buildRenders() = Seq[GateRenderer[_]](
-    new RenderOR,
-    new RenderNOR,
-    new RenderNOT,
-    new RenderAND,
-    new RenderNAND,
-    new RenderXOR,
-    new RenderXNOR,
-    new RenderBuffer,
-    new RenderMultiplexer,
-    new RenderPulse,
-    new RenderRepeater,
-    new RenderRandomizer,
-    new RenderSRLatch,
-    new RenderToggleLatch,
-    new RenderTransparentLatch,
-    new RenderLightSensor,
-    new RenderRainSensor,
-    new RenderTimer,
-    new RenderSequencer,
-    new RenderCounter,
-    new RenderStateCell,
-    new RenderSynchronizer,
-    new RenderBusXcvr,
-    new RenderNullCell,
-    new RenderInvertCell,
-    new RenderBufferCell,
-    new RenderComparator,
-    new RenderANDCell,
-    new RenderBusRandomizer,
-    new RenderBusConverter,
-    new RenderBusInputPanel,
-    new RenderStackingLatch,
-    new RenderSegmentDisplay,
-    new RenderDecodingRand,
-    GateRenderer.blank // circuit gate renderer will be injected.
+  private val renderers = new LazyRendererSlots[GateRenderer[_]](
+    Array[() => GateRenderer[_]](
+      () => new RenderOR,
+      () => new RenderNOR,
+      () => new RenderNOT,
+      () => new RenderAND,
+      () => new RenderNAND,
+      () => new RenderXOR,
+      () => new RenderXNOR,
+      () => new RenderBuffer,
+      () => new RenderMultiplexer,
+      () => new RenderPulse,
+      () => new RenderRepeater,
+      () => new RenderRandomizer,
+      () => new RenderSRLatch,
+      () => new RenderToggleLatch,
+      () => new RenderTransparentLatch,
+      () => new RenderLightSensor,
+      () => new RenderRainSensor,
+      () => new RenderTimer,
+      () => new RenderSequencer,
+      () => new RenderCounter,
+      () => new RenderStateCell,
+      () => new RenderSynchronizer,
+      () => new RenderBusXcvr,
+      () => new RenderNullCell,
+      () => new RenderInvertCell,
+      () => new RenderBufferCell,
+      () => new RenderComparator,
+      () => new RenderANDCell,
+      () => new RenderBusRandomizer,
+      () => new RenderBusConverter,
+      () => new RenderBusInputPanel,
+      () => new RenderStackingLatch,
+      () => new RenderSegmentDisplay,
+      () => new RenderDecodingRand,
+      () => GateRenderer.blank // circuit gate renderer will be injected.
+    )
   )
 
   def registerIcons(reg: IIconRegister) {
-    for (r <- renderers) r.registerIcons(reg)
+    if (!Configurator.logicwires3D)
+      for (i <- 0 until renderers.length) renderers(i).registerIcons(reg)
   }
 
   def renderStatic(gate: GatePart, pos: Vector3) {
@@ -119,11 +121,8 @@ object RenderGate {
       .spawnParticles(gate, rand)
   }
 
-  def hotswap(r: GateRenderer[_], meta: Int) {
-    val ar = renderers.toArray
-    ar(meta) = r
-    renderers = ar.toSeq
-  }
+  def hotswap(r: => GateRenderer[_], meta: Int): Unit =
+    renderers.replace(meta, () => r)
 }
 
 abstract class GateRenderer[T <: GatePart] {

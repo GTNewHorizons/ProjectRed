@@ -21,7 +21,6 @@ import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.util.{IIcon, ResourceLocation}
 
 import scala.collection.JavaConversions._
-import scala.util.control.Breaks
 
 private[integration] object ComponentModelBakery {
   val orientPrecomputed = (0 until 48).map(orientT).toArray
@@ -339,46 +338,58 @@ object TWireModel {
   def rectangulate(data: Array[Colour]) = {
     val wireCorners = new Array[Boolean](1024)
 
-    for (y <- 0 to 30) for (x <- 0 to 30) Breaks.breakable {
-      if (data(y * 32 + x).rgba != -1) Breaks.break()
-      if (overlap(wireCorners, x, y)) Breaks.break()
-      if (!segment2x2(data, x, y))
-        throw new RuntimeException(
-          "Wire segment not 2x2 at (" + x + ", " + y + ")"
-        )
+    var y = 0
+    while (y <= 30) {
+      var x = 0
+      while (x <= 30) {
+        if (data(y * 32 + x).rgba == -1 && !overlap(wireCorners, x, y)) {
+          if (!segment2x2(data, x, y))
+            throw new RuntimeException(
+              "Wire segment not 2x2 at (" + x + ", " + y + ")"
+            )
 
-      wireCorners(y * 32 + x) = true
+          wireCorners(y * 32 + x) = true
+        }
+        x += 1
+      }
+      y += 1
     }
 
-    var wireRectangles = Seq.newBuilder[Rectangle4i]
-    for (i <- 0 until 1024) if (wireCorners(i)) {
-      val rect = new Rectangle4i(i % 32, i / 32, 0, 0)
-      var x = rect.x + 2
-      while (x < 30 && wireCorners(rect.y * 32 + x)) x += 2
-      rect.w = x - rect.x
+    val wireRectangles = Seq.newBuilder[Rectangle4i]
+    var i = 0
+    while (i < 1024) {
+      if (wireCorners(i)) {
+        val rect = new Rectangle4i(i % 32, i / 32, 0, 0)
+        var x = rect.x + 2
+        while (x < 30 && wireCorners(rect.y * 32 + x)) x += 2
+        rect.w = x - rect.x
 
-      var y = rect.y + 2
-      Breaks.breakable {
-        while (y < 30) {
-          var advance = true
+        y = rect.y + 2
+        var advance = true
+        while (y < 30 && advance) {
           var dx = rect.x
           while (dx < rect.x + rect.w && advance) {
             if (!wireCorners(y * 32 + dx)) advance = false
             dx += 2
           }
 
-          if (!advance) Breaks.break()
-
-          y += 2
+          if (advance) y += 2
         }
+        rect.h = y - rect.y
+
+        var dy = rect.y
+        while (dy < rect.y + rect.h) {
+          var dx = rect.x
+          while (dx < rect.x + rect.w) {
+            wireCorners(dy * 32 + dx) = false
+            dx += 2
+          }
+          dy += 2
+        }
+
+        wireRectangles += rect
       }
-      rect.h = y - rect.y
-
-      for (dy <- rect.y until rect.y + rect.h by 2)
-        for (dx <- rect.x until rect.x + rect.w by 2)
-          wireCorners(dy * 32 + dx) = false
-
-      wireRectangles += rect
+      i += 1
     }
 
     wireRectangles.result()

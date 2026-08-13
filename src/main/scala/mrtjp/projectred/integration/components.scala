@@ -56,7 +56,7 @@ private[integration] object ComponentModelBakery {
     m
   }
 
-  def bakeDynamic(base: CCModel) = Array(base.copy, reverseFacing(base.copy))
+  def bakeDynamic(base: CCModel) = Array(base, reverseFacing(base.copy))
 
   private def reverseFacing(m: CCModel) = {
     for (i <- 0 until m.verts.length by 4) {

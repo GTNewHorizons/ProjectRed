@@ -33,6 +33,7 @@ object Configurator extends ModConfig("ProjRed|Core") {
   var enchantment_fuel_efficiencty_id = 80
 
   /** Machines * */
+  var enableInductiveFurnace = true
   var enableDiamondBlockBreaker = false
 
   /** Rendering * */
@@ -149,6 +150,11 @@ object Configurator extends ModConfig("ProjRed|Core") {
     val machines = new BaseCategory(
       "Machine Settings",
       "Contains settings related to machines and devices."
+    )
+    enableInductiveFurnace = machines.put(
+      "Enable the Inductive Furnace",
+      enableInductiveFurnace,
+      "Allow the Inductive Furnace to be crafted and load its smelting recipes."
     )
     enableDiamondBlockBreaker = machines.put(
       "Enable the Diamond Block Breaker",

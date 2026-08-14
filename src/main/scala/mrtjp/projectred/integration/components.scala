@@ -486,14 +486,24 @@ object TWireModel {
 }
 
 class WireModel3D private[integration] (wireRectangles: Seq[Rectangle4i])
-    extends SingleComponentModel(WireModel3D.generateModel(wireRectangles))
+    extends ComponentModel
     with TWireModel {
   def this(data: Array[Int]) = this(TWireModel.rectangulate(data))
 
-  override def getUVT =
+  private val modelPair = WireModel3D.generateModelPair(wireRectangles)
+
+  private def getUVT =
     if (disabled) new IconTransformation(wireIcons(0))
     else if (on) new MultiIconTransformation(wireIcons(0), wireIcons(2))
     else new MultiIconTransformation(wireIcons(0), wireIcons(1))
+
+  override def renderModel(t: Transformation, orient: Int) {
+    modelPair(if (orient < 24) 0 else 1).render(
+      new TransformationList(orientPrecomputed(orient), t),
+      new UVTransformationList(redundantUVTransformation, getUVT),
+      LightModel.standardLightModel
+    )
+  }
 }
 
 object WireModel3D {
@@ -511,6 +521,12 @@ object WireModel3D {
     model.shrinkUVs(0.0005)
     model
   }
+
+  private[integration] def generateModelPair(
+      wireRectangles: Seq[Rectangle4i]
+  ) = bakeModelPair(generateModel(wireRectangles))
+
+  private[integration] def bakeModelPair(model: CCModel) = bakeDynamic(model)
 
   def generateWireSegment(model: CCModel, i: Int, rect: Rectangle4i) {
     generateWireSegment(model, i, TWireModel.border(rect), 0.01, 0)

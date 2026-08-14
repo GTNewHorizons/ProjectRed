@@ -10,7 +10,7 @@ import javax.imageio.ImageIO
 import codechicken.lib.colour.{Colour, ColourARGB}
 import codechicken.lib.render.CCModel
 import codechicken.lib.vec.Rectangle4i
-import org.junit.Assert.{assertEquals, assertNotNull, assertNotSame}
+import org.junit.Assert.{assertEquals, assertNotNull, assertNotSame, assertSame}
 import org.junit.Test
 
 import scala.io.Source
@@ -57,6 +57,16 @@ class GateWireGoldenTest {
     assertEquals(originalX, pair(0).verts(0).vec.x, 0)
   }
 
+  @Test
+  def wireModelPairOwnsGeneratedBase(): Unit = {
+    val base = WireModel3D.generateModel(GateWireTestData.loadMask("OR-0"))
+    val pair = WireModel3D.bakeModelPair(base)
+
+    assertSame(base, pair(0))
+    assertNotSame(pair(0), pair(1))
+    assertNotSame(pair(0).verts(0), pair(1).verts(0))
+  }
+
   private def characterize(name: String): String = {
     val data = GateWireTestData.loadMask(name)
     val rectangles = TWireModel.rectangulate(data)
@@ -72,8 +82,8 @@ class GateWireGoldenTest {
   }
 
   private def characterizeBaking(name: String): String = {
-    val modelPair = ComponentModelBakery.bakeDynamic(
-      WireModel3D.generateModel(GateWireTestData.loadMask(name))
+    val modelPair = WireModel3D.generateModelPair(
+      TWireModel.rectangulate(GateWireTestData.loadMask(name))
     )
     val orientedDigest = digest { out =>
       for (orient <- 0 until 48) {

@@ -490,7 +490,9 @@ class WireModel3D private[integration] (wireRectangles: Seq[Rectangle4i])
     with TWireModel {
   def this(data: Array[Int]) = this(TWireModel.rectangulate(data))
 
-  private val modelPair = WireModel3D.generateModelPair(wireRectangles)
+  private[integration] val modelPair = WireModel3D.cachedModelPair(
+    wireRectangles
+  )
 
   private def getUVT =
     if (disabled) new IconTransformation(wireIcons(0))
@@ -507,6 +509,9 @@ class WireModel3D private[integration] (wireRectangles: Seq[Rectangle4i])
 }
 
 object WireModel3D {
+  private val modelCache = scala.collection.mutable.HashMap
+    .empty[Vector[(Int, Int, Int, Int)], Array[CCModel]]
+
   def generateModel(data: Array[Int]): CCModel =
     generateModel(TWireModel.rectangulate(data))
 
@@ -525,6 +530,15 @@ object WireModel3D {
   private[integration] def generateModelPair(
       wireRectangles: Seq[Rectangle4i]
   ) = bakeModelPair(generateModel(wireRectangles))
+
+  private[integration] def cachedModelPair(
+      wireRectangles: Seq[Rectangle4i]
+  ) = {
+    val key = wireRectangles.map(r => (r.x, r.y, r.w, r.h)).toVector
+    modelCache.synchronized {
+      modelCache.getOrElseUpdate(key, generateModelPair(wireRectangles))
+    }
+  }
 
   private[integration] def bakeModelPair(model: CCModel) =
     Array(model, reflectedView(model))

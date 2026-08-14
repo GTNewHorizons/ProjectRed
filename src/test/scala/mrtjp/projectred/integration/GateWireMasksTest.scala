@@ -25,6 +25,18 @@ class GateWireMasksTest {
   }
 
   @Test
+  def builtInMasksHaveExpectedUniqueLayouts(): Unit = {
+    assertEquals(
+      97,
+      GateWireGoldenTest.maskNames
+        .map(GateWireMasks.rectangles)
+        .map(tuples)
+        .distinct
+        .size
+    )
+  }
+
+  @Test
   def builtInLayoutClosesButDoesNotReadSingleResource(): Unit = {
     val stream =
       new TrackingInputStream(Array.emptyByteArray, failOnRead = true)

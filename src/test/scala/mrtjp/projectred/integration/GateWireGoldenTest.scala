@@ -76,6 +76,20 @@ class GateWireGoldenTest {
     }
   }
 
+  @Test
+  def equivalentWireLayoutsShareOnlyGeometry(): Unit = {
+    val rectangles = GateWireMasks.rectangles("OR-0")
+    val equivalent = rectangles.map(r => new Rectangle4i(r.x, r.y, r.w, r.h))
+    val first = new WireModel3D(rectangles)
+    val second = new WireModel3D(equivalent)
+
+    assertSame(first.modelPair, second.modelPair)
+    first.on = true
+    first.disabled = true
+    assertEquals(false, second.on)
+    assertEquals(false, second.disabled)
+  }
+
   private def characterize(name: String): String = {
     val data = GateWireTestData.loadMask(name)
     val rectangles = TWireModel.rectangulate(data)

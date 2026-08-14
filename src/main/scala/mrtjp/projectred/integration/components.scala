@@ -290,13 +290,13 @@ abstract class ComponentModel {
   def registerIcons(reg: IIconRegister) {}
 }
 
-abstract class SingleComponentModel(m: CCModel, pos: Vector3 = Vector3.zero)
-    extends ComponentModel {
-  // instead of creating 48 models, only make 2 (original + flipped orientation)
-  private val modelPair = {
-    val t = pos.copy.multiply(1 / 16d).translation
-    bakeDynamic(m.copy.apply(t))
-  }
+abstract class SingleComponentModel private[integration] (
+    private[integration] val modelPair: Array[CCModel]
+) extends ComponentModel {
+  def this(m: CCModel, pos: Vector3) =
+    this(SingleComponentModel.bakeModelPair(m, pos))
+
+  def this(m: CCModel) = this(m, Vector3.zero)
 
   def extraTransformModel(orient: Int): Transformation = orientPrecomputed(
     orient
@@ -313,6 +313,13 @@ abstract class SingleComponentModel(m: CCModel, pos: Vector3 = Vector3.zero)
       new UVTransformationList(extraTransformModelUV(orient), getUVT),
       LightModel.standardLightModel
     )
+  }
+}
+
+private[integration] object SingleComponentModel {
+  def bakeModelPair(m: CCModel, pos: Vector3) = {
+    val t = pos.copy.multiply(1 / 16d).translation
+    bakeDynamic(m.copy.apply(t))
   }
 }
 
@@ -336,8 +343,13 @@ abstract class MultiComponentModel(m: Seq[CCModel], pos: Vector3 = Vector3.zero)
   }
 }
 
-abstract class OnOffModel(m: CCModel, pos: Vector3 = Vector3.zero)
-    extends SingleComponentModel(m, pos) {
+abstract class OnOffModel private[integration] (modelPair: Array[CCModel])
+    extends SingleComponentModel(modelPair) {
+  def this(m: CCModel, pos: Vector3) =
+    this(SingleComponentModel.bakeModelPair(m, pos))
+
+  def this(m: CCModel) = this(m, Vector3.zero)
+
   var on = false
 
   def getIcons: Array[IIcon]
@@ -641,7 +653,7 @@ trait TRedstoneTorchModel extends OnOffModel {
 }
 
 class RedstoneTorchModel(x: Double, z: Double, h: Int)
-    extends OnOffModel(RedstoneTorchModel.genModel(x, z, h))
+    extends OnOffModel(RedstoneTorchModel.cachedModelPair(x, z, h))
     with TRedstoneTorchModel {
   override val getLightPos = new Vector3(x, h - 1, z).multiply(1 / 16d)
 
@@ -665,6 +677,14 @@ class FlippedRSTorchModel(x: Double, z: Double)
 }
 
 object RedstoneTorchModel {
+  private val modelCache = scala.collection.mutable.HashMap
+    .empty[(Double, Double, Int), Array[CCModel]]
+
+  private[integration] def cachedModelPair(x: Double, z: Double, h: Int) =
+    modelCache.synchronized {
+      modelCache.getOrElseUpdate((x, z, h), bakeDynamic(genModel(x, z, h)))
+    }
+
   def genModel(x: Double, z: Double, h: Int) = {
     val m = CCModel.quadModel(20)
     m.verts(0) = new Vertex5(7 / 16d, 10 / 16d, 9 / 16d, 7 / 16d, 8 / 16d)

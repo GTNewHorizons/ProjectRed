@@ -43,7 +43,7 @@ class GateWireGoldenTest {
 
   @Test
   def bakedModelsDoNotShareMutableGeometry(): Unit = {
-    val base = WireModel3D.generateModel(loadMask("OR-0"))
+    val base = WireModel3D.generateModel(GateWireTestData.loadMask("OR-0"))
     val pair = ComponentModelBakery.bakeDynamic(base)
 
     assertNotSame(pair(0), pair(1))
@@ -58,7 +58,7 @@ class GateWireGoldenTest {
   }
 
   private def characterize(name: String): String = {
-    val data = loadMask(name)
+    val data = GateWireTestData.loadMask(name)
     val rectangles = TWireModel.rectangulate(data)
     val model = WireModel3D.generateModel(data)
 
@@ -73,7 +73,7 @@ class GateWireGoldenTest {
 
   private def characterizeBaking(name: String): String = {
     val modelPair = ComponentModelBakery.bakeDynamic(
-      WireModel3D.generateModel(loadMask(name))
+      WireModel3D.generateModel(GateWireTestData.loadMask(name))
     )
     val orientedDigest = digest { out =>
       for (orient <- 0 until 48) {
@@ -86,18 +86,13 @@ class GateWireGoldenTest {
   }
 
   private def characterize2D(name: String, wireData: Array[Array[Colour]]) = {
-    val texMap = TWireModel.buildTexMap(TWireModel.rectangulate(loadMask(name)))
+    val texMap = TWireModel.buildTexMap(
+      TWireModel.rectangulate(GateWireTestData.loadMask(name))
+    )
     val textures = wireData.indices.map { tex =>
       digestInts(TWireModel.buildTexture(texMap, wireData, tex))
     }
     (name +: digestInts(texMap) +: textures).mkString(" ")
-  }
-
-  private def loadMask(name: String): Array[Int] = {
-    val image = loadImageData(name)
-    assertEquals("Unexpected width for " + name, 32, image.getWidth)
-    assertEquals("Unexpected height for " + name, 32, image.getHeight)
-    image.getRGB(0, 0, image.getWidth, image.getHeight, null, 0, image.getWidth)
   }
 
   private def loadImage(name: String): Array[Colour] = {
@@ -260,4 +255,24 @@ object GateWireGoldenTest {
   ).flatMap { case (name, count) => (0 until count).map(name + "-" + _) }
 
   require(maskNames.length == 120)
+}
+
+private[integration] object GateWireTestData {
+  def loadMask(name: String): Array[Int] = {
+    val image = loadImageData(name)
+    assertEquals("Unexpected width for " + name, 32, image.getWidth)
+    assertEquals("Unexpected height for " + name, 32, image.getHeight)
+    image.getRGB(0, 0, image.getWidth, image.getHeight, null, 0, image.getWidth)
+  }
+
+  private def loadImageData(name: String): BufferedImage = {
+    val path = GateWireGoldenTest.maskPath + name + ".png"
+    val stream = getClass.getResourceAsStream(path)
+    assertNotNull("Missing wire mask " + path, stream)
+    val image =
+      try ImageIO.read(stream)
+      finally stream.close()
+    assertNotNull("Invalid wire mask " + path, image)
+    image
+  }
 }

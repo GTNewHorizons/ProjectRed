@@ -5,6 +5,9 @@
  */
 package mrtjp.projectred.integration
 
+import java.util.{List => JList}
+import javax.imageio.ImageIO
+
 import codechicken.lib.colour.Colour
 import codechicken.lib.lighting.LightModel.Light
 import codechicken.lib.lighting.{LightModel, PlanarLightModel}
@@ -17,6 +20,8 @@ import mrtjp.core.color.Colors
 import mrtjp.core.vec.{InvertX, VecLib}
 import mrtjp.projectred.core.{Configurator, RenderHalo}
 import mrtjp.projectred.transmission.{UVT, WireModelGen}
+import net.minecraft.client.Minecraft
+import net.minecraft.client.resources.{IResource, IResourceManager}
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.util.{IIcon, ResourceLocation}
 
@@ -238,14 +243,41 @@ object ComponentStore {
   }
 
   def generateWireModel(name: String) = {
-    val data = TextureUtils.loadTextureData(
-      new ResourceLocation(
-        "projectred:textures/blocks/integration/surface/" + name + ".png"
-      )
+    val rectangles = loadWireRectangles(
+      name,
+      Minecraft.getMinecraft.getResourceManager
     )
 
-    if (Configurator.logicwires3D) new WireModel3D(data)
-    else new WireModel2D(data)
+    if (Configurator.logicwires3D) new WireModel3D(rectangles)
+    else new WireModel2D(rectangles)
+  }
+
+  private[integration] def loadWireRectangles(
+      name: String,
+      resourceManager: IResourceManager
+  ): Seq[Rectangle4i] = {
+    val location = new ResourceLocation(
+      "projectred:textures/blocks/integration/surface/" + name + ".png"
+    )
+    val resources = resourceManager
+      .getAllResources(location)
+      .asInstanceOf[JList[IResource]]
+      .map(_.getInputStream)
+    try {
+      val builtIn = GateWireMasks.rectangles(name)
+      if (builtIn != null && resources.length == 1) return builtIn
+      if (resources.isEmpty)
+        throw new RuntimeException("Wire mask not found: " + location)
+
+      val image = ImageIO.read(resources.last)
+      if (image == null)
+        throw new RuntimeException("Invalid wire mask: " + location)
+      if (image.getWidth != 32 || image.getHeight != 32)
+        throw new RuntimeException(
+          "Wire mask must be 32x32: " + location + " was " + image.getWidth + "x" + image.getHeight
+        )
+      TWireModel.rectangulate(image.getRGB(0, 0, 32, 32, null, 0, 32))
+    } finally resources.foreach(_.close())
   }
 }
 
@@ -453,9 +485,11 @@ object TWireModel {
   }
 }
 
-class WireModel3D(data: Array[Int])
-    extends SingleComponentModel(WireModel3D.generateModel(data))
+class WireModel3D private[integration] (wireRectangles: Seq[Rectangle4i])
+    extends SingleComponentModel(WireModel3D.generateModel(wireRectangles))
     with TWireModel {
+  def this(data: Array[Int]) = this(TWireModel.rectangulate(data))
+
   override def getUVT =
     if (disabled) new IconTransformation(wireIcons(0))
     else if (on) new MultiIconTransformation(wireIcons(0), wireIcons(2))
@@ -463,8 +497,10 @@ class WireModel3D(data: Array[Int])
 }
 
 object WireModel3D {
-  def generateModel(data: Array[Int]) = {
-    val wireRectangles = TWireModel.rectangulate(data)
+  def generateModel(data: Array[Int]): CCModel =
+    generateModel(TWireModel.rectangulate(data))
+
+  private[integration] def generateModel(wireRectangles: Seq[Rectangle4i]) = {
     val model = CCModel.quadModel(wireRectangles.length * 40)
     var i = 0
     for (rect <- wireRectangles) {
@@ -498,7 +534,11 @@ object WireModel3D {
   }
 }
 
-class WireModel2D(data: Array[Int]) extends ComponentModel with TWireModel {
+class WireModel2D private[integration] (wireRectangles: Seq[Rectangle4i])
+    extends ComponentModel
+    with TWireModel {
+  def this(data: Array[Int]) = this(TWireModel.rectangulate(data))
+
   var icons: Array[TextureSpecial] = _
   private val iconIndex = WireModel2D.claimIdx()
 
@@ -512,7 +552,6 @@ class WireModel2D(data: Array[Int]) extends ComponentModel with TWireModel {
   }
 
   override def registerIcons(reg: IIconRegister) {
-    val wireRectangles = TWireModel.rectangulate(data)
     val texMap = TWireModel.buildTexMap(wireRectangles)
     icons = new Array[TextureSpecial](wireData.length)
     for (tex <- 0 until icons.length) {

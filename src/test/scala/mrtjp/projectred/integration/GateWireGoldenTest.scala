@@ -64,7 +64,16 @@ class GateWireGoldenTest {
 
     assertSame(base, pair(0))
     assertNotSame(pair(0), pair(1))
-    assertNotSame(pair(0).verts(0), pair(1).verts(0))
+    for (i <- pair(0).verts.indices by 4) {
+      assertSame(pair(0).verts(i), pair(1).verts(i))
+      assertSame(pair(0).verts(i + 3), pair(1).verts(i + 1))
+      assertSame(pair(0).verts(i + 2), pair(1).verts(i + 2))
+      assertSame(pair(0).verts(i + 1), pair(1).verts(i + 3))
+      assertSame(pair(0).normals()(i), pair(1).normals()(i))
+      assertSame(pair(0).normals()(i + 3), pair(1).normals()(i + 1))
+      assertSame(pair(0).normals()(i + 2), pair(1).normals()(i + 2))
+      assertSame(pair(0).normals()(i + 1), pair(1).normals()(i + 3))
+    }
   }
 
   private def characterize(name: String): String = {

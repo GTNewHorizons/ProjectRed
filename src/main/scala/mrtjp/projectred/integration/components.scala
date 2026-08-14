@@ -526,7 +526,27 @@ object WireModel3D {
       wireRectangles: Seq[Rectangle4i]
   ) = bakeModelPair(generateModel(wireRectangles))
 
-  private[integration] def bakeModelPair(model: CCModel) = bakeDynamic(model)
+  private[integration] def bakeModelPair(model: CCModel) =
+    Array(model, reflectedView(model))
+
+  private def reflectedView(model: CCModel) = {
+    val reflected = CCModel.quadModel(model.verts.length)
+    val normals = model.normals()
+    val reflectedNormals = reflected.getOrAllocate(CCRenderState.normalAttrib())
+    var i = 0
+    while (i < model.verts.length) {
+      reflected.verts(i) = model.verts(i)
+      reflected.verts(i + 1) = model.verts(i + 3)
+      reflected.verts(i + 2) = model.verts(i + 2)
+      reflected.verts(i + 3) = model.verts(i + 1)
+      reflectedNormals(i) = normals(i)
+      reflectedNormals(i + 1) = normals(i + 3)
+      reflectedNormals(i + 2) = normals(i + 2)
+      reflectedNormals(i + 3) = normals(i + 1)
+      i += 4
+    }
+    reflected
+  }
 
   def generateWireSegment(model: CCModel, i: Int, rect: Rectangle4i) {
     generateWireSegment(model, i, TWireModel.border(rect), 0.01, 0)

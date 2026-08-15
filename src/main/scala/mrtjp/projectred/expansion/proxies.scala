@@ -169,7 +169,7 @@ object ForwardClientTracker extends TClientKeyTracker {
 
 object ExpansionRecipes {
   def initRecipes() {
-    InductiveFurnaceRecipeLib.init()
+    if (Configurator.enableInductiveFurnace) InductiveFurnaceRecipeLib.init()
     initItemRecipes()
     initMachineRecipes()
     initDeviceRecipes()
@@ -235,20 +235,22 @@ object ExpansionRecipes {
 
   private def initMachineRecipes() {
     // Inductive Furnace
-    GameRegistry.addRecipe(
-      new ShapedOreRecipe(
-        new ItemStack(machine1, 1, 0),
-        "bbb",
-        "b b",
-        "iei",
-        'b': JC,
-        Blocks.brick_block,
-        'i': JC,
-        "ingotIron",
-        'e': JC,
-        "ingotElectrotineAlloy"
+    if (Configurator.enableInductiveFurnace) {
+      GameRegistry.addRecipe(
+        new ShapedOreRecipe(
+          new ItemStack(machine1, 1, 0),
+          "bbb",
+          "b b",
+          "iei",
+          'b': JC,
+          Blocks.brick_block,
+          'i': JC,
+          "ingotIron",
+          'e': JC,
+          "ingotElectrotineAlloy"
+        )
       )
-    )
+    }
 
     // Electrotine generator
     GameRegistry.addRecipe(

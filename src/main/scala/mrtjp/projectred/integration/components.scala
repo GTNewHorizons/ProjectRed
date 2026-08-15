@@ -5,6 +5,9 @@
  */
 package mrtjp.projectred.integration
 
+import java.util.{List => JList}
+import javax.imageio.ImageIO
+
 import codechicken.lib.colour.Colour
 import codechicken.lib.lighting.LightModel.Light
 import codechicken.lib.lighting.{LightModel, PlanarLightModel}
@@ -17,58 +20,109 @@ import mrtjp.core.color.Colors
 import mrtjp.core.vec.{InvertX, VecLib}
 import mrtjp.projectred.core.{Configurator, RenderHalo}
 import mrtjp.projectred.transmission.{UVT, WireModelGen}
+import net.minecraft.client.Minecraft
+import net.minecraft.client.resources.{IResource, IResourceManager}
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.util.{IIcon, ResourceLocation}
 
 import scala.collection.JavaConversions._
-import scala.util.control.Breaks
+
+private[integration] object ComponentModelBakery {
+  val orientPrecomputed = (0 until 48).map(orientT).toArray
+  val bundledCablePrecomputed = (0 until 48)
+    .map((orient: Int) => {
+      val side = orient % 24 >> 2
+      val r = orient & 3
+      val reflect = orient >= 24
+      val rotate = (r + WireModelGen.reorientSide(side)) % 4 >= 2
+
+      var t: Transformation = new RedundantTransformation
+      if (reflect) t = t.`with`(new Scale(-1, 0, 1))
+      if (rotate) t = t.`with`(Rotation.quarterRotations(2))
+      t
+    })
+    .toArray
+  val redundantUVTransformation = new UVTransformationList()
+
+  def orientT(orient: Int) = {
+    var t = Rotation.sideOrientation(orient % 24 >> 2, orient & 3)
+    if (orient >= 24) t = new Scale(-1, 1, 1).`with`(t)
+    t.at(Vector3.center)
+  }
+
+  def dynamicT(orient: Int) =
+    if (orient == 0) new RedundantTransformation
+    else new Scale(-1, 1, 1).at(Vector3.center)
+
+  def bakeCopy(base: CCModel, orient: Int) = {
+    val m = base.copy
+    if (orient >= 24) reverseFacing(m)
+    m.apply(orientT(orient)).computeLighting(LightModel.standardLightModel)
+    m
+  }
+
+  def bakeDynamic(base: CCModel) = Array(base, reverseFacing(base.copy))
+
+  private def reverseFacing(m: CCModel) = {
+    for (i <- 0 until m.verts.length by 4) {
+      val vtmp = m.verts(i + 1)
+      val ntmp = m.normals()(i + 1)
+      m.verts(i + 1) = m.verts(i + 3)
+      m.normals()(i + 1) = m.normals()(i + 3)
+      m.verts(i + 3) = vtmp
+      m.normals()(i + 3) = ntmp
+    }
+    m
+  }
+}
 
 object ComponentStore {
-  val base = loadBase("base")
-  val lightChip = loadModel("chip")
-  val leverOn = loadModel("leveron")
-  val leverOff = loadModel("leveroff")
-  val solarArray = loadModel("solar")
-  val rainSensor = loadModel("rainsensor")
-  val pointer = loadModel("pointer")
-  val busXcvr = loadModel("array/busxcvr")
-  val lightPanel1 = loadModel("array/lightpanel1")
-  val lightPanel2 = loadModel("array/lightpanel2")
-  val busRand = loadModel("array/busrand")
-  val busConv = loadModel("array/busconv")
-  val signalPanel = loadModel("array/signalpanel")
-  val busInput = loadModel("array/businput")
-  val icBundled = loadModel("array/icbundled")
+  lazy val base = loadBase("base")
+  lazy val lightChip = loadModel("chip")
+  lazy val leverOn = loadModel("leveron")
+  lazy val leverOff = loadModel("leveroff")
+  lazy val solarArray = loadModel("solar")
+  lazy val rainSensor = loadModel("rainsensor")
+  lazy val pointer = loadModel("pointer")
+  lazy val busXcvr = loadModel("array/busxcvr")
+  lazy val lightPanel1 = loadModel("array/lightpanel1")
+  lazy val lightPanel2 = loadModel("array/lightpanel2")
+  lazy val busRand = loadModel("array/busrand")
+  lazy val busConv = loadModel("array/busconv")
+  lazy val signalPanel = loadModel("array/signalpanel")
+  lazy val busInput = loadModel("array/businput")
+  lazy val icBundled = loadModel("array/icbundled")
 
-  val nullCellWireBottom =
+  lazy val nullCellWireBottom =
     loadModel("array/nullcellbottomwire").apply(new Translation(0.5, 0, 0.5))
-  val nullCellWireTop =
+  lazy val nullCellWireTop =
     loadModel("array/nullcelltopwire").apply(new Translation(0.5, 0, 0.5))
-  val nullCellBase = loadBase("array/nullcellbase")
-  val extendedCellWireBottom = loadModel("array/extendedcellbottomwire").apply(
-    new Translation(0.5, 0, 0.5)
-  )
-  val extendedCellWireTop =
+  lazy val nullCellBase = loadBase("array/nullcellbase")
+  lazy val extendedCellWireBottom =
+    loadModel("array/extendedcellbottomwire").apply(
+      new Translation(0.5, 0, 0.5)
+    )
+  lazy val extendedCellWireTop =
     loadModel("array/extendedcelltopwire").apply(new Translation(0.5, 0, 0.5))
-  val extendedCellBase = loadBase("array/extendedcellbase")
-  val cellWireSide =
+  lazy val extendedCellBase = loadBase("array/extendedcellbase")
+  lazy val cellWireSide =
     loadModel("array/cellsidewire").apply(new Translation(0.5, 0, 0.5))
-  val cellFrame =
+  lazy val cellFrame =
     loadModel("array/cellstand").apply(new Translation(0.5, 0, 0.5))
-  val cellPlate =
+  lazy val cellPlate =
     loadModel("array/cellplate").apply(new Translation(0.5, 0, 0.5))
 
-  val stackLatchWireBottom =
+  lazy val stackLatchWireBottom =
     loadModel("array/stacklatchwire").apply(new Translation(0.5, 0, 0.5))
-  val stackStand = loadModel("array/latchstand")
+  lazy val stackStand = loadModel("array/latchstand")
 
-  val sevenSeg = loadCorrectedModels("array/7seg")
-  val sixteenSeg = loadCorrectedModels("array/16seg")
-  val segbus = loadModel("array/segbus")
+  lazy val sevenSeg = loadCorrectedModels("array/7seg")
+  lazy val sixteenSeg = loadCorrectedModels("array/16seg")
+  lazy val segbus = loadModel("array/segbus")
 
-  val icChip = loadCorrectedModel("icchip")
-  val icGlass = loadCorrectedModel("icglass")
-  val icHousing = loadCorrectedModel("ichousing")
+  lazy val icChip = loadCorrectedModel("icchip")
+  lazy val icGlass = loadCorrectedModel("icglass")
+  lazy val icHousing = loadCorrectedModel("ichousing")
 
   var baseIcon: IIcon = null
   var wireIcons: Array[IIcon] = new Array[IIcon](3)
@@ -92,22 +146,6 @@ object ComponentStore {
   var icChipIcon: IIcon = null
   var icChipIconOff: IIcon = null
   var icHousingIcon: IIcon = null
-
-  val orientPrecomputed = (0 until 48).map(orientT).toArray
-  val bundledCablePrecomputed = (0 until 48)
-    .map((orient: Int) => {
-      val side = orient % 24 >> 2
-      val r = orient & 3
-      val reflect = orient >= 24
-      val rotate = (r + WireModelGen.reorientSide(side)) % 4 >= 2
-
-      var t: Transformation = new RedundantTransformation
-      if (reflect) t = t.`with`(new Scale(-1, 0, 1))
-      if (rotate) t = t.`with`(Rotation.quarterRotations(2))
-      t
-    })
-    .toArray
-  val redundantUVTransformation = new UVTransformationList()
 
   def registerIcons(reg: IIconRegister) {
     val baseTex = "projectred:integration/"
@@ -198,37 +236,6 @@ object ComponentStore {
     m
   }
 
-  def orientT(orient: Int) = {
-    var t = Rotation.sideOrientation(orient % 24 >> 2, orient & 3)
-    if (orient >= 24) t = new Scale(-1, 1, 1).`with`(t)
-    t.at(Vector3.center)
-  }
-
-  def dynamicT(orient: Int) =
-    if (orient == 0) new RedundantTransformation
-    else new Scale(-1, 1, 1).at(Vector3.center)
-
-  def bakeCopy(base: CCModel, orient: Int) = {
-    val m = base.copy
-    if (orient >= 24) reverseFacing(m)
-    m.apply(orientT(orient)).computeLighting(LightModel.standardLightModel)
-    m
-  }
-
-  def bakeDynamic(base: CCModel) = Array(base.copy, reverseFacing(base.copy))
-
-  private def reverseFacing(m: CCModel) = {
-    for (i <- 0 until m.verts.length by 4) {
-      val vtmp = m.verts(i + 1)
-      val ntmp = m.normals()(i + 1)
-      m.verts(i + 1) = m.verts(i + 3)
-      m.normals()(i + 1) = m.normals()(i + 3)
-      m.verts(i + 3) = vtmp
-      m.normals()(i + 3) = ntmp
-    }
-    m
-  }
-
   def generateWireModels(name: String, count: Int) = {
     val xs = Seq.newBuilder[TWireModel]
     for (i <- 0 until count) xs += generateWireModel(name + "-" + i)
@@ -236,18 +243,46 @@ object ComponentStore {
   }
 
   def generateWireModel(name: String) = {
-    val data = TextureUtils.loadTextureColours(
-      new ResourceLocation(
-        "projectred:textures/blocks/integration/surface/" + name + ".png"
-      )
+    val rectangles = loadWireRectangles(
+      name,
+      Minecraft.getMinecraft.getResourceManager
     )
 
-    if (Configurator.logicwires3D) new WireModel3D(data)
-    else new WireModel2D(data)
+    if (Configurator.logicwires3D) new WireModel3D(rectangles)
+    else new WireModel2D(rectangles)
+  }
+
+  private[integration] def loadWireRectangles(
+      name: String,
+      resourceManager: IResourceManager
+  ): Seq[Rectangle4i] = {
+    val location = new ResourceLocation(
+      "projectred:textures/blocks/integration/surface/" + name + ".png"
+    )
+    val resources = resourceManager
+      .getAllResources(location)
+      .asInstanceOf[JList[IResource]]
+      .map(_.getInputStream)
+    try {
+      val builtIn = GateWireMasks.rectangles(name)
+      if (builtIn != null && resources.length == 1) return builtIn
+      if (resources.isEmpty)
+        throw new RuntimeException("Wire mask not found: " + location)
+
+      val image = ImageIO.read(resources.last)
+      if (image == null)
+        throw new RuntimeException("Invalid wire mask: " + location)
+      if (image.getWidth != 32 || image.getHeight != 32)
+        throw new RuntimeException(
+          "Wire mask must be 32x32: " + location + " was " + image.getWidth + "x" + image.getHeight
+        )
+      TWireModel.rectangulate(image.getRGB(0, 0, 32, 32, null, 0, 32))
+    } finally resources.foreach(_.close())
   }
 }
 
 import mrtjp.projectred.integration.ComponentStore._
+import mrtjp.projectred.integration.ComponentModelBakery._
 
 abstract class ComponentModel {
   def renderModel(t: Transformation, orient: Int)
@@ -255,13 +290,13 @@ abstract class ComponentModel {
   def registerIcons(reg: IIconRegister) {}
 }
 
-abstract class SingleComponentModel(m: CCModel, pos: Vector3 = Vector3.zero)
-    extends ComponentModel {
-  // instead of creating 48 models, only make 2 (original + flipped orientation)
-  private val modelPair = {
-    val t = pos.copy.multiply(1 / 16d).translation
-    bakeDynamic(m.copy.apply(t))
-  }
+abstract class SingleComponentModel private[integration] (
+    private[integration] val modelPair: Array[CCModel]
+) extends ComponentModel {
+  def this(m: CCModel, pos: Vector3) =
+    this(SingleComponentModel.bakeModelPair(m, pos))
+
+  def this(m: CCModel) = this(m, Vector3.zero)
 
   def extraTransformModel(orient: Int): Transformation = orientPrecomputed(
     orient
@@ -278,6 +313,13 @@ abstract class SingleComponentModel(m: CCModel, pos: Vector3 = Vector3.zero)
       new UVTransformationList(extraTransformModelUV(orient), getUVT),
       LightModel.standardLightModel
     )
+  }
+}
+
+private[integration] object SingleComponentModel {
+  def bakeModelPair(m: CCModel, pos: Vector3) = {
+    val t = pos.copy.multiply(1 / 16d).translation
+    bakeDynamic(m.copy.apply(t))
   }
 }
 
@@ -301,8 +343,13 @@ abstract class MultiComponentModel(m: Seq[CCModel], pos: Vector3 = Vector3.zero)
   }
 }
 
-abstract class OnOffModel(m: CCModel, pos: Vector3 = Vector3.zero)
-    extends SingleComponentModel(m, pos) {
+abstract class OnOffModel private[integration] (modelPair: Array[CCModel])
+    extends SingleComponentModel(modelPair) {
+  def this(m: CCModel, pos: Vector3) =
+    this(SingleComponentModel.bakeModelPair(m, pos))
+
+  def this(m: CCModel) = this(m, Vector3.zero)
+
   var on = false
 
   def getIcons: Array[IIcon]
@@ -333,49 +380,61 @@ trait TWireModel extends ComponentModel {
 }
 
 object TWireModel {
-  def rectangulate(data: Array[Colour]) = {
+  def rectangulate(data: Array[Int]) = {
     val wireCorners = new Array[Boolean](1024)
 
-    for (y <- 0 to 30) for (x <- 0 to 30) Breaks.breakable {
-      if (data(y * 32 + x).rgba != -1) Breaks.break()
-      if (overlap(wireCorners, x, y)) Breaks.break()
-      if (!segment2x2(data, x, y))
-        throw new RuntimeException(
-          "Wire segment not 2x2 at (" + x + ", " + y + ")"
-        )
+    var y = 0
+    while (y <= 30) {
+      var x = 0
+      while (x <= 30) {
+        if (data(y * 32 + x) == -1 && !overlap(wireCorners, x, y)) {
+          if (!segment2x2(data, x, y))
+            throw new RuntimeException(
+              "Wire segment not 2x2 at (" + x + ", " + y + ")"
+            )
 
-      wireCorners(y * 32 + x) = true
+          wireCorners(y * 32 + x) = true
+        }
+        x += 1
+      }
+      y += 1
     }
 
-    var wireRectangles = Seq.newBuilder[Rectangle4i]
-    for (i <- 0 until 1024) if (wireCorners(i)) {
-      val rect = new Rectangle4i(i % 32, i / 32, 0, 0)
-      var x = rect.x + 2
-      while (x < 30 && wireCorners(rect.y * 32 + x)) x += 2
-      rect.w = x - rect.x
+    val wireRectangles = Seq.newBuilder[Rectangle4i]
+    var i = 0
+    while (i < 1024) {
+      if (wireCorners(i)) {
+        val rect = new Rectangle4i(i % 32, i / 32, 0, 0)
+        var x = rect.x + 2
+        while (x < 30 && wireCorners(rect.y * 32 + x)) x += 2
+        rect.w = x - rect.x
 
-      var y = rect.y + 2
-      Breaks.breakable {
-        while (y < 30) {
-          var advance = true
+        y = rect.y + 2
+        var advance = true
+        while (y < 30 && advance) {
           var dx = rect.x
           while (dx < rect.x + rect.w && advance) {
             if (!wireCorners(y * 32 + dx)) advance = false
             dx += 2
           }
 
-          if (!advance) Breaks.break()
-
-          y += 2
+          if (advance) y += 2
         }
+        rect.h = y - rect.y
+
+        var dy = rect.y
+        while (dy < rect.y + rect.h) {
+          var dx = rect.x
+          while (dx < rect.x + rect.w) {
+            wireCorners(dy * 32 + dx) = false
+            dx += 2
+          }
+          dy += 2
+        }
+
+        wireRectangles += rect
       }
-      rect.h = y - rect.y
-
-      for (dy <- rect.y until rect.y + rect.h by 2)
-        for (dx <- rect.x until rect.x + rect.w by 2)
-          wireCorners(dy * 32 + dx) = false
-
-      wireRectangles += rect
+      i += 1
     }
 
     wireRectangles.result()
@@ -386,10 +445,10 @@ object TWireModel {
       (y - 1) * 32 + x
     )) || (y > 0 && wireCorners((y - 1) * 32 + x - 1))
 
-  def segment2x2(data: Array[Colour], x: Int, y: Int) =
-    data(y * 32 + x + 1).rgba == -1 && data(
+  def segment2x2(data: Array[Int], x: Int, y: Int) =
+    data(y * 32 + x + 1) == -1 && data(
       (y + 1) * 32 + x
-    ).rgba == -1 && data((y + 1) * 32 + x + 1).rgba == -1
+    ) == -1 && data((y + 1) * 32 + x + 1) == -1
 
   def border(wire: Rectangle4i) = {
     val border = new Rectangle4i(wire.x - 2, wire.y - 2, wire.w + 4, wire.h + 4)
@@ -399,20 +458,76 @@ object TWireModel {
     if (border.y + border.h >= 32) border.h -= border.y + border.h - 32
     border
   }
+
+  private[integration] def buildTexMap(wireRectangles: Seq[Rectangle4i]) = {
+    val texMap = new Array[Int](1024)
+    for (rect <- wireRectangles) {
+      fillMask(texMap, rect, 2)
+      fillMask(texMap, border(rect), 1)
+    }
+    texMap
+  }
+
+  private[integration] def buildTexture(
+      texMap: Array[Int],
+      wireData: Array[Array[Colour]],
+      tex: Int
+  ) = {
+    val pSize = Math.sqrt(wireData(0).length).asInstanceOf[Int]
+    val size = Math.max(32, pSize)
+    val relM = size / 32
+    val relP = size / pSize
+    val imageData = new Array[Int](size * size)
+
+    for (i <- 0 until imageData.length) {
+      val x = i % size
+      val y = i / size
+      val t = texMap(y / relM * 32 + x / relM)
+      if (t != 0)
+        imageData(i) =
+          wireData(if (t == 1) 0 else tex)(y / relP * pSize + x / relP).argb()
+    }
+    imageData
+  }
+
+  private def fillMask(map: Array[Int], r: Rectangle4i, v: Int) {
+    for (i <- r.x until r.x + r.w)
+      for (j <- r.y until r.y + r.h)
+        if (map(j * 32 + i) < v) map(j * 32 + i) = v
+  }
 }
 
-class WireModel3D(data: Array[Colour])
-    extends SingleComponentModel(WireModel3D.generateModel(data))
+class WireModel3D private[integration] (wireRectangles: Seq[Rectangle4i])
+    extends ComponentModel
     with TWireModel {
-  override def getUVT =
+  def this(data: Array[Int]) = this(TWireModel.rectangulate(data))
+
+  private[integration] val modelPair = WireModel3D.cachedModelPair(
+    wireRectangles
+  )
+
+  private def getUVT =
     if (disabled) new IconTransformation(wireIcons(0))
     else if (on) new MultiIconTransformation(wireIcons(0), wireIcons(2))
     else new MultiIconTransformation(wireIcons(0), wireIcons(1))
+
+  override def renderModel(t: Transformation, orient: Int) {
+    modelPair(if (orient < 24) 0 else 1).render(
+      new TransformationList(orientPrecomputed(orient), t),
+      new UVTransformationList(redundantUVTransformation, getUVT),
+      LightModel.standardLightModel
+    )
+  }
 }
 
 object WireModel3D {
-  def generateModel(data: Array[Colour]) = {
-    val wireRectangles = TWireModel.rectangulate(data)
+  private val modelCache = scala.collection.mutable.HashMap
+    .empty[Vector[(Int, Int, Int, Int)], Array[CCModel]]
+
+  def generateModel(data: Array[Int]): CCModel =
+    generateModel(TWireModel.rectangulate(data))
+
+  private[integration] def generateModel(wireRectangles: Seq[Rectangle4i]) = {
     val model = CCModel.quadModel(wireRectangles.length * 40)
     var i = 0
     for (rect <- wireRectangles) {
@@ -422,6 +537,41 @@ object WireModel3D {
     model.computeNormals()
     model.shrinkUVs(0.0005)
     model
+  }
+
+  private[integration] def generateModelPair(
+      wireRectangles: Seq[Rectangle4i]
+  ) = bakeModelPair(generateModel(wireRectangles))
+
+  private[integration] def cachedModelPair(
+      wireRectangles: Seq[Rectangle4i]
+  ) = {
+    val key = wireRectangles.map(r => (r.x, r.y, r.w, r.h)).toVector
+    modelCache.synchronized {
+      modelCache.getOrElseUpdate(key, generateModelPair(wireRectangles))
+    }
+  }
+
+  private[integration] def bakeModelPair(model: CCModel) =
+    Array(model, reflectedView(model))
+
+  private def reflectedView(model: CCModel) = {
+    val reflected = CCModel.quadModel(model.verts.length)
+    val normals = model.normals()
+    val reflectedNormals = reflected.getOrAllocate(CCRenderState.normalAttrib())
+    var i = 0
+    while (i < model.verts.length) {
+      reflected.verts(i) = model.verts(i)
+      reflected.verts(i + 1) = model.verts(i + 3)
+      reflected.verts(i + 2) = model.verts(i + 2)
+      reflected.verts(i + 3) = model.verts(i + 1)
+      reflectedNormals(i) = normals(i)
+      reflectedNormals(i + 1) = normals(i + 3)
+      reflectedNormals(i + 2) = normals(i + 2)
+      reflectedNormals(i + 3) = normals(i + 1)
+      i += 4
+    }
+    reflected
   }
 
   def generateWireSegment(model: CCModel, i: Int, rect: Rectangle4i) {
@@ -446,7 +596,11 @@ object WireModel3D {
   }
 }
 
-class WireModel2D(data: Array[Colour]) extends ComponentModel with TWireModel {
+class WireModel2D private[integration] (wireRectangles: Seq[Rectangle4i])
+    extends ComponentModel
+    with TWireModel {
+  def this(data: Array[Int]) = this(TWireModel.rectangulate(data))
+
   var icons: Array[TextureSpecial] = _
   private val iconIndex = WireModel2D.claimIdx()
 
@@ -460,43 +614,21 @@ class WireModel2D(data: Array[Colour]) extends ComponentModel with TWireModel {
   }
 
   override def registerIcons(reg: IIconRegister) {
-    val wireRectangles = TWireModel.rectangulate(data)
+    val texMap = TWireModel.buildTexMap(wireRectangles)
     icons = new Array[TextureSpecial](wireData.length)
     for (tex <- 0 until icons.length) {
-      val texMap = new Array[Int](1024)
-      for (rect <- wireRectangles) {
-        fillMask(texMap, rect, 2)
-        fillMask(texMap, TWireModel.border(rect), 1)
-      }
-
-      val pSize = Math.sqrt(wireData(0).length).asInstanceOf[Int]
-      val size = Math.max(32, pSize)
-      val relM = size / 32
-      val relP = size / pSize
-
-      val imageData = new Array[Int](size * size)
-      for (i <- 0 until imageData.length) {
-        val x = i % size
-        val y = i / size
-        val t = texMap(y / relM * 32 + x / relM)
-        if (t != 0)
-          imageData(i) =
-            wireData(if (t == 1) 0 else tex)(y / relP * pSize + x / relP).argb()
-      }
-
       icons(tex) = TextureUtils
         .getTextureSpecial(
           reg,
           "projectred:integration/wire2d_" + iconIndex + "_" + tex
         )
-        .addTexture(new TextureDataHolder(imageData, size))
+        .addTexture(
+          new TextureDataHolder(
+            TWireModel.buildTexture(texMap, wireData, tex),
+            Math.max(32, Math.sqrt(wireData(0).length).asInstanceOf[Int])
+          )
+        )
     }
-  }
-
-  def fillMask(map: Array[Int], r: Rectangle4i, v: Int) {
-    for (i <- r.x until r.x + r.w)
-      for (j <- r.y until r.y + r.h)
-        if (map(j * 32 + i) < v) map(j * 32 + i) = v
   }
 }
 
@@ -521,7 +653,7 @@ trait TRedstoneTorchModel extends OnOffModel {
 }
 
 class RedstoneTorchModel(x: Double, z: Double, h: Int)
-    extends OnOffModel(RedstoneTorchModel.genModel(x, z, h))
+    extends OnOffModel(RedstoneTorchModel.cachedModelPair(x, z, h))
     with TRedstoneTorchModel {
   override val getLightPos = new Vector3(x, h - 1, z).multiply(1 / 16d)
 
@@ -545,6 +677,14 @@ class FlippedRSTorchModel(x: Double, z: Double)
 }
 
 object RedstoneTorchModel {
+  private val modelCache = scala.collection.mutable.HashMap
+    .empty[(Double, Double, Int), Array[CCModel]]
+
+  private[integration] def cachedModelPair(x: Double, z: Double, h: Int) =
+    modelCache.synchronized {
+      modelCache.getOrElseUpdate((x, z, h), bakeDynamic(genModel(x, z, h)))
+    }
+
   def genModel(x: Double, z: Double, h: Int) = {
     val m = CCModel.quadModel(20)
     m.verts(0) = new Vertex5(7 / 16d, 10 / 16d, 9 / 16d, 7 / 16d, 8 / 16d)

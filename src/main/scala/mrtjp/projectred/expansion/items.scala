@@ -256,16 +256,14 @@ class ItemPlanRenderer extends IItemRenderer {
       item: ItemStack,
       `type`: IItemRenderer.ItemRenderType
   ): Boolean = {
+    if (this.recursive) return false
+    if (`type` ne IItemRenderer.ItemRenderType.INVENTORY) return false
+
     val isShiftHeld =
       Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(
         Keyboard.KEY_RSHIFT
       )
-    if (
-      !this.recursive && (`type` eq IItemRenderer.ItemRenderType.INVENTORY) && isShiftHeld
-    ) {
-      if (ItemPlan.hasRecipeInside(item)) return true
-    }
-    false
+    isShiftHeld && ItemPlan.hasRecipeInside(item)
   }
 
   override def shouldUseRenderHelper(

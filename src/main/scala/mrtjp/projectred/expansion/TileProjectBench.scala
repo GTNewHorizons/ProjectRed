@@ -39,26 +39,68 @@ import net.minecraftforge.oredict.{ShapedOreRecipe, ShapelessOreRecipe}
 
 import scala.collection.JavaConversions._
 
+/** Slot layout for the project bench, in one place so the container, the tile
+  * and the crafting slot cannot drift apart.
+  *
+  * Tile inventory (28 slots) and container slots 0..27 happen to use the same
+  * indices; the container adds the output slot and the player inventory on top.
+  */
+object ProjectBenchSlots {
+
+  /** Crafting grid. */
+  final val GridStart = 0
+  final val GridEnd = 9 // exclusive
+  final val GridSize = GridEnd - GridStart
+
+  /** Ingredient storage. */
+  final val StorageStart = 9
+  final val StorageEnd = 27 // exclusive
+  final val StorageSize = StorageEnd - StorageStart
+
+  /** Plan slot. */
+  final val PlanSlot = 27
+
+  /** Container-only slots; the tile inventory has no result slot of its own. */
+  final val OutputSlot = 28
+  final val PlayerInvStart = 29
+  final val PlayerInvEnd = 65 // exclusive
+
+  /** Order in which tile slots are copied into the "pool" array that
+    * [[SlotProjectCrafting.searchFor]] consumes from: ingredient storage first,
+    * then the crafting grid. Pool index k maps to tile slot PoolOrder(k), which
+    * is what makes the write-back the exact inverse of the snapshot.
+    *
+    * Treat as immutable.
+    */
+  final val PoolOrder: Array[Int] =
+    ((StorageStart until StorageEnd) ++ (GridStart until GridEnd)).toArray
+
+  /** Index at which the crafting grid section of a pool array begins. */
+  final val GridOffset = StorageSize
+}
+
 class TileProjectBench
     extends TileMachine
     with TInventory
     with ISidedInventory
     with TGuiMachine {
+  import ProjectBenchSlots._
+
   val invCrafting = new InventoryCrafting(new NodeContainer, 3, 3)
   val invResult = new InventoryCraftResult
 
   var isPlanRecipe = false
   var currentRecipe: IRecipe = null
-  var currentInputs = new Array[ItemStack](9)
+  var currentInputs = new Array[ItemStack](GridSize)
 
   private var recipeNeedsUpdate = true
 
-  override def save(tag: NBTTagCompound) {
+  override def save(tag: NBTTagCompound): Unit = {
     super.save(tag)
     saveInv(tag)
   }
 
-  override def load(tag: NBTTagCompound) {
+  override def load(tag: NBTTagCompound): Unit = {
     super.load(tag)
     loadInv(tag)
   }
@@ -69,11 +111,11 @@ class TileProjectBench
     case _ => super.read(in, key)
   }
 
-  def sendWriteButtonAction() {
+  def sendWriteButtonAction(): Unit = {
     writeStream(1).sendToServer()
   }
 
-  def sendClearGridAction(id: Int) {
+  def sendClearGridAction(id: Int): Unit = {
     writeStream(2).writeInt(id).sendToServer()
   }
 
@@ -82,45 +124,57 @@ class TileProjectBench
   override def doesRotate = false
   override def doesOrient = false
 
-  override def size = 28 // 0-8 crafting, 9-26 ingredients, 27 plan, 28 result
+  // 0-8 crafting grid, 9-26 ingredient storage, 27 plan.
+  // The crafting result is not part of this inventory; it lives in invResult.
+  override def size = 28
   override def name = "project_bench"
 
   override def canExtractItem(slot: Int, item: ItemStack, side: Int) =
-    9 until 27 contains slot
+    (StorageStart until StorageEnd).contains(slot)
   override def canInsertItem(slot: Int, item: ItemStack, side: Int) =
-    9 until 27 contains slot
-  override def getAccessibleSlotsFromSide(side: Int) = 9 until 27 toArray
+    (StorageStart until StorageEnd).contains(slot)
+  override def getAccessibleSlotsFromSide(side: Int) =
+    (StorageStart until StorageEnd).toArray
 
-  override def update() { updateRecipeIfNeeded() }
-  override def updateClient() { updateRecipeIfNeeded() }
+  override def update(): Unit = { updateRecipeIfNeeded() }
+  override def updateClient(): Unit = { updateRecipeIfNeeded() }
 
-  def updateRecipeIfNeeded() {
+  def updateRecipeIfNeeded(): Unit = {
     if (!recipeNeedsUpdate) return
+    updateRecipeNow()
+  }
+
+  /** Recompute the recipe immediately and clear the pending flag, so callers
+    * that have just rewritten the inventory do not leave a redundant refresh
+    * queued for the next tick.
+    */
+  def updateRecipeNow(): Unit = {
     recipeNeedsUpdate = false
     updateRecipe()
   }
 
-  def updateRecipe() {
+  def updateRecipe(): Unit = {
     isPlanRecipe = false
     currentRecipe = null
     currentInputs.transform(_ => null)
     invResult.setInventorySlotContents(0, null)
 
-    if ((0 until 9).exists(getStackInSlot(_) != null)) {
-      for (i <- 0 until 9)
+    if ((GridStart until GridEnd).exists(getStackInSlot(_) != null)) {
+      for (i <- GridStart until GridEnd)
         invCrafting.setInventorySlotContents(i, getStackInSlot(i))
       matchAndSetRecipe()
     } else {
-      val plan = getStackInSlot(27)
+      val plan = getStackInSlot(PlanSlot)
       if (plan != null && ItemPlan.hasRecipeInside(plan)) {
         val inputs = ItemPlan.loadPlanInputs(plan)
-        for (i <- 0 until 9) invCrafting.setInventorySlotContents(i, inputs(i))
+        for (i <- GridStart until GridEnd)
+          invCrafting.setInventorySlotContents(i, inputs(i))
         matchAndSetRecipe()
         if (currentRecipe != null) isPlanRecipe = true
       }
     }
 
-    def matchAndSetRecipe() {
+    def matchAndSetRecipe(): Unit = {
       val recipes =
         CraftingManager.getInstance().getRecipeList.asInstanceOf[JList[IRecipe]]
       currentRecipe = recipes.find(_.matches(invCrafting, world)).orNull
@@ -129,7 +183,7 @@ class TileProjectBench
           0,
           currentRecipe.getCraftingResult(invCrafting)
         )
-        for (i <- 0 until 9)
+        for (i <- GridStart until GridEnd)
           currentInputs(i) = {
             val s = invCrafting.getStackInSlot(i)
             if (s != null) s.copy else null
@@ -138,22 +192,28 @@ class TileProjectBench
     }
   }
 
-  def writePlan() {
+  def writePlan(): Unit = {
     if (currentRecipe != null && !isPlanRecipe) {
       val out = invResult.getStackInSlot(0)
       if (out != null) {
-        val stack = getStackInSlot(27)
+        val stack = getStackInSlot(PlanSlot)
         if (stack != null)
-          ItemPlan.savePlan(stack, (0 until 9).map(getStackInSlot).toArray, out)
+          ItemPlan.savePlan(
+            stack,
+            (GridStart until GridEnd).map(getStackInSlot).toArray,
+            out
+          )
       }
     }
   }
 
-  def clearGrid(id: Int) {
+  def clearGrid(id: Int): Unit = {
     world.getEntityByID(id) match {
       case p: EntityPlayer =>
         p.openContainer match {
-          case c: ContainerProjectBench =>
+          // The entity id comes from the client, so verify the container the
+          // sender actually has open belongs to this bench.
+          case c: ContainerProjectBench if c.tile eq this =>
             c.transferAllFromGrid()
           case _ =>
         }
@@ -161,17 +221,17 @@ class TileProjectBench
     }
   }
 
-  override def markDirty() {
+  override def markDirty(): Unit = {
     super.markDirty()
     recipeNeedsUpdate = true
   }
 
-  override def onBlockRemoval() {
+  override def onBlockRemoval(): Unit = {
     super.onBlockRemoval()
     dropInvContents(world, x, y, z)
   }
 
-  override def openGui(player: EntityPlayer) {
+  override def openGui(player: EntityPlayer): Unit = {
     GuiProjectBench.open(player, createContainer(player), _.writeCoord(x, y, z))
   }
 
@@ -187,46 +247,66 @@ class SlotProjectCrafting(
     y: Int
 ) extends SlotCrafting(player, tile.invCrafting, tile.invResult, idx, x, y)
     with TSlot3 {
+  import ProjectBenchSlots._
+
+  /** Scratch grid used to test a craft without touching tile.invCrafting.
+    * canTakeStack runs on both sides and on every slot click, so it must not
+    * mutate state the rest of the machine reads.
+    */
+  private val testGrid = new InventoryCrafting(new NodeContainer, 3, 3)
+
+  /** Copy of every slot searchFor is allowed to consume from, in PoolOrder. The
+    * copies mean a failed search costs nothing.
+    */
+  private def snapshotPool(): Array[ItemStack] = PoolOrder.map { i =>
+    val s = tile.getStackInSlot(i)
+    if (s != null) s.copy else null
+  }
+
   override def canTakeStack(player: EntityPlayer): Boolean = {
-    if (!tile.currentRecipe.matches(tile.invCrafting, tile.world)) return false
-    // copied from super for obfuscation bug
-    if (!tile.isPlanRecipe) return canRemoveDelegate()
+    if (tile.currentRecipe == null) return false
+    // canRemoveDelegate is copied from super because of an obfuscation bug
+    if (!tile.isPlanRecipe && !canRemoveDelegate()) return false
 
-    val storage = (9 until 27).map { i =>
-      val s = tile.getStackInSlot(i)
-      if (s != null) s.copy else null
-    }.toArray
-
+    // searchFor ends with recipe.matches against the grid it just filled, so
+    // this is the whole predicate. Deliberately the same pool and the same
+    // call onPickupFromSlot makes, so the two can never disagree.
     searchFor(
+      testGrid,
       player.worldObj,
       tile.currentRecipe,
       tile.currentInputs,
-      storage
+      snapshotPool()
     )
   }
 
-  override def onPickupFromSlot(player: EntityPlayer, stack: ItemStack) {
+  override def onPickupFromSlot(
+      player: EntityPlayer,
+      stack: ItemStack
+  ): Unit = {
+    if (tile.currentRecipe == null) return
 
-    val storage = ((9 until 27) ++ (0 until 9)).map { i =>
-      val s = tile.getStackInSlot(i)
-      if (s != null) s.copy else null
-    }.toArray
+    val pool = snapshotPool()
 
+    // canTakeStack runs the identical check, so this should never fail;
+    // bail out rather than hand out remainders for a craft that did not happen.
     if (
-      searchFor(
+      !searchFor(
+        tile.invCrafting,
         player.worldObj,
         tile.currentRecipe,
         tile.currentInputs,
-        storage
+        pool
       )
-    ) {
-      val orderedStorage = storage.drop(18) ++ storage.take(18)
-      for (i <- orderedStorage.indices) {
-        val stack = orderedStorage(i)
-        if (stack == null || stack.stackSize <= 0)
-          tile.setInventorySlotContents(i, null)
-        else tile.setInventorySlotContents(i, stack)
-      }
+    ) return
+
+    // Commit the consumption. PoolOrder(k) is the tile slot pool(k) came from.
+    for (k <- pool.indices) {
+      val s = pool(k)
+      tile.setInventorySlotContents(
+        PoolOrder(k),
+        if (s == null || s.stackSize <= 0) null else s
+      )
     }
 
     FMLCommonHandler
@@ -238,220 +318,266 @@ class SlotProjectCrafting(
       )
     onCrafting(stack)
 
-    for (i <- 0 until 9) {
-
-      val gridStack = tile.invCrafting.getStackInSlot(
-        i
-      ) // current real item in grid (maybe null or decreased)
+    for (i <- GridStart until GridEnd) {
+      // invCrafting holds what was actually consumed, so this is the container
+      // item of the eaten ingredient (empty bucket, bottle, tool, ...).
       val remainder = getRemaining(i, tile.invCrafting)
 
-      if (remainder != null && gridStack != null) {
-        // Case 1: No plan active AND this grid slot is now empty → put remainder back in grid
-        if (!tile.isPlanRecipe && (gridStack.isItemEqual(remainder))) {
+      if (remainder != null) {
+        // Grid recipes put the container item back where the ingredient was,
+        // but only if consuming the ingredient emptied that slot.
+        if (!tile.isPlanRecipe && tile.getStackInSlot(i) == null)
           tile.setInventorySlotContents(i, remainder)
-        }
-        // Case 2: Try to merge remainder into storage slots (9-26) or player inventory
+        // Otherwise into storage, then the player, then the floor.
         else if (
           !tryAddToStorageSlots(remainder) &&
           !player.inventory.addItemStackToInventory(remainder)
-        ) {
-          // If no space anywhere, drop it
+        )
           player.dropPlayerItemWithRandomChoice(remainder, false)
-        }
       }
     }
-    tile.updateRecipe()
 
+    tile.updateRecipeNow()
   }
 
   def tryAddToStorageSlots(stack: ItemStack): Boolean = {
-    // Try to merge into storage slots 9-26
-    for (j <- 9 until 27) {
+    // Merge into partially filled storage slots first.
+    var j = StorageStart
+    while (j < StorageEnd) {
       val slotStack = tile.getStackInSlot(j)
       if (
         slotStack != null && slotStack.isItemEqual(stack) &&
         ItemStack.areItemStackTagsEqual(slotStack, stack) &&
         slotStack.stackSize < slotStack.getMaxStackSize
       ) {
-        val space = slotStack.getMaxStackSize - slotStack.stackSize
-        val toAdd = Math.min(space, stack.stackSize)
+        val toAdd =
+          Math.min(
+            slotStack.getMaxStackSize - slotStack.stackSize,
+            stack.stackSize
+          )
         slotStack.stackSize += toAdd
         stack.stackSize -= toAdd
+        // stackSize changed in place, so nothing else marks the tile dirty.
+        tile.markDirty()
         if (stack.stackSize <= 0) return true
       }
+      j += 1
     }
 
-    // Try to place in empty storage slot
-    for (j <- 9 until 27) {
+    // Then any empty slot.
+    j = StorageStart
+    while (j < StorageEnd) {
       if (tile.getStackInSlot(j) == null) {
         tile.setInventorySlotContents(j, stack)
         return true
       }
+      j += 1
     }
 
     false
   }
 
-  def getRemaining(i: Int, invCrafting: InventoryCrafting): ItemStack = {
-    val stack = invCrafting.getStackInSlot(i)
+  def getRemaining(i: Int, inv: InventoryCrafting): ItemStack = {
+    val stack = inv.getStackInSlot(i)
+    if (stack == null) return null
 
-    if (stack != null) {
-      val item = stack.getItem
-      if (item != null && item.hasContainerItem(stack)) {
-        item.getContainerItem(stack)
-      } else null
-    } else null
+    val item = stack.getItem
+    if (item != null && item.hasContainerItem(stack))
+      item.getContainerItem(stack)
+    else null
   }
 
+  /** Tries to satisfy every ingredient of `recipe` out of `pool`, writing what
+    * it took into `target` and decrementing `pool` in place.
+    *
+    * `pool` is decremented but `target` is only meaningful if this returns
+    * true. Pass a scratch inventory as `target` to test a craft; pass
+    * tile.invCrafting to actually perform one.
+    */
   def searchFor(
+      target: InventoryCrafting,
       world: World,
       recipe: IRecipe,
       inputs: Array[ItemStack],
-      storage: Array[ItemStack]
+      pool: Array[ItemStack]
   ): Boolean = {
-    if (tile.isPlanRecipe) i = 0 else i = 17
-    for (i <- 0 until 9) {
-      val item = inputs(i)
-      if (item != null) {
-        val eatenItem = eatResource(recipe, item, storage)
-        if (eatenItem == null) return false
-        tile.invCrafting.setInventorySlotContents(i, eatenItem)
-      }
-    }
-    recipe.matches(tile.invCrafting, world)
-  }
+    // Plan recipes start at the front of storage and leave the cursor where it
+    // is between ingredients, so several items can come off the same stack.
+    //
+    // Grid recipes start just before the grid section and step forward before
+    // every ingredient, so input i is taken from grid slot i where possible and
+    // wraps into storage when that slot cannot supply it.
+    var cursor = if (tile.isPlanRecipe) 0 else GridOffset - 1
 
-  private var i = 0
-  private def eatResource(
-      recipe: IRecipe,
-      stack1: ItemStack,
-      storage: Array[ItemStack]
-  ): ItemStack = {
-    def increment() = { i = (i + 1) % storage.length; i }
-    if (!tile.isPlanRecipe) increment()
-    val start = i
-    do {
-      val stack2 = storage(i)
-      if (stack2 != null && ingredientMatch(recipe, stack1, stack2)) {
-        stack2.stackSize -= 1;
-        if (stack2.stackSize <= 0) {
-          storage(i) = null;
+    def advance(): Int = { cursor = (cursor + 1) % pool.length; cursor }
+
+    // Recipe-level, not per-ingredient: a recipe counts as an ore recipe as
+    // soon as one of its nine inputs is an ore-dictionary entry, so this only
+    // gates the fallback below, never the exact match.
+    val oreRecipe =
+      recipe.isInstanceOf[ShapedOreRecipe] || recipe
+        .isInstanceOf[ShapelessOreRecipe]
+
+    // Walk the ring once from `start`. On a hit the cursor stays on the slot
+    // that supplied the item; on a miss it ends back on `start`, so a second
+    // scan can pick up where this one began.
+    def scan(want: ItemStack, start: Int, allowOre: Boolean): ItemStack = {
+      cursor = start
+      do {
+        val candidate = pool(cursor)
+        if (candidate != null && ingredientMatch(want, candidate, allowOre)) {
+          candidate.stackSize -= 1
+          if (candidate.stackSize <= 0) pool(cursor) = null
+
+          val taken = candidate.copy()
+          taken.stackSize = 1
+          return taken
         }
+      } while (advance() != start)
+      null
+    }
 
-        val copy = stack2.copy();
-        copy.stackSize = 1;
-        return copy;
+    def eat(want: ItemStack): ItemStack = {
+      if (!tile.isPlanRecipe) advance()
+      val start = cursor
+
+      // Exact items always win. An ore-dictionary substitute is only
+      // considered once nothing exact is left, so the plain ItemStack
+      // ingredients of an ore recipe still get the item they asked for.
+      // Anything this fallback grabs wrongly is caught by the matches() call
+      // at the end, which is what actually authorises the craft.
+      val exact = scan(want, start, allowOre = false)
+      if (exact != null) exact
+      else if (oreRecipe) scan(want, start, allowOre = true)
+      else null
+    }
+
+    var i = GridStart
+    while (i < GridEnd) {
+      val want = inputs(i)
+      if (want == null) {
+        // Clear, so a stale entry from an earlier search cannot satisfy matches.
+        target.setInventorySlotContents(i, null)
+      } else {
+        val taken = eat(want)
+        if (taken == null) return false
+        target.setInventorySlotContents(i, taken)
       }
-    } while (increment() != start)
-    null
+      i += 1
+    }
+
+    recipe.matches(target, world)
   }
 
   private def ingredientMatch(
-      recipe: IRecipe,
-      stack1: ItemStack,
-      stack2: ItemStack
-  ) = {
-
+      want: ItemStack,
+      candidate: ItemStack,
+      allowOre: Boolean
+  ): Boolean = {
     val eq = new ItemEquality
-    eq.matchMeta = !stack1.isItemStackDamageable
+    eq.matchMeta = !want.isItemStackDamageable
     eq.matchNBT = true
-    eq.matchOre = false
-    eq.matches(ItemKey.get(stack1), ItemKey.get(stack2))
+    eq.matchOre = allowOre
+    eq.matches(ItemKey.get(want), ItemKey.get(candidate))
   }
 
   // Following 3 methods copy-pasted from TSlot3 for obfuscation issues
   override def getSlotStackLimit: Int = slotLimitCalculator()
   override def isItemValid(stack: ItemStack): Boolean = canPlaceDelegate(stack)
-  override def onSlotChanged() {
+  override def onSlotChanged(): Unit = {
     super.onSlotChanged()
     slotChangeDelegate()
     slotChangeDelegate2()
   }
 }
 
-class ContainerProjectBench(player: EntityPlayer, tile: TileProjectBench)
+class ContainerProjectBench(player: EntityPlayer, val tile: TileProjectBench)
     extends NodeContainer {
+  import ProjectBenchSlots._
+
   {
     for (((x, y), i) <- GuiLib.createSlotGrid(48, 18, 3, 3, 0, 0).zipWithIndex)
-      addSlotToContainer(new Slot3(tile, i, x, y))
+      addSlotToContainer(new Slot3(tile, i + GridStart, x, y))
 
     for (((x, y), i) <- GuiLib.createSlotGrid(8, 76, 9, 2, 0, 0).zipWithIndex)
-      addSlotToContainer(new Slot3(tile, i + 9, x, y))
+      addSlotToContainer(new Slot3(tile, i + StorageStart, x, y))
 
-    val plan = new Slot3(tile, 27, 17, 36)
+    val plan = new Slot3(tile, PlanSlot, 17, 36)
     plan.canPlaceDelegate = { _.getItem.isInstanceOf[ItemPlan] }
     plan.slotLimitCalculator = { () => 1 }
     addSlotToContainer(plan)
 
-    val output = new SlotProjectCrafting(player, tile, 28, 143, 36)
+    val output = new SlotProjectCrafting(player, tile, OutputSlot, 143, 36)
     output.canPlaceDelegate = { _ => false }
     addSlotToContainer(output)
 
     addPlayerInv(player, 8, 126)
   }
 
-  def transferAllFromGrid() {
-    for (i <- 0 until 9)
+  def transferAllFromGrid(): Unit = {
+    for (i <- GridStart until GridEnd)
       if (getSlot(i).getHasStack)
         transferStackInSlot(player, i)
     detectAndSendChanges()
   }
 
   override def transferStackInSlot(player: EntityPlayer, i: Int): ItemStack = {
-    if (i == 28 && !getSlot(28).canTakeStack(player))
+    if (i == OutputSlot && !getSlot(OutputSlot).canTakeStack(player))
       null
     else
       super.transferStackInSlot(player, i)
   }
 
   override def doMerge(stack: ItemStack, from: Int): Boolean = {
-    if (0 until 9 contains from) // crafting grid
+    if ((GridStart until GridEnd).contains(from)) // crafting grid
       {
-        if (tryMergeItemStack(stack, 9, 27, false))
+        if (tryMergeItemStack(stack, StorageStart, StorageEnd, false))
           return true // merge to storage
-        if (tryMergeItemStack(stack, 29, 65, false))
+        if (tryMergeItemStack(stack, PlayerInvStart, PlayerInvEnd, false))
           return true // merge to inventory
-      } else if (9 until 27 contains from) // storage
+      } else if ((StorageStart until StorageEnd).contains(from)) // storage
       {
         if (stack.getItem.isInstanceOf[ItemPlan]) {
           if (
-            getSlot(27).getStack != null && ItemKey.get(
-              getSlot(27).getStack
+            getSlot(PlanSlot).getStack != null && ItemKey.get(
+              getSlot(PlanSlot).getStack
             ) != ItemKey.get(stack)
           )
-            transferStackInSlot(player, 27) // transfer existing stack
+            transferStackInSlot(player, PlanSlot) // transfer existing stack
 
-          if (tryMergeItemStack(stack, 27, 28, false))
+          if (tryMergeItemStack(stack, PlanSlot, OutputSlot, false))
             return true // merge to plan
         }
-        if (tryMergeItemStack(stack, 29, 65, false))
+        if (tryMergeItemStack(stack, PlayerInvStart, PlayerInvEnd, false))
           return true // merge to inventory
-      } else if (from == 27) // plan slot
+      } else if (from == PlanSlot) // plan slot
       {
-        if (tryMergeItemStack(stack, 9, 27, true))
+        if (tryMergeItemStack(stack, StorageStart, StorageEnd, true))
           return true // merge to storage
-        if (tryMergeItemStack(stack, 29, 65, false))
+        if (tryMergeItemStack(stack, PlayerInvStart, PlayerInvEnd, false))
           return true // merge to inventory
-      } else if (from == 28) // output slot
+      } else if (from == OutputSlot) // output slot
       {
-        if (tryMergeItemStack(stack, 29, 65, true))
+        if (tryMergeItemStack(stack, PlayerInvStart, PlayerInvEnd, true))
           return true // merge to inventory
-        if (tryMergeItemStack(stack, 9, 27, true))
+        if (tryMergeItemStack(stack, StorageStart, StorageEnd, true))
           return true // merge to storage
-      } else if (29 until 65 contains from) // player inventory
+      } else if (
+      (PlayerInvStart until PlayerInvEnd).contains(from)
+    ) // player inventory
       {
         if (stack.getItem.isInstanceOf[ItemPlan]) {
           if (
-            getSlot(27).getStack != null && ItemKey.get(
-              getSlot(27).getStack
+            getSlot(PlanSlot).getStack != null && ItemKey.get(
+              getSlot(PlanSlot).getStack
             ) != ItemKey.get(stack)
           )
-            transferStackInSlot(player, 27) // transfer existing stack
+            transferStackInSlot(player, PlanSlot) // transfer existing stack
 
-          if (tryMergeItemStack(stack, 27, 28, false))
+          if (tryMergeItemStack(stack, PlanSlot, OutputSlot, false))
             return true // merge to plan
         }
-        if (tryMergeItemStack(stack, 9, 27, false))
+        if (tryMergeItemStack(stack, StorageStart, StorageEnd, false))
           return true // merge to storage
       }
 
@@ -463,7 +589,7 @@ class GuiProjectBench(tile: TileProjectBench, c: ContainerProjectBench)
     extends NodeGui(c, 176, 208) {
   {
     val write = new IconButtonNode {
-      override def drawButton(mouseover: Boolean) {
+      override def drawButton(mouseover: Boolean): Unit = {
         PRResources.guiProjectbench.bind()
         GuiDraw.drawTexturedModalRect(position.x, position.y, 176, 0, 14, 14)
       }
@@ -474,7 +600,7 @@ class GuiProjectBench(tile: TileProjectBench, c: ContainerProjectBench)
     addChild(write)
 
     val clear = new IconButtonNode {
-      override def drawButton(mouseover: Boolean) {
+      override def drawButton(mouseover: Boolean): Unit = {
         PRResources.guiProjectbench.bind()
         GuiDraw.drawTexturedModalRect(position.x, position.y, 176, 15, 8, 8)
       }
@@ -487,7 +613,7 @@ class GuiProjectBench(tile: TileProjectBench, c: ContainerProjectBench)
     addChild(clear)
   }
 
-  override def drawBack_Impl(mouse: Point, rframe: Float) {
+  override def drawBack_Impl(mouse: Point, rframe: Float): Unit = {
     PRResources.guiProjectbench.bind()
     GuiDraw.drawTexturedModalRect(0, 0, 0, 0, size.width, size.height)
 
@@ -555,7 +681,7 @@ object RenderProjectBench extends TCubeMapRender {
     case _ => side1
   }
 
-  override def registerIcons(reg: IIconRegister) {
+  override def registerIcons(reg: IIconRegister): Unit = {
     bottom = reg.registerIcon("projectred:mechanical/projectbench/bottom")
     top = reg.registerIcon("projectred:mechanical/projectbench/top")
     side1 = reg.registerIcon("projectred:mechanical/projectbench/side1")

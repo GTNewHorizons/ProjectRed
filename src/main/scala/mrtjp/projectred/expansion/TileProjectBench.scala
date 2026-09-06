@@ -233,7 +233,7 @@ class SlotProjectCrafting(
       }
     }
 
-    FMLCommonHandler.instance.firePlayerCraftingEvent(
+    FMLCommonHandler.instance().firePlayerCraftingEvent(
       player,
       stack,
       tile.invCrafting

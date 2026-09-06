@@ -263,6 +263,7 @@ class SlotProjectCrafting(
     tile.updateRecipe()
 
   }
+
   def tryAddToStorageSlots(stack: ItemStack): Boolean = {
     // Try to merge into storage slots 9-26
     for (j <- 9 until 27) {

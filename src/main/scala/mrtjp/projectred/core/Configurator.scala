@@ -33,13 +33,13 @@ object Configurator extends ModConfig("ProjRed|Core") {
   var enchantment_fuel_efficiencty_id = 80
 
   /** Machines * */
+  var enableInductiveFurnace = true
   var enableDiamondBlockBreaker = false
 
   /** Rendering * */
   var logicwires3D = true
   var staticWires = true
   var staticGates = true
-  var lightHaloMax = -1
   var pipeRoutingFX = true
 
   /** World Gen * */
@@ -151,6 +151,11 @@ object Configurator extends ModConfig("ProjRed|Core") {
       "Machine Settings",
       "Contains settings related to machines and devices."
     )
+    enableInductiveFurnace = machines.put(
+      "Enable the Inductive Furnace",
+      enableInductiveFurnace,
+      "Allow the Inductive Furnace to be crafted and load its smelting recipes."
+    )
     enableDiamondBlockBreaker = machines.put(
       "Enable the Diamond Block Breaker",
       enableDiamondBlockBreaker,
@@ -175,11 +180,6 @@ object Configurator extends ModConfig("ProjRed|Core") {
       "Static Gates",
       staticGates,
       "If set to false, gates will be rendered in the TESR rather than the WorldRenderer."
-    )
-    lightHaloMax = rendering.put(
-      "Light Halo Render Count",
-      lightHaloMax,
-      "Number of lights to render, -1 for unlimited"
     )
     pipeRoutingFX = rendering.put(
       "Routed Pipe FX",

@@ -188,24 +188,20 @@ class SlotProjectCrafting(
 ) extends SlotCrafting(player, tile.invCrafting, tile.invResult, idx, x, y)
     with TSlot3 {
   override def canTakeStack(player: EntityPlayer): Boolean = {
-    if (tile.isPlanRecipe) {
-      val storage = (9 until 27).map { i =>
-        val s = tile.getStackInSlot(i)
-        if (s != null) s.copy else null
-      }.toArray
-
-      return searchFor(
-        player.worldObj,
-        tile.currentRecipe,
-        tile.currentInputs,
-        storage
-      ) && tile.currentRecipe.matches(tile.invCrafting, tile.world)
-    }
-
+    if (!tile.currentRecipe.matches(tile.invCrafting, tile.world)) return false
     // copied from super for obfuscation bug
-    canRemoveDelegate() && tile.currentRecipe.matches(
-      tile.invCrafting,
-      tile.world
+    if (!tile.isPlanRecipe) return canRemoveDelegate()
+
+    val storage = (9 until 27).map { i =>
+      val s = tile.getStackInSlot(i)
+      if (s != null) s.copy else null
+    }.toArray
+
+    searchFor(
+      player.worldObj,
+      tile.currentRecipe,
+      tile.currentInputs,
+      storage
     )
   }
 
@@ -233,11 +229,13 @@ class SlotProjectCrafting(
       }
     }
 
-    FMLCommonHandler.instance().firePlayerCraftingEvent(
-      player,
-      stack,
-      tile.invCrafting
-    )
+    FMLCommonHandler
+      .instance()
+      .firePlayerCraftingEvent(
+        player,
+        stack,
+        tile.invCrafting
+      )
     onCrafting(stack)
 
     for (i <- 0 until 9) {

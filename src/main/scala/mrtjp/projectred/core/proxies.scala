@@ -11,16 +11,16 @@ import mrtjp.projectred.Tags
 import net.minecraftforge.common.MinecraftForge
 
 class CoreProxy_server extends IProxy {
-  def preinit() {}
-
-  def init() {
-    PacketCustom.assignHandler(CoreSPH.channel, CoreSPH)
-
+  def preinit() {
     itemPart = new ItemPart
     itemDrawPlate = new ItemDrawPlate
     itemScrewdriver = new ItemScrewdriver
     itemWireDebugger = new ItemWireDebugger
     itemDataCard = new ItemDataCard
+  }
+
+  def init() {
+    PacketCustom.assignHandler(CoreSPH.channel, CoreSPH)
 
     RecipeLib.loadLib()
     CoreRecipes.initCoreRecipes()

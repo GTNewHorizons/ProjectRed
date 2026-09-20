@@ -500,7 +500,7 @@ class NewICNode extends TNode {
           position.y - 1,
           size.width + 2,
           size.height + 2,
-          0xFFA0A0A0
+          0xffa0a0a0
         )
         super.drawBack_Impl(mouse, rframe)
       }

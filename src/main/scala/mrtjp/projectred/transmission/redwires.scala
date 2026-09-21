@@ -3,7 +3,6 @@ package mrtjp.projectred.transmission
 import codechicken.lib.data.{MCDataInput, MCDataOutput}
 import codechicken.lib.vec.{BlockCoord, Rotation}
 import codechicken.multipart._
-import codechicken.multipart.scalatraits.TRedstoneTile
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.world.Messenger
 import mrtjp.projectred.api.IConnectable
@@ -130,7 +129,7 @@ abstract class RedwirePart
 
   override def discoverOpen(r: Int) = {
     val absDir = absoluteDir(r)
-    (tile.asInstanceOf[TRedstoneTile].openConnections(absDir) & 1 << Rotation
+    (tile.asInstanceOf[IRedstoneTile].openConnections(absDir) & 1 << Rotation
       .rotationTo(absDir & 6, side)) != 0
   }
 

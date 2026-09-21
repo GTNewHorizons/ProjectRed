@@ -8,9 +8,11 @@ package mrtjp.projectred.expansion
 import codechicken.lib.data.{MCDataInput, MCDataOutput}
 import codechicken.lib.vec.{BlockCoord, Rotation, Vector3}
 import codechicken.multipart._
+import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.world.PlacementLib
 import mrtjp.projectred.api.{IConnectable, IScrewdriver}
 import mrtjp.projectred.core.{TFacePowerPart, TFaceConnectable, TSwitchPacket}
+import net.minecraft.client.particle.EffectRenderer
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
@@ -26,6 +28,29 @@ trait TFaceElectricalDevice
     with TSwitchPacket
     with TIconHitEffects
     with TFacePowerPart {
+  @SideOnly(Side.CLIENT)
+  override def addHitEffects(
+      hit: MovingObjectPosition,
+      renderer: EffectRenderer
+  ) =
+    IconHitEffects.addHitEffects(this, hit, renderer)
+
+  @SideOnly(Side.CLIENT)
+  override def addDestroyEffects(renderer: EffectRenderer) =
+    IconHitEffects.addDestroyEffects(this, renderer)
+
+  override def occlusionTest(other: TMultiPart): Boolean =
+    NormalOcclusionTest.apply(this, other) && super.occlusionTest(other)
+
+  override def getSubParts = JCuboidPart.subParts(this)
+  override def getCollisionBoxes = JCuboidPart.collisionBoxes(this)
+
+  @SideOnly(Side.CLIENT)
+  override def drawBreaking(
+      renderBlocks: net.minecraft.client.renderer.RenderBlocks
+  ) =
+    JCuboidPart.renderBreaking(this, renderBlocks)
+
   def preparePlacement(
       player: EntityPlayer,
       pos: BlockCoord,

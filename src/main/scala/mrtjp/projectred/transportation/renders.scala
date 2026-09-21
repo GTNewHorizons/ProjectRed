@@ -458,7 +458,7 @@ object PipeRSHighlightRenderer extends IMicroHighlightRenderer {
     MicroMaterialRegistry.getMaterial(material) match {
       case b: BlockMicroMaterial if b.block == Blocks.redstone_block =>
         val hitData: (Integer, _) = ExtendedMOP.getData(hit)
-        tile.partList(hitData._1) match {
+        tile.jPartList().get(hitData._1) match {
           case p: TRedstonePipe if !p.material =>
             RenderPipe.renderRSMicroHighlight(p)
             true
@@ -489,7 +489,7 @@ object PipeColourHighlightRenderer extends IMicroHighlightRenderer {
     MicroMaterialRegistry.getMaterial(material) match {
       case b: BlockMicroMaterial if b.block == Blocks.wool =>
         val hitData: (Integer, _) = ExtendedMOP.getData(hit)
-        tile.partList(hitData._1) match {
+        tile.jPartList().get(hitData._1) match {
           case p: TColourFilterPipe if p.colour != b.meta =>
             RenderPipe.renderWoolMicroHighlight(p, b.meta.toByte)
             true

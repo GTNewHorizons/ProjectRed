@@ -4,9 +4,10 @@ import java.util.{List => JList}
 
 import codechicken.lib.vec.{BlockCoord, Vector3}
 import codechicken.multipart.minecraft.ButtonPart
-import codechicken.multipart.{MultiPartRegistry, TItemMultiPart, TMultiPart}
+import codechicken.multipart.{MultiPartRegistry, TMultiPart}
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.item.{ItemCore, TItemGlassSound}
+import mrtjp.projectred.core.TItemMultiPartPlacement
 import mrtjp.projectred.ProjectRedIllumination
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.creativetab.CreativeTabs
@@ -18,7 +19,7 @@ import net.minecraftforge.common.util.ForgeDirection
 
 class ItemBaseLight(obj: LightObject, val inverted: Boolean)
     extends ItemCore(obj.getItemName + (if (inverted) ".inv" else ""))
-    with TItemMultiPart
+    with TItemMultiPartPlacement
     with TItemGlassSound {
   setHasSubtypes(true)
   setCreativeTab(ProjectRedIllumination.tabLighting)
@@ -37,7 +38,7 @@ class ItemBaseLight(obj: LightObject, val inverted: Boolean)
     ) return null
 
     val light = MultiPartRegistry
-      .createPart(obj.getType, false)
+      .loadPart(obj.getType, null)
       .asInstanceOf[BaseLightPart]
     if (light != null) {
       light.preparePlacement(side ^ 1, stack.getItemDamage, inverted)
@@ -61,7 +62,7 @@ class ItemBaseLight(obj: LightObject, val inverted: Boolean)
 
 abstract class ItemPartButtonCommons(name: String)
     extends ItemCore(name)
-    with TItemMultiPart
+    with TItemMultiPartPlacement
     with TItemGlassSound {
   setHasSubtypes(true)
   setCreativeTab(ProjectRedIllumination.tabLighting)
@@ -80,7 +81,7 @@ abstract class ItemPartButtonCommons(name: String)
       !w.isSideSolid(pos.x, pos.y, pos.z, ForgeDirection.getOrientation(side))
     ) return null
 
-    val b = getNewInst(ButtonPart.sideMetaMap(side ^ 1))
+    val b = getNewInst(ButtonPart.metaForSide(side ^ 1))
     if (b != null) b.onPlaced(item)
     b
   }
@@ -101,7 +102,7 @@ abstract class ItemPartButtonCommons(name: String)
 
 class ItemPartButton
     extends ItemPartButtonCommons("projectred.illumination.lightbutton")
-    with TItemMultiPart
+    with TItemMultiPartPlacement
     with TItemGlassSound {
   @SideOnly(Side.CLIENT)
   override def registerIcons(reg: IIconRegister) {

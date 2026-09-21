@@ -2,8 +2,10 @@ package mrtjp.projectred.transportation
 
 import codechicken.lib.packet.PacketCustom
 import codechicken.microblock.MicroMaterialRegistry
+import codechicken.lib.data.MCDataInput
+import net.minecraft.nbt.NBTTagCompound
 import codechicken.multipart.MultiPartRegistry
-import codechicken.multipart.MultiPartRegistry.IPartFactory
+import codechicken.multipart.MultiPartRegistry.IPartFactory2
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.gui.GuiHandler
 import mrtjp.projectred.ProjectRedTransportation._
@@ -11,7 +13,7 @@ import mrtjp.projectred.core.{Configurator, IProxy}
 import mrtjp.projectred.Tags
 import net.minecraftforge.client.MinecraftForgeClient
 
-class TransportationProxy_server extends IProxy with IPartFactory {
+class TransportationProxy_server extends IProxy with IPartFactory2 {
   val guiIDInterfacePipe = 5
   val guiIDFirewallPipe = 6
   val guiIDRoutingChips = 7
@@ -21,7 +23,7 @@ class TransportationProxy_server extends IProxy with IPartFactory {
   }
 
   override def init() {
-    MultiPartRegistry.registerParts(
+    MultiPartRegistry.registerPartFactory(
       this,
       Array[String](
         "pr_pipe",
@@ -33,7 +35,7 @@ class TransportationProxy_server extends IProxy with IPartFactory {
         "pr_rpt",
         "pr_netvalve",
         "pr_netlatency"
-      )
+      ): _*
     )
 
     itemPartPipe = new ItemPartPipe
@@ -49,11 +51,18 @@ class TransportationProxy_server extends IProxy with IPartFactory {
   override def postinit() {}
 
   import mrtjp.projectred.transportation.PipeDefs._
-  override def createPart(name: String, client: Boolean) = name match {
+  override def createPart(name: String, nbt: NBTTagCompound) =
+    createPart(name, false)
+  override def createPart(name: String, packet: MCDataInput) =
+    createPart(name, true)
+  override def createPartForClientPreview(name: String, nbt: NBTTagCompound) =
+    createPart(name, true)
+
+  def createPart(name: String, client: Boolean) = name match {
     case BASIC.partname           => new BasicPipePart
     case ROUTEDJUNCTION.partname  => new RoutedJunctionPipePart
     case ROUTEDINTERFACE.partname => new RoutedInterfacePipePart
-    // case ROUTEDCRAFTING.partname => new RoutedCraftingPipePartø
+    // case ROUTEDCRAFTING.partname => new RoutedCraftingPipePartÃ¸
     case ROUTEDREQUEST.partname => new RoutedRequestPipePart
     // case ROUTEDEXTENSION.partname => new RoutedExtensionPipePart
     case ROUTEDFIREWALL.partname => new RoutedFirewallPipe

@@ -1,4 +1,8 @@
 // Add any additional repositories for your dependencies here
 
 repositories {
+    exclusiveContent {
+        forRepository { mavenLocal() }
+        filter { includeVersion('com.github.GTNewHorizons', 'ForgeMultipart', '1.8.1') }
+    }
 }

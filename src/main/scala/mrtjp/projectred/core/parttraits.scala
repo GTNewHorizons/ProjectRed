@@ -2,7 +2,44 @@ package mrtjp.projectred.core
 
 import codechicken.lib.data.{MCDataOutput, MCDataInput}
 import codechicken.lib.vec.{Vector3, Rotation}
-import codechicken.multipart.{TSlottedPart, TFacePart, TMultiPart}
+import codechicken.multipart.{
+  JItemMultiPart,
+  TItemMultiPart,
+  TSlottedPart,
+  TFacePart,
+  TMultiPart
+}
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.item.{Item, ItemStack}
+import net.minecraft.world.World
+
+// Mix in before sound traits so their super call places the part.
+trait TItemMultiPartPlacement extends Item with TItemMultiPart {
+  override def onItemUse(
+      stack: ItemStack,
+      player: EntityPlayer,
+      world: World,
+      x: Int,
+      y: Int,
+      z: Int,
+      side: Int,
+      hitX: Float,
+      hitY: Float,
+      hitZ: Float
+  ): Boolean = JItemMultiPart.onItemUse(
+    this,
+    stack,
+    player,
+    world,
+    x,
+    y,
+    z,
+    side,
+    hitX,
+    hitY,
+    hitZ
+  )
+}
 
 trait TSwitchPacket extends TMultiPart {
   override final def read(packet: MCDataInput) {

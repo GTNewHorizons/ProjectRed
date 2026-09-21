@@ -451,7 +451,7 @@ object JacketedHighlightRenderer extends IMicroHighlightRenderer {
     ) false
     else {
       val hitData: (Integer, Any) = ExtendedMOP.getData(hit)
-      val part = tile.partList(hitData._1)
+      val part = tile.jPartList().get(hitData._1)
 
       part match {
         case fpart: FramedWirePart =>

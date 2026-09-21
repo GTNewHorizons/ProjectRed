@@ -3,11 +3,12 @@ package mrtjp.projectred.transportation
 import java.util.{List => JList}
 
 import codechicken.lib.vec.{BlockCoord, Vector3}
-import codechicken.multipart.{MultiPartRegistry, TItemMultiPart}
+import codechicken.multipart.MultiPartRegistry
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.gui.{GuiLib, NodeContainer, Slot3}
 import mrtjp.core.inventory.SimpleInventory
 import mrtjp.core.item.{ItemCore, ItemDefinition, TItemGlassSound}
+import mrtjp.projectred.core.TItemMultiPartPlacement
 import mrtjp.projectred.ProjectRedTransportation
 import mrtjp.projectred.core._
 import mrtjp.projectred.transportation.ChipType.ChipType
@@ -25,7 +26,7 @@ import scala.collection.mutable.ListBuffer
 
 class ItemPartPipe
     extends ItemCore("projectred.transportation.pipe")
-    with TItemMultiPart
+    with TItemMultiPartPlacement
     with TItemGlassSound {
   setHasSubtypes(true)
   setCreativeTab(ProjectRedTransportation.tabTransportation)
@@ -40,7 +41,7 @@ class ItemPartPipe
   ) = {
     val pdef = PipeDefs.values(item.getItemDamage)
     val p = MultiPartRegistry
-      .createPart(pdef.partname, false)
+      .loadPart(pdef.partname, null)
       .asInstanceOf[PayloadPipePart[_]]
     if (p != null) p.preparePlacement(side, item.getItemDamage)
     p

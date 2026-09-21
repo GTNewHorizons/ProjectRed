@@ -16,7 +16,7 @@ import org.apache.logging.log4j.LogManager
   modid = "ProjRed|Core",
   version = ProjectRedCore.VERSION,
   dependencies = "required-after:Forge;" +
-    "required-after:ForgeMultipart;" +
+    "required-after:ForgeMultipart@[1.8.1];" +
     "required-after:MrTJPCoreMod",
   modLanguage = "scala",
   guiFactory = "mrtjp.projectred.core.GuiConfigFactory",

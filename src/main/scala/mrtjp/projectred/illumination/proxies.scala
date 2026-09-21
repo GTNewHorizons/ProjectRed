@@ -1,7 +1,9 @@
 package mrtjp.projectred.illumination
 
+import codechicken.lib.data.MCDataInput
+import net.minecraft.nbt.NBTTagCompound
 import codechicken.multipart.MultiPartRegistry
-import codechicken.multipart.MultiPartRegistry.IPartFactory
+import codechicken.multipart.MultiPartRegistry.IPartFactory2
 import cpw.mods.fml.client.registry.ClientRegistry
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.color.Colors_old
@@ -12,16 +14,18 @@ import mrtjp.projectred.Tags
 import net.minecraft.item.Item
 import net.minecraftforge.client.MinecraftForgeClient
 
-class IlluminationProxy_server extends IProxy with IPartFactory {
+class IlluminationProxy_server extends IProxy with IPartFactory2 {
   val lights =
     Seq(LightObjLantern, LightObjFixture, LightObjFallout, LightObjCage)
 
   override def preinit() {}
 
   override def init() {
-    MultiPartRegistry.registerParts(
+    MultiPartRegistry.registerPartFactory(
       this,
-      (lights.map(_.getType) :+ "pr_lightbutton" :+ "pr_flightbutton").toArray
+      (lights.map(
+        _.getType
+      ) :+ "pr_lightbutton" :+ "pr_flightbutton").toArray: _*
     )
     for (l <- lights) l.initServer()
 
@@ -41,7 +45,14 @@ class IlluminationProxy_server extends IProxy with IPartFactory {
 
   override def postinit() {}
 
-  override def createPart(name: String, client: Boolean) = name match {
+  override def createPart(name: String, nbt: NBTTagCompound) =
+    createPart(name, false)
+  override def createPart(name: String, packet: MCDataInput) =
+    createPart(name, true)
+  override def createPartForClientPreview(name: String, nbt: NBTTagCompound) =
+    createPart(name, true)
+
+  def createPart(name: String, client: Boolean) = name match {
     case "pr_lightbutton"  => new LightButtonPart
     case "pr_flightbutton" => new FLightButtonPart
     case _                 => getLight(name)

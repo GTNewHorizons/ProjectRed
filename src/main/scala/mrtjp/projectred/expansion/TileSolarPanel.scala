@@ -10,10 +10,11 @@ import codechicken.lib.render.uv.{MultiIconTransformation, UVTransformation}
 import codechicken.lib.render.{CCModel, CCRenderState, TextureUtils}
 import codechicken.lib.vec._
 import codechicken.microblock.FaceMicroClass
-import codechicken.multipart.{MultiPartRegistry, TItemMultiPart, TMultiPart}
+import codechicken.multipart.{MultiPartRegistry, TMultiPart}
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.item.{ItemCore, TItemGlassSound}
 import mrtjp.core.world.PlacementLib
+import mrtjp.projectred.core.TItemMultiPartPlacement
 import mrtjp.projectred.ProjectRedExpansion
 import mrtjp.projectred.api.IConnectable
 import mrtjp.projectred.core.{
@@ -48,7 +49,7 @@ class SolarPanelPart
 
   override def conductor(dir: Int) = cond
 
-  override def getBounds = FaceMicroClass.aBounds(0x10 | side)
+  override def getBounds = FaceMicroClass.aBounds()(0x10 | side)
   override def getOcclusionBoxes = SolarPanelPart.oBoxes(side).toSeq
 
   override def doesRotate = false
@@ -128,7 +129,7 @@ object SolarPanelPart {
 
 class ItemSolarPanel
     extends ItemCore("projectred.expansion.solar_panel")
-    with TItemMultiPart
+    with TItemMultiPartPlacement
     with TItemGlassSound {
   setCreativeTab(ProjectRedExpansion.tabExpansion)
 
@@ -146,7 +147,7 @@ class ItemSolarPanel
     ) return null
 
     val solar = MultiPartRegistry
-      .createPart("pr_solar", false)
+      .loadPart("pr_solar", null)
       .asInstanceOf[SolarPanelPart]
     if (solar != null)
       solar.preparePlacement(player, pos, side, item.getItemDamage)

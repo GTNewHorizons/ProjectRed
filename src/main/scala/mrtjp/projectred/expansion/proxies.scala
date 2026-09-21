@@ -28,7 +28,7 @@ class ExpansionProxy_server extends IProxy with IPartFactory2 {
   }
 
   def init() {
-    MultiPartRegistry.registerParts(this, Array("pr_solar"))
+    MultiPartRegistry.registerPartFactory(this, "pr_solar")
 
     // Parts
     itemSolar = new ItemSolarPanel

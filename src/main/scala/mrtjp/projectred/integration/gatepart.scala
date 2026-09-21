@@ -15,6 +15,7 @@ import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.world.PlacementLib
 import mrtjp.projectred.api.{IConnectable, IScrewdriver}
 import mrtjp.projectred.core.{Configurator, TFaceConnectable, TSwitchPacket}
+import net.minecraft.client.particle.EffectRenderer
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
@@ -24,12 +25,25 @@ import org.lwjgl.opengl.GL11
 import scala.collection.JavaConversions._
 
 abstract class GatePart
-    extends TMultiPart
-    with TCuboidPart
+    extends JCuboidPart
     with TNormalOcclusion
     with TFaceConnectable
     with TSwitchPacket
     with TIconHitEffects {
+  @SideOnly(Side.CLIENT)
+  override def addHitEffects(
+      hit: MovingObjectPosition,
+      renderer: EffectRenderer
+  ) =
+    IconHitEffects.addHitEffects(this, hit, renderer)
+
+  @SideOnly(Side.CLIENT)
+  override def addDestroyEffects(renderer: EffectRenderer) =
+    IconHitEffects.addDestroyEffects(this, renderer)
+
+  override def occlusionTest(other: TMultiPart): Boolean =
+    NormalOcclusionTest.apply(this, other) && super.occlusionTest(other)
+
   private var gateSubID: Byte = 0
   private var gateShape: Byte = 0
 
@@ -318,7 +332,7 @@ abstract class GateLogic[T <: GatePart] {
       hit: MovingObjectPosition
   ) = false
 
-  def getBounds(gate: T) = FaceMicroClass.aBounds(0x10 | gate.side)
+  def getBounds(gate: T) = FaceMicroClass.aBounds()(0x10 | gate.side)
   def getSubParts(gate: T) = Seq[IndexedCuboid6]()
   def getOcclusions(gate: T): Seq[Cuboid6] = GatePart.oBoxes(gate.side)
 

@@ -1,7 +1,8 @@
 // Add your dependencies here
 
 dependencies {
-    api("com.github.GTNewHorizons:ForgeMultipart:1.7.10:dev")
+    // Temporary Java-port development artifact published to Maven local, not an upstream release.
+    api("com.github.GTNewHorizons:ForgeMultipart:1.8.1:dev")
     api("com.github.GTNewHorizons:ForgeRelocation:0.3.6:dev")
     implementation("com.github.GTNewHorizons:NotEnoughItems:2.8.102-GTNH:dev")
 

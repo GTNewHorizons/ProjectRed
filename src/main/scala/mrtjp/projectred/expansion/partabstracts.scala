@@ -26,7 +26,7 @@ trait TFaceElectricalDevice
     with TNormalOcclusion
     with TFaceConnectable
     with TSwitchPacket
-    with TIconHitEffects
+    with JIconHitEffects
     with TFacePowerPart {
   @SideOnly(Side.CLIENT)
   override def addHitEffects(
@@ -36,7 +36,10 @@ trait TFaceElectricalDevice
     IconHitEffects.addHitEffects(this, hit, renderer)
 
   @SideOnly(Side.CLIENT)
-  override def addDestroyEffects(renderer: EffectRenderer) =
+  override def addDestroyEffects(
+      hit: MovingObjectPosition,
+      renderer: EffectRenderer
+  ) =
     IconHitEffects.addDestroyEffects(this, renderer)
 
   override def occlusionTest(other: TMultiPart): Boolean =

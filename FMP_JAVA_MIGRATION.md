@@ -76,8 +76,10 @@ yet bound during NBT loading, and no replacement loading-context accessor exists
 part's world or delaying restoration would change saved elapsed-time behavior. Other retained
 facades (`MultipartProxy.block`, `MicroblockProxy` item/saw getters and shape/material statics)
 already provide Java-typed access; their companion dispatch is internal to FMP. ProjectRed emits
-no direct FMP `MODULE$` or `$class` calls. The one-argument destruction callback is retained for
-the `TIconHitEffects` contract and FMP's two-argument callback delegation.
+no direct FMP `MODULE$` or `$class` calls. Gate and electrical parts implement `JIconHitEffects`
+and override the current `addDestroyEffects(hit, renderer)` callback directly, forwarding to the
+same tint-aware helper. They no longer implement `TIconHitEffects` or override its deprecated
+one-argument destruction callback; no ProjectRed caller uses that old callback.
 
 No remaining ProjectRed source dependency on FMP's Scala-shaped APIs was found in this audit.
 FMP must preserve the Java facade signatures and callback contracts while replacing their
@@ -99,6 +101,9 @@ FMP companions or trait helpers, no button orientation-array references, and no 
 `createPart` calls remain. `javap` confirms the light helper's runtime `Microblock` casts and
 the client annotation on the Java render override. This verifies consumer bytecode, not a
 Forge-transformed/generated class or a running physical client.
+
+After the particle callback cleanup, an audit resolving compiled member references and
+overrides against the recorded FMP jar found no deprecated FMP calls or overrides.
 
 Still required before release/pack adoption:
 

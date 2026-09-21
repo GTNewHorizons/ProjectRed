@@ -15,7 +15,8 @@ class MultipartDispatchTest {
 
   private def calls(
       owner: String,
-      method: String
+      method: String,
+      descriptor: String = ""
   ): Seq[(Int, String, String, String)] = {
     val result = ArrayBuffer.empty[(Int, String, String, String)]
     val stream =
@@ -31,7 +32,8 @@ class MultipartDispatchTest {
               signature: String,
               exceptions: Array[String]
           ): MethodVisitor =
-            if (name != method) null
+            if (name != method || (descriptor.nonEmpty && desc != descriptor))
+              null
             else
               new MethodVisitor(Opcodes.ASM5) {
                 override def visitMethodInsn(
@@ -54,11 +56,14 @@ class MultipartDispatchTest {
       owner: String,
       method: String,
       target: String,
-      name: String
+      name: String,
+      descriptor: String = ""
   ): Unit =
     assertTrue(
       owner + "." + method + " must dispatch to " + target + "." + name,
-      calls(owner, method).exists(c => c._2 == target && c._3 == name)
+      calls(owner, method, descriptor).exists(c =>
+        c._2 == target && c._3 == name
+      )
     )
 
   @Test
@@ -140,13 +145,21 @@ class MultipartDispatchTest {
       routes(owner, "occlusionTest", fmp + "NormalOcclusionTest", "apply")
 
     for (
-      owner <- Seq(
-        "integration/GatePart",
-        "expansion/TFaceElectricalDevice$class"
+      (owner, receiver) <- Seq(
+        "integration/GatePart" -> "",
+        "expansion/TFaceElectricalDevice$class" ->
+          "Lmrtjp/projectred/expansion/TFaceElectricalDevice;"
       );
       method <- Seq("addHitEffects", "addDestroyEffects")
     )
-      routes(owner, method, fmp + "IconHitEffects", method)
+      routes(
+        owner,
+        method,
+        fmp + "IconHitEffects",
+        method,
+        "(" + receiver + "Lnet/minecraft/util/MovingObjectPosition;" +
+          "Lnet/minecraft/client/particle/EffectRenderer;)V"
+      )
 
     for (
       (method, target) <- Seq(

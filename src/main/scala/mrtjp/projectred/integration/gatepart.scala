@@ -29,7 +29,7 @@ abstract class GatePart
     with TNormalOcclusion
     with TFaceConnectable
     with TSwitchPacket
-    with TIconHitEffects {
+    with JIconHitEffects {
   @SideOnly(Side.CLIENT)
   override def addHitEffects(
       hit: MovingObjectPosition,
@@ -38,7 +38,10 @@ abstract class GatePart
     IconHitEffects.addHitEffects(this, hit, renderer)
 
   @SideOnly(Side.CLIENT)
-  override def addDestroyEffects(renderer: EffectRenderer) =
+  override def addDestroyEffects(
+      hit: MovingObjectPosition,
+      renderer: EffectRenderer
+  ) =
     IconHitEffects.addDestroyEffects(this, renderer)
 
   override def occlusionTest(other: TMultiPart): Boolean =

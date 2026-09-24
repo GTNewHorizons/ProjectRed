@@ -16,7 +16,7 @@ import mrtjp.core.color.Colors
 import mrtjp.core.gui._
 import mrtjp.core.vec.{Point, Rect, Size}
 import mrtjp.core.world.WorldLib
-import mrtjp.projectred.core.libmc.PRResources
+import mrtjp.projectred.core.libmc.{PRResources, TexturedPanNode}
 import mrtjp.projectred.fabrication.ICComponentStore._
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Gui
@@ -621,7 +621,7 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     clip.size = Size(252, 197)
     addChild(clip)
 
-    val pan = new PanNode
+    val pan = new TexturedPanNode
     pan.size = Size(252, 197)
     pan.clampSlack = 35
     pan.dragTestFunction = { () => Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) }

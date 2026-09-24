@@ -491,7 +491,20 @@ class NewICNode extends TNode {
     fin.text = "start"
     addChild(fin)
 
-    textbox = new SimpleTextboxNode
+    textbox = new SimpleTextboxNode {
+      // The library only draws the grey border up to size + 1, so the right
+      // and bottom edges are missing. Draw a full border underneath first.
+      override def drawBack_Impl(mouse: Point, rframe: Float) {
+        GuiDraw.drawRect(
+          position.x - 1,
+          position.y - 1,
+          size.width + 2,
+          size.height + 2,
+          0xffa0a0a0
+        )
+        super.drawBack_Impl(mouse, rframe)
+      }
+    }
     textbox.size = Size(80, 14)
     textbox.position = Point(size / 2 - textbox.size / 2) + Point(0, 24)
     textbox.phantom = "untitled"

@@ -31,6 +31,8 @@ trait IRedwireEmitter {
 
 trait IInsulatedRedwirePart extends IRedwirePart {
   def getInsulatedColour: Int
+
+  def recolour(newColour: Int): Boolean
 }
 
 trait TRedwireCommons
@@ -312,6 +314,21 @@ trait TInsulatedCommons extends TRedwireCommons with IInsulatedRedwirePart {
 
   def getWireType = WireDef.INSULATED_WIRES(colour)
 
+  override def recolour(newColour: Int): Boolean = {
+    if (
+      world.isRemote || newColour < 0 || newColour >= WireDef.INSULATED_WIRES.length || colour == newColour
+    )
+      return false
+
+    colour = newColour.toByte
+    tile.markDirty()
+    getWriteStreamOf(11).writeByte(colour)
+    if (updateInward()) sendConnUpdate()
+    WirePropagator.propagateTo(this, FORCE)
+    tile.notifyPartChange(this)
+    true
+  }
+
   override def preparePlacement(side: Int, meta: Int) {
     super.preparePlacement(side, meta)
     colour = (meta - WireDef.INSULATED_0.meta).toByte
@@ -335,6 +352,13 @@ trait TInsulatedCommons extends TRedwireCommons with IInsulatedRedwirePart {
   override def readDesc(packet: MCDataInput) {
     super.readDesc(packet)
     colour = packet.readByte()
+  }
+
+  abstract override def read(packet: MCDataInput, key: Int) = key match {
+    case 11 =>
+      colour = packet.readByte()
+      if (Configurator.staticWires) tile.markRender()
+    case _ => super.read(packet, key)
   }
 
   abstract override def resolveSignal(part: Any, dir: Int) = part match {

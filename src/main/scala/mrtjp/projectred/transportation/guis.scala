@@ -71,6 +71,19 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
   var craft: CheckBoxNode = null
   var partials: CheckBoxNode = null
 
+  sealed trait SortMode
+  case object CountDesc extends SortMode
+  case object CountAsc extends SortMode
+  case object IDDesc extends SortMode
+  case object IDAsc extends SortMode
+
+  var sortMode: SortMode = RequestGuiState.sortMode match {
+    case 0 => CountDesc
+    case 1 => CountAsc
+    case 2 => IDDesc
+    case 3 => IDAsc
+  }
+
   {
     clip = new ClipNode
     clip.position = Point(18, 18)
@@ -105,9 +118,9 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
     pan.addChild(list)
 
     textFilter = new SimpleTextboxNode
-    textFilter.position = Point(54, 139)
-    textFilter.size = Size(148, 16)
-    textFilter.phantom = "search"
+    textFilter.position = Point(69, 139)
+    textFilter.size = Size(118, 16)
+    textFilter.phantom = "Search..."
     textFilter.textChangedDelegate = { () => refreshList() }
     addChild(textFilter)
 
@@ -120,8 +133,8 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
         } else false
       }
     }
-    textCount.position = Point(102, 158)
-    textCount.size = Size(50, 16)
+    textCount.position = Point(87, 158)
+    textCount.size = Size(50, 14)
     textCount.text = "1"
     textCount.phantom = "1"
     textCount.allowedcharacters = "0123456789"
@@ -136,18 +149,63 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
     }
     addChild(textCount)
 
-    pull = CheckBoxNode.centered(210, 148)
-    pull.state = true
-    pull.clickDelegate = { () => askForListRefresh() }
+    pull = CheckBoxNode.centered(203, 150)
+    pull.state = RequestGuiState.pull
+    pull.clickDelegate = { () =>
+      RequestGuiState.pull = pull.state
+      askForListRefresh()
+    }
     addChild(pull)
 
-    craft = CheckBoxNode.centered(210, 163)
-    craft.state = true
-    craft.clickDelegate = { () => askForListRefresh() }
+    craft = CheckBoxNode.centered(203, 165)
+    craft.state = RequestGuiState.craft
+    craft.clickDelegate = { () =>
+      RequestGuiState.craft = craft.state
+      askForListRefresh()
+    }
     addChild(craft)
 
-    partials = CheckBoxNode.centered(210, 178)
+    partials = CheckBoxNode.centered(203, 180)
+    partials.state = RequestGuiState.partials
+    partials.clickDelegate = { () =>
+      RequestGuiState.partials = partials.state
+      askForListRefresh()
+    }
     addChild(partials)
+
+    val sortButton = new MCButtonNode
+    sortButton.position = Point(10, 143)
+    sortButton.size = Size(50, 14)
+
+    def sortLabel = sortMode match {
+      case CountDesc => "Count ▼"
+      case CountAsc  => "Count ▲"
+      case IDDesc    => "ID ▼"
+      case IDAsc     => "ID ▲"
+    }
+
+    sortButton.text = sortLabel
+
+    sortButton.clickDelegate = { () =>
+      sortMode = sortMode match {
+        case CountDesc => CountAsc
+        case CountAsc  => IDDesc
+        case IDDesc    => IDAsc
+        case IDAsc     => CountDesc
+      }
+
+      RequestGuiState.sortMode = sortMode match {
+        case CountDesc => 0
+        case CountAsc  => 1
+        case IDDesc    => 2
+        case IDAsc     => 3
+      }
+
+      sortButton.text = sortLabel
+      askForListRefresh()
+    }
+
+    addChild(sortButton)
 
     val ref = new MCButtonNode
     ref.position = Point(10, 158)
@@ -164,22 +222,22 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
     addChild(req)
 
     val down = new MCButtonNode
-    down.position = Point(81, 158)
-    down.size = Size(16, 16)
+    down.position = Point(69, 158)
+    down.size = Size(14, 14)
     down.text = "-"
     down.clickDelegate = { () => countDown() }
     addChild(down)
 
     val up = new MCButtonNode
-    up.position = Point(156, 158)
-    up.size = Size(16, 16)
+    up.position = Point(141, 158)
+    up.size = Size(14, 14)
     up.text = "+"
     up.clickDelegate = { () => countUp() }
     addChild(up)
 
     val all = new MCButtonNode
-    all.position = Point(176, 158)
-    all.size = Size(24, 16)
+    all.position = Point(160, 158)
+    all.size = Size(27, 14)
     all.text = "All"
     all.clickDelegate = { () =>
       if (selectedItem != null)
@@ -189,15 +247,6 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
   }
 
   def refreshList() {
-    list.items = itemMap
-      .map { case (key, count) => ItemKeyStack.get(key, count) }
-      .toSeq
-      .filter(filterAllows)
-      .sorted
-    list.reset()
-
-    if (!list.items.exists(_.key == selectedItem))
-      selectedItem = null
 
     def filterAllows(stack: ItemKeyStack): Boolean = {
       val searchText = textFilter.text
@@ -224,6 +273,42 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
       }
     }
 
+    val unsortedItems = itemMap
+      .map { case (key, count) => ItemKeyStack.get(key, count) }
+      .toSeq
+      .filter(filterAllows)
+
+    val itemsSorted = sortMode match {
+
+      case CountDesc =>
+        unsortedItems.sortWith { (a, b) =>
+          if (a.stackSize == b.stackSize)
+            a < b
+          else
+            a.stackSize > b.stackSize
+        }
+
+      case CountAsc =>
+        unsortedItems.sortWith { (a, b) =>
+          if (a.stackSize == b.stackSize)
+            a < b
+          else
+            a.stackSize < b.stackSize
+        }
+
+      case IDDesc =>
+        unsortedItems.sorted.reverse
+
+      case IDAsc =>
+        unsortedItems.sorted
+    }
+
+    list.items = itemsSorted
+
+    list.reset()
+
+    if (!list.items.exists(_.key == selectedItem))
+      selectedItem = null
   }
 
   override def drawBack_Impl(mouse: Point, frame: Float) {
@@ -232,9 +317,9 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
   }
 
   override def drawFront_Impl(mouse: Point, frame: Float) {
-    GuiDraw.drawString("Pull", 218, 144, Colors.GREY.rgb, false)
-    GuiDraw.drawString("Craft", 218, 159, Colors.GREY.rgb, false)
-    GuiDraw.drawString("Partial", 218, 174, Colors.GREY.rgb, false)
+    GuiDraw.drawString("Pull", 212, 147, Colors.GREY.rgb, false)
+    GuiDraw.drawString("Craft", 212, 162, Colors.GREY.rgb, false)
+    GuiDraw.drawString("Partial", 212, 177, Colors.GREY.rgb, false)
     drawCountBreakdownHint()
   }
 
@@ -261,9 +346,9 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
     if (countHint.nonEmpty) {
       val textWidth = GuiDraw.getStringWidth(countHint)
       val x =
-        102 + (50 - textWidth) / 2 // Center below textCount (102 is textCount x position, 50 is width)
+        87 + (50 - textWidth) / 2 // Center below textCount (87 is textCount x position, 50 is width)
       val y =
-        158 + 16 + 2 // Below textCount (158 is textCount y position, 16 is textCount height, 4 is padding)
+        173 + 4 // Below textCount (173 is Submit y position, offset of 3.5 pixels to center it vertically)
       GuiDraw.drawString(countHint, x, y, Colors.GREY.rgb, false)
     }
   }
@@ -443,4 +528,12 @@ object GuiFirewallPipe extends TGuiBuilder {
         null
     }
   }
+}
+
+object RequestGuiState {
+  var pull = true
+  var craft = true
+  var partials = false
+
+  var sortMode = 0
 }

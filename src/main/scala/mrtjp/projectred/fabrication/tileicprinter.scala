@@ -26,7 +26,7 @@ import mrtjp.core.vec.{Point, Size, Vec2}
 import mrtjp.core.world.WorldLib
 import mrtjp.projectred.ProjectRedCore.log
 import mrtjp.projectred.core.PartDefs
-import mrtjp.projectred.core.libmc.PRResources
+import mrtjp.projectred.core.libmc.{PRResources, TexturedPanNode}
 import mrtjp.projectred.integration.ComponentStore
 import mrtjp.projectred.transmission.WireDef
 import net.minecraft.client.renderer.RenderBlocks
@@ -560,7 +560,7 @@ class GuiICPrinter(c: ContainerPrinter, tile: TileICPrinter)
     clip.size = Size(48, 48)
     addChild(clip)
 
-    val pan = new PanNode
+    val pan = new TexturedPanNode
     pan.size = Size(48, 48)
     pan.scrollModifier = Vec2(0, 1)
     pan.scrollBarHorizontal = false

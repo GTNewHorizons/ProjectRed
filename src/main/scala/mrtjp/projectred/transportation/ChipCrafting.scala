@@ -261,7 +261,8 @@ class ChipCrafting
   }
 
   override def registerExcess(promise: DeliveryPromise) {
-    if (getCraftedItem.key == promise.item)
+    val craftedItem = getCraftedItem
+    if (craftedItem != null && craftedItem.key == promise.item)
       excess += promise.item -> promise.size
   }
 

@@ -166,8 +166,7 @@ class TileAutoCrafter
       recipeEquality.matchNBT = true
       recipeEquality.matchMeta =
         !currentOutput.key.makeStack(0).isItemStackDamageable
-      recipeEquality.matchOre = currentRecipe.isInstanceOf[ShapedOreRecipe] ||
-        currentRecipe.isInstanceOf[ShapelessOreRecipe]
+      recipeEquality.matchOre = false
     }
   }
 
@@ -210,8 +209,7 @@ class TileAutoCrafter
     val eq = new ItemEquality
     eq.matchMeta = !item.makeStack(0).isItemStackDamageable
     eq.matchNBT = true
-    eq.matchOre = currentRecipe.isInstanceOf[ShapedOreRecipe] || currentRecipe
-      .isInstanceOf[ShapelessOreRecipe]
+    eq.matchOre = false
 
     var found = 0
     for (i <- 9 until 27) {
@@ -399,15 +397,6 @@ class GuiAutoCrafter(tile: TileAutoCrafter, c: ContainerAutoCrafter)
       Colors.GREY.argb,
       false
     )
-  }
-
-  override def drawFront_Impl(mouse: Point, rframe: Float) {
-    if (
-      Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(
-        Keyboard.KEY_RSHIFT
-      )
-    )
-      GuiProjectBench.drawPlanOutputOverlay(c.slots)
   }
 }
 

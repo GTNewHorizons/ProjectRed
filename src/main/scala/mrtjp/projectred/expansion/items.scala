@@ -6,7 +6,6 @@
 package mrtjp.projectred.expansion
 
 import java.util.{List => JList}
-
 import codechicken.lib.packet.PacketCustom
 import codechicken.lib.vec.{BlockCoord, Rotation, Translation, Vector3}
 import cpw.mods.fml.common.FMLCommonHandler
@@ -20,11 +19,14 @@ import mrtjp.core.item.ItemCore
 import mrtjp.projectred.ProjectRedExpansion
 import mrtjp.projectred.api.IScrewdriver
 import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.model.{ModelBiped, ModelRenderer}
+import net.minecraft.client.renderer.RenderHelper
+import net.minecraft.client.renderer.entity.RenderItem
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.enchantment.{
-  EnchantmentHelper,
   Enchantment,
+  EnchantmentHelper,
   EnumEnchantmentType
 }
 import net.minecraft.entity.player.EntityPlayer
@@ -33,10 +35,14 @@ import net.minecraft.init.Blocks
 import net.minecraft.item.ItemArmor.ArmorMaterial
 import net.minecraft.item.{Item, ItemArmor, ItemStack}
 import net.minecraft.nbt.{NBTTagCompound, NBTTagList}
+import net.minecraft.client.resources.I18n
 import net.minecraft.util.{DamageSource, EnumChatFormatting, IIcon}
 import net.minecraft.world.World
+import net.minecraftforge.client.{IItemRenderer, MinecraftForgeClient}
 import net.minecraftforge.common.ISpecialArmor
 import net.minecraftforge.common.ISpecialArmor.ArmorProperties
+import org.lwjgl.input.Keyboard
+import org.lwjgl.opengl.GL11
 
 import scala.collection.mutable.{Set => MSet}
 
@@ -179,12 +185,15 @@ class ItemElectronicScrewdriver
 
 class ItemPlan extends ItemCore("projectred.expansion.plan") {
   setCreativeTab(ProjectRedExpansion.tabExpansion)
+  if (FMLCommonHandler.instance().getEffectiveSide.isClient)
+    MinecraftForgeClient.registerItemRenderer(this, new ItemPlanRenderer)
 
   var iconBlank: IIcon = null
   var iconWritten: IIcon = null
 
   override def getIconIndex(stack: ItemStack) =
-    if (ItemPlan.hasRecipeInside(stack)) iconWritten else iconBlank
+    if (ItemPlan.hasRecipeInside(stack)) iconWritten
+    else iconBlank
 
   override def getIcon(stack: ItemStack, pass: Int) = getIconIndex(stack)
 
@@ -200,10 +209,92 @@ class ItemPlan extends ItemCore("projectred.expansion.plan") {
       flag: Boolean
   ) {
     if (ItemPlan.hasRecipeInside(stack)) {
-      val s =
-        s"${EnumChatFormatting.BLUE}Output: ${EnumChatFormatting.GRAY + ItemPlan.loadPlanOutput(stack).getDisplayName}"
-      list.asInstanceOf[JList[String]].add(s)
+      val output = ItemPlan.loadPlanOutput(stack);
+      val inputs = ItemPlan.loadPlanInputs(stack);
+
+      val tooltip = list.asInstanceOf[JList[String]]
+
+      // Output line (with amount)
+      tooltip.add(
+        s"${EnumChatFormatting.BLUE}" +
+          I18n.format(
+            "item.projectred.expansion.plan.tooltip.output",
+            s"${EnumChatFormatting.GRAY}${output.stackSize}x ${output.getDisplayName}"
+          )
+      )
+
+      // Inputs header
+      tooltip.add(
+        s"${EnumChatFormatting.BLUE}" +
+          I18n.format("item.projectred.expansion.plan.tooltip.inputs")
+      )
+
+      // Each input item
+      inputs.foreach { in =>
+        if (in != null) {
+          tooltip.add(
+            s" ${EnumChatFormatting.DARK_GRAY}- " +
+              s"${EnumChatFormatting.GRAY}${in.getDisplayName}"
+          )
+        } else {
+          tooltip.add(
+            s" ${EnumChatFormatting.DARK_GRAY}- " +
+              s"${EnumChatFormatting.GRAY}" +
+              I18n.format("item.projectred.expansion.plan.tooltip.empty")
+          )
+        }
+      }
     }
+  }
+}
+
+class ItemPlanRenderer extends IItemRenderer {
+  final private val ri = new RenderItem
+  private var recursive = false
+
+  override def handleRenderType(
+      item: ItemStack,
+      `type`: IItemRenderer.ItemRenderType
+  ): Boolean = {
+    if (this.recursive) return false
+    if (`type` ne IItemRenderer.ItemRenderType.INVENTORY) return false
+
+    val isShiftHeld =
+      Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(
+        Keyboard.KEY_RSHIFT
+      )
+    isShiftHeld && ItemPlan.hasRecipeInside(item)
+  }
+
+  override def shouldUseRenderHelper(
+      `type`: IItemRenderer.ItemRenderType,
+      item: ItemStack,
+      helper: IItemRenderer.ItemRendererHelper
+  ) = false
+
+  override def renderItem(
+      `type`: IItemRenderer.ItemRenderType,
+      item: ItemStack,
+      data: AnyRef*
+  ): Unit = {
+    this.recursive = true
+
+    val is = ItemPlan.loadPlanOutput(item)
+    val mc = Minecraft.getMinecraft
+    GL11.glPushAttrib(
+      GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT
+    )
+    RenderHelper.enableGUIStandardItemLighting()
+    this.ri.renderItemAndEffectIntoGUI(
+      mc.fontRenderer,
+      mc.getTextureManager,
+      is,
+      0,
+      0
+    )
+    RenderHelper.disableStandardItemLighting()
+    GL11.glPopAttrib()
+    this.recursive = false
   }
 }
 

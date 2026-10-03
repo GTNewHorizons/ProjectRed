@@ -24,6 +24,8 @@ trait IBundledCablePart extends IWirePart with IBundledEmitter {
   def setSignal(newSignal: Array[Byte])
 
   def getBundledColour: Int
+
+  def recolour(newColour: Int): Boolean
 }
 
 trait TBundledCableCommons
@@ -34,6 +36,21 @@ trait TBundledCableCommons
   var colour: Byte = 0
 
   def getWireType = WireDef.values(WireDef.BUNDLED_N.meta + colour + 1)
+
+  override def recolour(newColour: Int): Boolean = {
+    if (
+      world.isRemote || newColour < -1 || newColour >= WireDef.BUNDLED_WIRES.length - 1 || colour == newColour
+    )
+      return false
+
+    colour = newColour.toByte
+    tile.markDirty()
+    getWriteStreamOf(11).writeByte(colour)
+    if (updateInward()) sendConnUpdate()
+    WirePropagator.propagateTo(this, FORCE)
+    tile.notifyPartChange(this)
+    true
+  }
 
   override def preparePlacement(side: Int, meta: Int) {
     super.preparePlacement(side, meta)
@@ -60,6 +77,13 @@ trait TBundledCableCommons
   override def readDesc(packet: MCDataInput) {
     super.readDesc(packet)
     colour = packet.readByte()
+  }
+
+  abstract override def read(packet: MCDataInput, key: Int) = key match {
+    case 11 =>
+      colour = packet.readByte()
+      if (useStaticRenderer) tile.markRender()
+    case _ => super.read(packet, key)
   }
 
   override def canConnectPart(part: IConnectable, r: Int) = part match {

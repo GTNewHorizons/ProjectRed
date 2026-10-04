@@ -1056,7 +1056,7 @@ class RenderComparator extends GateRenderer[SequentialGatePart] {
 
   override def renderModels(t: Transformation, orient: Int) {
     super.renderModels(t, orient)
-    chips.foreach(_.renderModel(t, orient % 24))
+    chips.foreach(_.renderModel(t, orient))
   }
 }
 

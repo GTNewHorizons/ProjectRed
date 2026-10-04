@@ -145,22 +145,38 @@ object WireDef extends ItemDefinition {
 
   val BUNDLED_N =
     WireDef("pr_bundled", "pr_fbundled", 2, 0xffffff, "bundled/neutral")
-  val BUNDLED_0 = WireDef("pr_bundled", null, 2, 0xffffff, "bundled/white")
-  val BUNDLED_1 = WireDef("pr_bundled", null, 2, 0xffffff, "bundled/orange")
-  val BUNDLED_2 = WireDef("pr_bundled", null, 2, 0xffffff, "bundled/magenta")
-  val BUNDLED_3 = WireDef("pr_bundled", null, 2, 0xffffff, "bundled/lightblue")
-  val BUNDLED_4 = WireDef("pr_bundled", null, 2, 0xffffff, "bundled/yellow")
-  val BUNDLED_5 = WireDef("pr_bundled", null, 2, 0xffffff, "bundled/lime")
-  val BUNDLED_6 = WireDef("pr_bundled", null, 2, 0xffffff, "bundled/pink")
-  val BUNDLED_7 = WireDef("pr_bundled", null, 2, 0xffffff, "bundled/grey")
-  val BUNDLED_8 = WireDef("pr_bundled", null, 2, 0xffffff, "bundled/lightgrey")
-  val BUNDLED_9 = WireDef("pr_bundled", null, 2, 0xffffff, "bundled/cyan")
-  val BUNDLED_10 = WireDef("pr_bundled", null, 2, 0xffffff, "bundled/purple")
-  val BUNDLED_11 = WireDef("pr_bundled", null, 2, 0xffffff, "bundled/blue")
-  val BUNDLED_12 = WireDef("pr_bundled", null, 2, 0xffffff, "bundled/brown")
-  val BUNDLED_13 = WireDef("pr_bundled", null, 2, 0xffffff, "bundled/green")
-  val BUNDLED_14 = WireDef("pr_bundled", null, 2, 0xffffff, "bundled/red")
-  val BUNDLED_15 = WireDef("pr_bundled", null, 2, 0xffffff, "bundled/black")
+  val BUNDLED_0 =
+    WireDef("pr_bundled", "pr_fbundled", 2, 0xffffff, "bundled/white")
+  val BUNDLED_1 =
+    WireDef("pr_bundled", "pr_fbundled", 2, 0xffffff, "bundled/orange")
+  val BUNDLED_2 =
+    WireDef("pr_bundled", "pr_fbundled", 2, 0xffffff, "bundled/magenta")
+  val BUNDLED_3 =
+    WireDef("pr_bundled", "pr_fbundled", 2, 0xffffff, "bundled/lightblue")
+  val BUNDLED_4 =
+    WireDef("pr_bundled", "pr_fbundled", 2, 0xffffff, "bundled/yellow")
+  val BUNDLED_5 =
+    WireDef("pr_bundled", "pr_fbundled", 2, 0xffffff, "bundled/lime")
+  val BUNDLED_6 =
+    WireDef("pr_bundled", "pr_fbundled", 2, 0xffffff, "bundled/pink")
+  val BUNDLED_7 =
+    WireDef("pr_bundled", "pr_fbundled", 2, 0xffffff, "bundled/grey")
+  val BUNDLED_8 =
+    WireDef("pr_bundled", "pr_fbundled", 2, 0xffffff, "bundled/lightgrey")
+  val BUNDLED_9 =
+    WireDef("pr_bundled", "pr_fbundled", 2, 0xffffff, "bundled/cyan")
+  val BUNDLED_10 =
+    WireDef("pr_bundled", "pr_fbundled", 2, 0xffffff, "bundled/purple")
+  val BUNDLED_11 =
+    WireDef("pr_bundled", "pr_fbundled", 2, 0xffffff, "bundled/blue")
+  val BUNDLED_12 =
+    WireDef("pr_bundled", "pr_fbundled", 2, 0xffffff, "bundled/brown")
+  val BUNDLED_13 =
+    WireDef("pr_bundled", "pr_fbundled", 2, 0xffffff, "bundled/green")
+  val BUNDLED_14 =
+    WireDef("pr_bundled", "pr_fbundled", 2, 0xffffff, "bundled/red")
+  val BUNDLED_15 =
+    WireDef("pr_bundled", "pr_fbundled", 2, 0xffffff, "bundled/black")
 
   val POWER_LOWLOAD =
     WireDef("pr_pwrlow", "pr_fpwrlow", 1, 0xffffff, "power/lowload")

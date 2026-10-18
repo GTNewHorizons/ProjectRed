@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
+import java.util.function.LongSupplier;
 
 import com.gtnewhorizons.horizonqa.api.GameTestArguments;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
@@ -86,6 +87,43 @@ public class CounterRegressionTests {
         helper.succeed();
     }
 
+    @GameTest(template = "gate", timeoutTicks = 35)
+    @MethodSource("implementations")
+    public static void directValueEditsUpdateReceiverWithoutInputEdges(GameTestHelper helper, boolean ic) {
+        CounterAccess counter = counter(helper, ic);
+        long[] edited = { -1 };
+        helper.startSequence()
+                .thenWaitUntil(
+                        "all initial work has settled",
+                        10,
+                        () -> helper.assertEquals(-1L, counter.scheduled.getAsLong()))
+                .thenExecute("edit value directly to maximum", () -> {
+                    helper.assertEquals(0, counter.signal.getAsInt());
+                    edited[0] = helper.getWorld().getTotalWorldTime();
+                    counter.value.accept(4);
+                    helper.assertEquals(0, counter.signal.getAsInt(), "output must wait for its scheduled evaluation");
+                })
+                .thenWaitUntil(
+                        "direct value edit powers attached wire",
+                        6,
+                        () -> helper.assertTrue(counter.signal.getAsInt() > 0))
+                .thenExecute("power arrived after two ticks", () -> {
+                    helper.assertEquals(2L, helper.getWorld().getTotalWorldTime() - edited[0]);
+                    helper.assertEquals(-1L, counter.scheduled.getAsLong());
+                    counter.value.accept(2);
+                    edited[0] = helper.getWorld().getTotalWorldTime();
+                    helper.assertTrue(counter.signal.getAsInt() > 0, "output must not change inline with setter");
+                })
+                .thenWaitUntil(
+                        "nonterminal value clears attached wire",
+                        6,
+                        () -> helper.assertEquals(0, counter.signal.getAsInt()))
+                .thenExecute(
+                        "clear arrived after two ticks",
+                        () -> helper.assertEquals(2L, helper.getWorld().getTotalWorldTime() - edited[0]))
+                .thenSucceed();
+    }
+
     private static void fill(GameTestHelper helper, CounterAccess counter) {
         for (int edge = 0; edge < 4; edge++) counter.pulse.run();
         helper.assertEquals(4, counter.count.getAsInt(), "precondition: counter must be at maximum");
@@ -108,6 +146,7 @@ public class CounterRegressionTests {
             access.decrement = n -> logic.setCounterDecr(gate, n);
             access.value = n -> logic.setCounterValue(gate, n);
             access.signal = GateFixture.output(gate)::getSignal;
+            access.scheduled = gate::schedTime;
             access.owner = "workbench";
         } else {
             SequentialGatePart gate = (SequentialGatePart) GateFixture.world(helper, GateDefinition.Counter());
@@ -122,6 +161,7 @@ public class CounterRegressionTests {
             access.decrement = n -> logic.setCounterDecr(gate, n);
             access.value = n -> logic.setCounterValue(gate, n);
             access.signal = GateFixture.output(helper)::getSignal;
+            access.scheduled = gate::schedTime;
             access.owner = "gate";
         }
         return access;
@@ -132,6 +172,7 @@ public class CounterRegressionTests {
         Runnable pulse;
         IntSupplier count;
         IntSupplier signal;
+        LongSupplier scheduled;
         IntConsumer maximum;
         IntConsumer increment;
         IntConsumer decrement;

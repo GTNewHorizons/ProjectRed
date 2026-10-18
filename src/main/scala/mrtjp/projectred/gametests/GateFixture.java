@@ -42,7 +42,18 @@ public final class GateFixture {
     public static GatePart world(GameTestHelper helper, GateDefinition.GateDef definition) {
         GatePart gate = (GatePart) MultiPartRegistry.createPart(definition.partname(), false);
         gate.load(tag(definition));
-        add(helper, "gate", gate);
+        TestPos origin = helper.absolute("gate");
+        TestPos output = helper.absolute("port0");
+        for (int rotation = 0; rotation < 4; rotation++) {
+            gate.setRotation(rotation);
+            BlockCoord adjacent = new BlockCoord(origin.x(), origin.y(), origin.z())
+                    .offset(gate.absoluteDir(gate.toAbsolute(0)));
+            if (adjacent.x == output.x() && adjacent.y == output.y() && adjacent.z == output.z()) {
+                add(helper, "gate", gate);
+                return gate;
+            }
+        }
+        helper.fail("gate output does not face the port0 fixture label");
         return gate;
     }
 

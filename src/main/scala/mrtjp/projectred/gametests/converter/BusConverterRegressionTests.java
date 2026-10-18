@@ -13,6 +13,7 @@ import com.gtnewhorizons.horizonqa.api.annotation.MethodSource;
 
 import mrtjp.projectred.gametests.GateFixture;
 import mrtjp.projectred.integration.BundledGatePart;
+import mrtjp.projectred.integration.BusConverter;
 import mrtjp.projectred.integration.GateDefinition;
 import mrtjp.projectred.transmission.BundledCablePart;
 import mrtjp.projectred.transmission.BundledCommons;
@@ -78,21 +79,31 @@ public class BusConverterRegressionTests {
                 .thenIdle(5).thenSucceed();
     }
 
-    @GameTest(template = "gate", timeoutTicks = 25)
+    @GameTest(template = "gate", timeoutTicks = 35)
     public static void legacyDeadlineSamplesInputBeforePublishingOutput(GameTestHelper helper) {
         helper.setRedstoneInput("port2", 15);
-        GateFixture.world(helper, GateDefinition.BusConverter(), legacy(0, 0));
+        BundledGatePart gate = (BundledGatePart) GateFixture.world(helper, GateDefinition.BusConverter());
+        BusConverter logic = gate.getLogic();
         BundledCablePart receiver = output(helper);
-        helper.assertEquals(0, receiver.getBundledSignal()[0] & 0xff, "load must not publish stale channel zero");
-        helper.onEachTick(
-                "no false channel-zero pulse",
-                () -> helper.assertEquals(0, receiver.getBundledSignal()[0] & 0xff));
-        helper.startSequence()
-                .thenWaitUntil(
-                        "freshly sampled channel fifteen reaches receiver",
-                        10,
-                        () -> helper.assertEquals(0x8000, BundledCommons.packDigital(receiver.getBundledSignal())))
-                .thenSucceed();
+        helper.startSequence().thenWaitUntil("placement work has settled", 10, () -> {
+            helper.assertEquals(-1L, gate.schedTime());
+            helper.assertEquals(0x8000, BundledCommons.packDigital(receiver.getBundledSignal()));
+        }).thenExecute("load stale legacy state without placement callbacks", () -> {
+            NBTTagCompound saved = new NBTTagCompound();
+            gate.save(saved);
+            saved.setByte("in", (byte) 0);
+            saved.setByte("in0", (byte) 0);
+            saved.setByte("out0", (byte) 0);
+            saved.setLong("schedTime", 0);
+            gate.load(saved);
+            helper.onEachTick(
+                    "restoration never publishes stale channel zero",
+                    () -> helper.assertEquals(0, receiver.getBundledSignal()[0] & 0xff));
+        }).thenWaitUntil("freshly sampled channel fifteen reaches receiver", 10, () -> {
+            helper.assertEquals(0x8000, logic.bOut(), "restoration processed the live input");
+            helper.assertEquals(-1L, gate.schedTime());
+            helper.assertEquals(0x8000, BundledCommons.packDigital(receiver.getBundledSignal()));
+        }).thenSucceed();
     }
 
     @GameTest(template = "gate", timeoutTicks = 25)

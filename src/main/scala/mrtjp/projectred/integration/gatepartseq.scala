@@ -327,8 +327,9 @@ trait TTimerGateLogic extends SequentialGateLogic with ITimerGuiLogic {
     var t = time
     val minTime = math.max(4, Configurator.minTimerTicks)
     if (t < minTime) t = minTime
-    if (t != pointer_max) {
+    if (t != getTimerMax) {
       pointer_max = t - 2
+      gate.tile.markDirty()
       sendPointerMaxUpdate()
     }
   }

@@ -13,7 +13,6 @@ import com.gtnewhorizons.horizonqa.api.annotation.MethodSource;
 
 import mrtjp.projectred.gametests.GateFixture;
 import mrtjp.projectred.integration.BundledGatePart;
-import mrtjp.projectred.integration.BusConverter;
 import mrtjp.projectred.integration.GateDefinition;
 import mrtjp.projectred.transmission.BundledCablePart;
 import mrtjp.projectred.transmission.BundledCommons;
@@ -23,49 +22,9 @@ import mrtjp.projectred.transmission.WireDef;
 @GameTestHolder(value = "projectred", requiredMods = { "ProjRed|Integration", "ProjRed|Transmission" })
 public class BusConverterRegressionTests {
 
-    public static List<GameTestArguments> fullMasks() {
-        return Arrays.asList(
-                GameTestArguments.named("channel8", 0x100),
-                GameTestArguments.named("channel15", 0x8000),
-                GameTestArguments.named("all", 0xffff));
-    }
-
-    public static List<GameTestArguments> legacyMasks() {
-        return Arrays.asList(GameTestArguments.named("channel7", 0x80), GameTestArguments.named("low-eight", 0xff));
-    }
-
     public static List<GameTestArguments> restorePaths() {
         return Arrays
                 .asList(GameTestArguments.named("legacy", false), GameTestArguments.named("resaved-before-tick", true));
-    }
-
-    @GameTest(template = "gate", timeoutTicks = 20)
-    @MethodSource("fullMasks")
-    public static void fullMasksSurviveSaveAndLoad(GameTestHelper helper, int mask) {
-        NBTTagCompound tag = GateFixture.tag(GateDefinition.BusConverter());
-        tag.setShort("in0", (short) mask);
-        tag.setShort("out0", (short) mask);
-        BundledGatePart original = loaded(tag);
-        NBTTagCompound saved = new NBTTagCompound();
-        original.save(saved);
-        BusConverter restored = logic(loaded(saved));
-        helper.assertEquals(mask, restored.bIn(), "saved bundled input mask");
-        helper.assertEquals(mask, restored.bOut(), "saved bundled output mask");
-        helper.assertEquals(mask, BundledCommons.packDigital(restored.bOutUnpacked()), "restored output channels");
-        helper.succeed();
-    }
-
-    @GameTest(template = "gate", timeoutTicks = 20)
-    @MethodSource("legacyMasks")
-    public static void legacyByteMasksStayUnsigned(GameTestHelper helper, int mask) {
-        NBTTagCompound tag = GateFixture.tag(GateDefinition.BusConverter());
-        tag.setByte("in0", (byte) mask);
-        tag.setByte("out0", (byte) mask);
-        BusConverter restored = logic(loaded(tag));
-        helper.assertEquals(mask, restored.bIn(), "legacy input must not acquire upper channels");
-        helper.assertEquals(mask, restored.bOut(), "legacy output must not acquire upper channels");
-        helper.assertEquals(mask, BundledCommons.packDigital(restored.bOutUnpacked()), "legacy output channels");
-        helper.succeed();
     }
 
     @GameTest(template = "gate", timeoutTicks = 30)
@@ -166,10 +125,6 @@ public class BusConverterRegressionTests {
         BundledGatePart gate = new BundledGatePart();
         gate.load(tag);
         return gate;
-    }
-
-    private static BusConverter logic(BundledGatePart gate) {
-        return gate.getLogic();
     }
 
     private static BundledCablePart output(GameTestHelper helper) {

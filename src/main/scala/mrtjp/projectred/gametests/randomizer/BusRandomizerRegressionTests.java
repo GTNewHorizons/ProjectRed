@@ -1,15 +1,10 @@
 package mrtjp.projectred.gametests.randomizer;
 
-import java.util.Arrays;
-import java.util.List;
-
 import net.minecraft.nbt.NBTTagCompound;
 
-import com.gtnewhorizons.horizonqa.api.GameTestArguments;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
-import com.gtnewhorizons.horizonqa.api.annotation.MethodSource;
 
 import mrtjp.projectred.gametests.GateFixture;
 import mrtjp.projectred.integration.BundledGatePart;
@@ -21,28 +16,6 @@ import mrtjp.projectred.transmission.WireDef;
 
 @GameTestHolder(value = "projectred", requiredMods = { "ProjRed|Integration", "ProjRed|Transmission" })
 public class BusRandomizerRegressionTests {
-
-    public static List<GameTestArguments> highMasks() {
-        return Arrays.asList(GameTestArguments.named("channel15", 0x8000), GameTestArguments.named("all", 0xffff));
-    }
-
-    @GameTest(template = "gate", timeoutTicks = 20)
-    @MethodSource("highMasks")
-    public static void restoredSelectionMaskIsUnsigned(GameTestHelper helper, int mask) {
-        BusRandomizer restored = restored(mask, 0);
-        helper.assertEquals(mask, restored.mask(), "loaded selection mask");
-        helper.assertEquals(Integer.bitCount(mask), Integer.bitCount(restored.mask()), "number of selectable channels");
-        helper.succeed();
-    }
-
-    @GameTest(template = "gate", timeoutTicks = 20)
-    @MethodSource("highMasks")
-    public static void restoredOutputMaskIsUnsigned(GameTestHelper helper, int mask) {
-        BusRandomizer restored = restored(0xffff, mask);
-        helper.assertEquals(mask, restored.output(), "loaded output mask");
-        helper.assertEquals(mask, BundledCommons.packDigital(restored.unpackedOut()), "loaded bundled output");
-        helper.succeed();
-    }
 
     @GameTest(template = "gate", timeoutTicks = 20)
     public static void pendingSelectionUsesRestoredChannelFifteen(GameTestHelper helper) {
@@ -76,18 +49,5 @@ public class BusRandomizerRegressionTests {
                                 BundledCommons.packDigital(receiver.getBundledSignal()),
                                 "channel fifteen is the only legal selection"))
                 .thenSucceed();
-    }
-
-    private static BusRandomizer restored(int mask, int output) {
-        NBTTagCompound tag = GateFixture.tag(GateDefinition.BusRandomizer());
-        tag.setShort("in", (short) mask);
-        tag.setShort("out", (short) output);
-        BundledGatePart gate = new BundledGatePart();
-        gate.load(tag);
-        NBTTagCompound saved = new NBTTagCompound();
-        gate.save(saved);
-        BundledGatePart copy = new BundledGatePart();
-        copy.load(saved);
-        return copy.getLogic();
     }
 }

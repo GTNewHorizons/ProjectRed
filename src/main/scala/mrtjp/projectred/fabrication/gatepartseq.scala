@@ -432,6 +432,7 @@ class Sequencer(gate: SequentialGateICPart)
     if (t < minTime) t = minTime
     if (t != pointer_max) {
       pointer_max = t
+      gate.world.network.markSave()
       sendPointerMaxUpdate()
     }
   }

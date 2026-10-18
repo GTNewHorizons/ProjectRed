@@ -431,6 +431,7 @@ class Sequencer(gate: SequentialGatePart)
     if (t < minTime) t = minTime
     if (t != pointer_max) {
       pointer_max = t
+      gate.tile.markDirty()
       sendPointerMaxUpdate()
     }
   }

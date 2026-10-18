@@ -701,7 +701,8 @@ class Synchronizer(gate: SequentialGatePart)
 
       gate.setState(gate.state & 0xf0 | newInput)
       gate.onInputChange()
-      if ((newInput & 4) != 0) setState2(0)
+      if ((newInput & 4) != 0)
+        setState2(state2 & 4) // retain pending pulse termination
       else {
         if ((high & 2) != 0) setState2(state2 | 1) // right
         if ((high & 8) != 0) setState2(state2 | 2) // left
@@ -715,14 +716,14 @@ class Synchronizer(gate: SequentialGatePart)
   override def scheduledTick(gate: SequentialGatePart) {
     val oldValue = state2
     if (!pulsing && right && left) {
-      gate.setState(gate.state | 1 << 4)
-      gate.onOutputChange(1)
       setState2(state2 | 4) // pulsing
       gate.scheduleTick(2)
+      gate.setState(gate.state | 1 << 4)
+      gate.onOutputChange(1)
     } else if (pulsing) {
+      setState2(0) // off before notifying feedback
       gate.setState(gate.state & ~0x10)
       gate.onOutputChange(1)
-      setState2(0) // off
     }
     if (state2 != oldValue) sendState2Update()
   }

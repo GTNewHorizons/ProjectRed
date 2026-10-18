@@ -545,20 +545,24 @@ class Counter(gate: SequentialGateICPart)
   override def setCounterValue(gate: GateICPart, i: Int) {
     val oldVal = value
     value = Math.min(max, Math.max(0, i))
-    if (value != oldVal)
+    if (value != oldVal) {
+      gate.world.network.markSave()
+      gate.scheduleTick(2)
       sendValueUpdate()
+    }
   }
 
   override def setCounterMax(gate: GateICPart, i: Int) {
     val oldMax = max
     max = Math.min(32767, Math.max(1, i))
     if (max != oldMax) {
+      gate.world.network.markSave()
+      gate.scheduleTick(2)
       sendMaxUpdate()
       val oldVal = value
-      value = Math.min(value, Math.max(0, i))
+      value = Math.min(value, max)
       if (value != oldVal) {
         sendValueUpdate()
-        gate.scheduleTick(2)
       }
     }
   }
@@ -566,15 +570,19 @@ class Counter(gate: SequentialGateICPart)
   override def setCounterIncr(gate: GateICPart, i: Int) {
     val oldIncr = incr
     incr = Math.min(max, Math.max(1, i))
-    if (incr != oldIncr)
+    if (incr != oldIncr) {
+      gate.world.network.markSave()
       sendIncrUpdate()
+    }
   }
 
   override def setCounterDecr(gate: GateICPart, i: Int) {
     val oldDecr = decr
     decr = Math.min(max, Math.max(1, i))
-    if (decr != oldDecr)
+    if (decr != oldDecr) {
+      gate.world.network.markSave()
       sendDecrUpdate()
+    }
   }
 
   def onChange(gate: SequentialGateICPart) {
@@ -598,7 +606,7 @@ class Counter(gate: SequentialGateICPart)
   }
 
   def scheduledTick(gate: SequentialGateICPart) {
-    val oldOutput = gate.state
+    val oldOutput = gate.state >> 4
     var newOutput = 0
     if (value == max) newOutput = 1
     else if (value == 0) newOutput = 4

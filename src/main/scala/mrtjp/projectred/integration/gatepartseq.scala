@@ -538,6 +538,8 @@ class Counter(gate: SequentialGatePart)
     val oldVal = value
     value = Math.min(max, Math.max(0, i))
     if (value != oldVal) {
+      gate.tile.markDirty()
+      gate.scheduleTick(2)
       tickSound()
       sendValueUpdate()
     }
@@ -547,13 +549,14 @@ class Counter(gate: SequentialGatePart)
     val oldMax = max
     max = Math.min(32767, Math.max(1, i))
     if (max != oldMax) {
+      gate.tile.markDirty()
+      gate.scheduleTick(2)
       tickSound()
       sendMaxUpdate()
       val oldVal = value
-      value = Math.min(value, Math.max(0, i))
+      value = Math.min(value, max)
       if (value != oldVal) {
         sendValueUpdate()
-        gate.scheduleTick(2)
       }
     }
   }
@@ -562,6 +565,7 @@ class Counter(gate: SequentialGatePart)
     val oldIncr = incr
     incr = Math.min(max, Math.max(1, i))
     if (incr != oldIncr) {
+      gate.tile.markDirty()
       tickSound()
       sendIncrUpdate()
     }
@@ -571,6 +575,7 @@ class Counter(gate: SequentialGatePart)
     val oldDecr = decr
     decr = Math.min(max, Math.max(1, i))
     if (decr != oldDecr) {
+      gate.tile.markDirty()
       tickSound()
       sendDecrUpdate()
     }
@@ -597,7 +602,7 @@ class Counter(gate: SequentialGatePart)
   }
 
   def scheduledTick(gate: SequentialGatePart) {
-    val oldOutput = gate.state
+    val oldOutput = gate.state >> 4
     var newOutput = 0
     if (value == max) newOutput = 1
     else if (value == 0) newOutput = 4

@@ -11,9 +11,11 @@ import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 import com.gtnewhorizons.horizonqa.api.annotation.MethodSource;
 
+import mrtjp.core.vec.Point;
 import mrtjp.projectred.fabrication.ICGateDefinition;
 import mrtjp.projectred.fabrication.LeverICPart;
 import mrtjp.projectred.fabrication.SequentialGateICPart;
+import mrtjp.projectred.fabrication.TorchICPart;
 import mrtjp.projectred.gametests.GateFixture;
 import mrtjp.projectred.integration.GateDefinition;
 
@@ -91,13 +93,14 @@ public class SynchronizerRegressionTests {
     public static void pendingIcInputAndReleaseRequestPersistence(GameTestHelper helper) {
         SequentialGateICPart gate = GateFixture.ic(helper, ICGateDefinition.Synchronizer());
         mrtjp.projectred.fabrication.Synchronizer logic = (mrtjp.projectred.fabrication.Synchronizer) gate.getLogic();
-        LeverICPart right = GateFixture.input(gate, 1);
+        Point right = new Point(gate.x(), gate.y()).offset(gate.toAbsolute(1));
         IntSupplier output = GateFixture.output(gate)::getSignal;
-        GateFixture.assertSaveRequested(helper, "workbench", () -> right.readClientPacket(null));
+        // Torch placement/removal isolates the gate's save request from lever state changes.
+        GateFixture.assertSaveRequested(helper, "workbench", () -> gate.world().setPart(right, new TorchICPart()));
         helper.assertTrue(logic.right(), "one input should remain latched awaiting the other");
         helper.assertFalse(logic.left(), "second input must not be latched");
         helper.assertEquals(0, output.getAsInt(), "one input must not produce an output pulse");
-        GateFixture.assertSaveRequested(helper, "workbench", () -> right.readClientPacket(null));
+        GateFixture.assertSaveRequested(helper, "workbench", () -> gate.world().removePart(right));
         helper.assertTrue(logic.right(), "release must preserve the pending input latch");
         helper.succeed();
     }

@@ -40,8 +40,12 @@ public final class GateFixture {
     }
 
     public static GatePart world(GameTestHelper helper, GateDefinition.GateDef definition) {
+        return world(helper, definition, tag(definition));
+    }
+
+    public static GatePart world(GameTestHelper helper, GateDefinition.GateDef definition, NBTTagCompound tag) {
         GatePart gate = (GatePart) MultiPartRegistry.createPart(definition.partname(), false);
-        gate.load(tag(definition));
+        gate.load(tag);
         TestPos origin = helper.absolute("gate");
         TestPos output = helper.absolute("port0");
         for (int rotation = 0; rotation < 4; rotation++) {

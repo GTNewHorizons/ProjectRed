@@ -247,8 +247,8 @@ class BusRandomizer(gate: BundledGatePart) extends BundledGateLogic(gate) {
   }
 
   override def load(tag: NBTTagCompound) {
-    mask = tag.getShort("in")
-    output = tag.getShort("out")
+    mask = tag.getShort("in") & 0xffff
+    output = tag.getShort("out") & 0xffff
     unpackedOut = unpackDigital(unpackedOut, output)
   }
 

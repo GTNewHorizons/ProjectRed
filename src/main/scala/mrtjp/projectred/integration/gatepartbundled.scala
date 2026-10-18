@@ -342,6 +342,7 @@ class BusConverter(gate: BundledGatePart) extends BundledGateLogic(gate) {
   var bIn, bOut = 0
   var rsIn, rsOut = 0
   var bOutUnpacked: Array[Byte] = null
+  private var restoreOutput = false
 
   override def bundledOutputMask(shape: Int) = if (shape == 0) 1 else 0
   override def bundledInputMask(shape: Int) = if (shape == 0) 0 else 1
@@ -359,6 +360,7 @@ class BusConverter(gate: BundledGatePart) extends BundledGateLogic(gate) {
     tag.setByte("out", rsOut.toByte)
     tag.setShort("in0", bIn.toShort)
     tag.setShort("out0", bOut.toShort)
+    tag.setBoolean("restoreOutput", restoreOutput)
   }
 
   override def load(tag: NBTTagCompound) {
@@ -368,6 +370,10 @@ class BusConverter(gate: BundledGatePart) extends BundledGateLogic(gate) {
     setBOut(
       tag.getShort("out0") & (if (tag.hasKey("out0", 1)) 0xff else 0xffff)
     )
+    restoreOutput = tag.getBoolean("restoreOutput") ||
+      tag.hasKey("in0", 1) || tag.hasKey("out0", 1)
+    // Sample legacy inputs before processing pending output work.
+    if (restoreOutput) gate.schedTime = -1L
   }
 
   override def writeDesc(packet: MCDataOutput) {
@@ -406,6 +412,15 @@ class BusConverter(gate: BundledGatePart) extends BundledGateLogic(gate) {
 
   override def getBundledOutput(gate: BundledGatePart, r: Int) =
     if (gate.shape == 0 && r == 0) bOutUnpacked else null
+
+  override def onTick(gate: BundledGatePart) {
+    if (!gate.world.isRemote && restoreOutput) {
+      onChange(gate)
+      gate.scheduleTick(2)
+      restoreOutput = false
+      gate.tile.markDirty()
+    }
+  }
 
   override def onChange(gate: BundledGatePart) {
     var changed = false
@@ -456,6 +471,7 @@ class BusConverter(gate: BundledGatePart) extends BundledGateLogic(gate) {
     */
   override def cycleShape(gate: BundledGatePart) = {
     gate.setShape(gate.shape ^ 1)
+    gate.scheduleTick(2)
     true
   }
 

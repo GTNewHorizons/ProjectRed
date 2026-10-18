@@ -357,15 +357,17 @@ class BusConverter(gate: BundledGatePart) extends BundledGateLogic(gate) {
   override def save(tag: NBTTagCompound) {
     tag.setByte("in", rsIn.toByte)
     tag.setByte("out", rsOut.toByte)
-    tag.setByte("in0", bIn.toByte)
-    tag.setByte("out0", bOut.toByte)
+    tag.setShort("in0", bIn.toShort)
+    tag.setShort("out0", bOut.toShort)
   }
 
   override def load(tag: NBTTagCompound) {
     rsIn = tag.getByte("in")
     rsOut = tag.getByte("out")
-    bIn = tag.getByte("in0")
-    setBOut(tag.getByte("out0"))
+    bIn = tag.getShort("in0") & (if (tag.hasKey("in0", 1)) 0xff else 0xffff)
+    setBOut(
+      tag.getShort("out0") & (if (tag.hasKey("out0", 1)) 0xff else 0xffff)
+    )
   }
 
   override def writeDesc(packet: MCDataOutput) {
@@ -409,7 +411,7 @@ class BusConverter(gate: BundledGatePart) extends BundledGateLogic(gate) {
     var changed = false
 
     val oldRSIn = rsIn
-    rsIn = if (gate.shape == 0) gate.getRedstoneInput(2) / 17 else 0
+    rsIn = if (gate.shape == 0) (gate.getRedstoneInput(2) + 16) / 17 else 0
     if (oldRSIn != rsIn) changed = true
 
     val oldBIn = bIn

@@ -720,6 +720,7 @@ class Synchronizer(gate: SequentialGateICPart)
       }
       if (right && left) gate.scheduleTick(0)
 
+      gate.world.network.markSave()
       if (state2 != oldValue) sendState2Update()
     }
   }

@@ -11,11 +11,8 @@ import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 import com.gtnewhorizons.horizonqa.api.annotation.MethodSource;
 
-import mrtjp.core.vec.Size;
-import mrtjp.projectred.ProjectRedFabrication;
 import mrtjp.projectred.fabrication.IntegratedCircuit;
 import mrtjp.projectred.fabrication.LeverICPart;
-import mrtjp.projectred.fabrication.TileICWorkbench;
 import mrtjp.projectred.gametests.GateFixture;
 
 @GameTestHolder(value = "projectred", requiredMods = { "ProjRed|Fabrication" })
@@ -28,9 +25,7 @@ public class LeverRegressionTests {
     @GameTest(template = "gate", timeoutTicks = 20)
     @MethodSource("initialStates")
     public static void isolatedToggleRequestsPersistence(GameTestHelper helper, boolean initiallyOn) {
-        helper.setBlock("workbench", ProjectRedFabrication.icBlock(), 0);
-        IntegratedCircuit ic = helper.assertTileEntityPresent(TileICWorkbench.class, "workbench").getIC();
-        ic.size_$eq(new Size(3, 3));
+        IntegratedCircuit ic = GateFixture.workbench(helper);
         LeverICPart lever = new LeverICPart();
         NBTTagCompound initial = new NBTTagCompound();
         initial.setBoolean("on", initiallyOn);

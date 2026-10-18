@@ -1,7 +1,9 @@
 package mrtjp.projectred.gametests;
 
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.util.FakePlayer;
 
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.TestPos;
@@ -16,6 +18,7 @@ import mrtjp.projectred.ProjectRedFabrication;
 import mrtjp.projectred.fabrication.AlloyWireICPart;
 import mrtjp.projectred.fabrication.ICGateDefinition;
 import mrtjp.projectred.fabrication.IntegratedCircuit;
+import mrtjp.projectred.fabrication.ItemICBlueprint;
 import mrtjp.projectred.fabrication.LeverICPart;
 import mrtjp.projectred.fabrication.SequentialGateICPart;
 import mrtjp.projectred.fabrication.TileICWorkbench;
@@ -73,11 +76,26 @@ public final class GateFixture {
         return wire;
     }
 
-    public static SequentialGateICPart ic(GameTestHelper helper, ICGateDefinition.ICGateDef definition) {
+    public static IntegratedCircuit workbench(GameTestHelper helper) {
         helper.setBlock("workbench", ProjectRedFabrication.icBlock(), 0);
         TileICWorkbench bench = helper.assertTileEntityPresent(TileICWorkbench.class, "workbench");
-        IntegratedCircuit ic = bench.getIC();
-        ic.size_$eq(new Size(5, 5));
+        IntegratedCircuit design = new IntegratedCircuit();
+        design.size_$eq(new Size(16, 16));
+        ItemStack blueprint = new ItemStack(ProjectRedFabrication.itemICBlueprint());
+        ItemICBlueprint.saveIC(design, blueprint);
+        TestPos pos = helper.absolute("workbench");
+        FakePlayer player = helper.spawnFakePlayer("PRBP" + pos.x() + "_" + pos.z());
+        player.setSneaking(false);
+        helper.afterTest(() -> player.inventory.mainInventory[player.inventory.currentItem] = null);
+        helper.assertTrue(helper.simulateRightClick("workbench", player, blueprint), "blueprint insertion was handled");
+        helper.assertTrue(bench.hasBP(), "workbench must contain a blueprint");
+        helper.assertEquals(0, blueprint.stackSize, "workbench consumed the inserted blueprint");
+        helper.assertEquals(design.size(), bench.getIC().size(), "workbench loaded the blueprint's board dimensions");
+        return bench.getIC();
+    }
+
+    public static SequentialGateICPart ic(GameTestHelper helper, ICGateDefinition.ICGateDef definition) {
+        IntegratedCircuit ic = workbench(helper);
         SequentialGateICPart gate = new SequentialGateICPart();
         gate.preparePlacement(0, definition.ordinal());
         ic.setPart(2, 2, gate);

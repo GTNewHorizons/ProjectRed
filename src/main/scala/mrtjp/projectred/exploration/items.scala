@@ -35,6 +35,7 @@ import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.util.{EnumChatFormatting, IIcon}
 import net.minecraft.world.{IBlockAccess, World}
 import net.minecraftforge.common.EnumPlantType
+import net.minecraftforge.oredict.OreDictionary
 import org.lwjgl.input.Keyboard
 
 class ItemBackpack extends ItemCore("projectred.exploration.backpack") {
@@ -400,9 +401,9 @@ object ArmorDefs {
     armorMatrialRuby,
     armorMatrialSapphire
   }
-  private val ruby = PartDefs.RUBY.makeStack
-  private val sapphire = PartDefs.SAPPHIRE.makeStack
-  private val peridot = PartDefs.PERIDOT.makeStack
+  private val ruby = "gemRuby"
+  private val sapphire = "gemSapphire"
+  private val peridot = "gemPeridot"
 
   val RUBYHELMET = ArmorDef("rubyhelmet", "ruby", armorMatrialRuby, ruby)
   val RUBYCHESTPLATE =
@@ -432,7 +433,7 @@ object ArmorDefs {
       unlocal: String,
       tex: String,
       mat: ArmorMaterial,
-      repair: ItemStack
+      repairOre: String
   )
 }
 
@@ -444,8 +445,9 @@ class ItemGemArmor(adef: ArmorDef, atype: Int)
   GameRegistry.registerItem(this, "projectred.exploration." + adef.unlocal)
 
   override def getIsRepairable(ist1: ItemStack, ist2: ItemStack) = {
-    if (adef.repair.isItemEqual(ist2)) true
-    else false
+    OreDictionary
+      .getOreIDs(ist2)
+      .contains(OreDictionary.getOreID(adef.repairOre))
   }
 
   override def getArmorTexture(

@@ -718,7 +718,7 @@ class Synchronizer(gate: SequentialGateICPart)
         if ((high & 2) != 0) setState2(state2 | 1) // right
         if ((high & 8) != 0) setState2(state2 | 2) // left
       }
-      if (right && left) gate.scheduleTick(0)
+      if (!pulsing && right && left) gate.scheduleTick(0)
 
       gate.world.network.markSave()
       if (state2 != oldValue) sendState2Update()

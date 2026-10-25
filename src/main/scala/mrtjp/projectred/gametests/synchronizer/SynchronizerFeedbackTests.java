@@ -94,6 +94,35 @@ public class SynchronizerFeedbackTests {
                 .thenExecute("exactly two pulses", () -> helper.assertEquals(2, sync.rises)).thenSucceed();
     }
 
+    @GameTest(template = "gate", timeoutTicks = 25)
+    @MethodSource("implementations")
+    public static void inputReleaseDuringRiseKeepsTwoTickPulse(GameTestHelper helper, boolean ic) {
+        SyncAccess sync = synchronizer(helper, ic);
+        long[] rise = { -1 };
+        long[] fall = { -1 };
+        boolean[] released = { false };
+        sync.feedback = high -> {
+            long now = helper.getWorld().getTotalWorldTime();
+            if (high && !released[0]) {
+                rise[0] = now;
+                released[0] = true;
+                sync.inputs.accept(8);
+            } else if (!high && released[0] && fall[0] < 0) {
+                fall[0] = now;
+            }
+        };
+        helper.startSequence().thenExecute("trigger paired inputs", () -> sync.inputs.accept(10))
+                .thenWaitUntil(
+                        "output rise releases right input synchronously",
+                        10,
+                        () -> helper.assertTrue(released[0]))
+                .thenWaitUntil("output pulse has ended", 6, () -> helper.assertTrue(fall[0] >= 0))
+                .thenExecute("normal input release preserves pulse width", () -> {
+                    helper.assertEquals(2L, fall[0] - rise[0], "pulse width after synchronous input release");
+                    helper.assertEquals(1, sync.rises, "input release must not create another pulse");
+                }).thenSucceed();
+    }
+
     private static SyncAccess synchronizer(GameTestHelper helper, boolean ic) {
         SyncAccess access = new SyncAccess();
         if (ic) {

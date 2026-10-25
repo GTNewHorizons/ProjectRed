@@ -58,7 +58,7 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
   private val MAX_COUNT_LENGTH = 9
 
   var clip: ClipNode = null
-  var pan: PanNode = null
+  var pan: TexturedPanNode = null
   var list: ItemListNode = null
   var selectedItem: ItemKey = null
 
@@ -77,7 +77,7 @@ class GuiRequester(pipe: IWorldRequester) extends NodeGui(256, 192) {
     clip.size = Size(220, 117)
     addChild(clip)
 
-    pan = new PanNode
+    pan = new TexturedPanNode
     pan.size = Size(220, 117)
     pan.scrollBarThickness = 16
     pan.scrollModifier = Vec2(0, 1)

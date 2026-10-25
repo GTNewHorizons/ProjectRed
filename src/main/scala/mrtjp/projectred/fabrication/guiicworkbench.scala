@@ -16,7 +16,7 @@ import mrtjp.core.color.Colors
 import mrtjp.core.gui._
 import mrtjp.core.vec.{Point, Rect, Size}
 import mrtjp.core.world.WorldLib
-import mrtjp.projectred.core.libmc.PRResources
+import mrtjp.projectred.core.libmc.{PRResources, TexturedPanNode}
 import mrtjp.projectred.fabrication.ICComponentStore._
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Gui
@@ -491,7 +491,20 @@ class NewICNode extends TNode {
     fin.text = "start"
     addChild(fin)
 
-    textbox = new SimpleTextboxNode
+    textbox = new SimpleTextboxNode {
+      // The library only draws the grey border up to size + 1, so the right
+      // and bottom edges are missing. Draw a full border underneath first.
+      override def drawBack_Impl(mouse: Point, rframe: Float) {
+        GuiDraw.drawRect(
+          position.x - 1,
+          position.y - 1,
+          size.width + 2,
+          size.height + 2,
+          0xffa0a0a0
+        )
+        super.drawBack_Impl(mouse, rframe)
+      }
+    }
     textbox.size = Size(80, 14)
     textbox.position = Point(size / 2 - textbox.size / 2) + Point(0, 24)
     textbox.phantom = "untitled"
@@ -621,7 +634,7 @@ class GuiICWorkbench(val tile: TileICWorkbench) extends NodeGui(330, 256) {
     clip.size = Size(252, 197)
     addChild(clip)
 
-    val pan = new PanNode
+    val pan = new TexturedPanNode
     pan.size = Size(252, 197)
     pan.clampSlack = 35
     pan.dragTestFunction = { () => Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) }

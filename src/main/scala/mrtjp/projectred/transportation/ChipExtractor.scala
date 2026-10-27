@@ -4,6 +4,7 @@ import mrtjp.core.inventory.InvWrapper
 
 import scala.collection.immutable.BitSet
 import scala.collection.mutable.ListBuffer
+import util.control.Breaks._
 
 class ChipExtractor extends RoutingChip with TChipFilter with TChipOrientation {
   private var remainingDelay = operationDelay
@@ -35,20 +36,21 @@ class ChipExtractor extends RoutingChip with TChipFilter with TChipOrientation {
         stackSize != 0 &&
         filt.hasItem(stackKey) != filterExclude
       ) {
-        var exclusions = BitSet.empty
-        var s = routeLayer.getLogisticPath(stackKey, exclusions, true)
-        if (s != null) {
-          var leftInRun = itemsToExtract
+        val maxRunSize = math.min(itemsToExtract, stackSize)
+        var leftInRun = maxRunSize
+
+        breakable {
+          var exclusions = BitSet.empty
+          var s = routeLayer.getLogisticPath(stackKey, exclusions, true)
           while (s != null) {
-            var toExtract = math.min(leftInRun, stackSize)
-            toExtract = math.min(toExtract, stackKey.getMaxStackSize)
+            var toExtract = math.min(leftInRun, stackKey.getMaxStackSize)
             toExtract = math.min(toExtract, s.itemCount)
 
-            if (toExtract <= 0) return
+            if (toExtract <= 0) break
 
             val stack2 =
               stackKey.makeStack(inv.extractItem(stackKey, toExtract))
-            if (stack2.stackSize <= 0) return
+            if (stack2.stackSize <= 0) break
 
             routeLayer.queueStackToSend(
               stack2,
@@ -57,12 +59,15 @@ class ChipExtractor extends RoutingChip with TChipFilter with TChipOrientation {
             )
 
             leftInRun -= stack2.stackSize
-            if (leftInRun <= 0) return
+            if (leftInRun <= 0) break
 
             exclusions += s.responder
             s = routeLayer.getLogisticPath(stackKey, exclusions, true)
           }
         }
+
+        // Confirm that we actually extracted something. If not, we can still try the next item type
+        if (leftInRun < maxRunSize) return
       }
     }
   }

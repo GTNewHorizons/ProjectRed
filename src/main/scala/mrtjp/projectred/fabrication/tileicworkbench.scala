@@ -138,10 +138,42 @@ class TileICWorkbench extends TileICMachine with NetWorldCircuit {
     case 2 => circuit.readDesc(in)
     case 3 => readPartStream(in)
     case 4 => readICStream(in)
-    case 5 =>
-      if (!hasBP) new IntegratedCircuit().readDesc(in)
-      else { circuit.readDesc(in); sendICDesc() }
     case _ => super.read(in, key)
+  }
+
+  override def readFromClient(
+      in: MCDataInput,
+      key: Int,
+      player: EntityPlayer
+  ) {
+    if (!watchers.contains(player) || !hasBP) return
+    key match {
+      case 4 => readClientICStream(in)
+      case 5 => circuit.readDesc(in); sendICDesc()
+      case _ => super.readFromClient(in, key, player)
+    }
+  }
+
+  private def readClientICStream(in: MCDataInput) {
+    try {
+      var key = in.readUByte()
+      while (key != 255) {
+        key match {
+          case 3 => CircuitOp.getOperation(in.readUByte()).readOp(circuit, in)
+          case 4 =>
+            circuit.getPart(in.readUByte(), in.readUByte()) match {
+              case part: TClientNetCircuitPart => part.readClientPacket(in)
+              case _                           => return
+            }
+          // Client IC streams carry editing actions, never state updates.
+          case _ => return
+        }
+        key = in.readUByte()
+      }
+    } catch {
+      case _: IndexOutOfBoundsException =>
+        mrtjp.projectred.ProjectRedCore.log.error("Invalid client IC stream")
+    }
   }
 
   private def sendHasBPUpdate() {

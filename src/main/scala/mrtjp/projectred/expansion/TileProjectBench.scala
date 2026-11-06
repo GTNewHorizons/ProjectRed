@@ -65,10 +65,15 @@ class TileProjectBench
     loadInv(tag)
   }
 
-  override def read(in: MCDataInput, key: Int) = key match {
+  override def readFromClient(
+      in: MCDataInput,
+      key: Int,
+      player: EntityPlayer
+  ) = key match {
     case 1 => writePlan()
-    case 2 => clearGrid(in.readInt())
-    case _ => super.read(in, key)
+    case 2 =>
+      if (in.readInt() == player.getEntityId) clearGrid(player.getEntityId)
+    case _ => super.readFromClient(in, key, player)
   }
 
   def sendWriteButtonAction() {

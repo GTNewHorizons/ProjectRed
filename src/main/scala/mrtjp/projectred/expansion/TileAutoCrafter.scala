@@ -69,9 +69,13 @@ class TileAutoCrafter
     cycleTimer2 = tag.getInteger("cyt2")
   }
 
-  override def read(in: MCDataInput, key: Int) = key match {
+  override def readFromClient(
+      in: MCDataInput,
+      key: Int,
+      player: EntityPlayer
+  ) = key match {
     case 2 => cyclePlanSlot()
-    case _ => super.read(in, key)
+    case _ => super.readFromClient(in, key, player)
   }
 
   def sendCyclePlanSlot() {

@@ -18,6 +18,7 @@ import net.minecraft.world.World
 import net.minecraftforge.fluids.FluidStack
 
 import scala.collection.mutable.{Map => MMap, Seq => MSeq}
+import scala.util.control.NonFatal
 
 trait WorldCircuit {
   def getIC: IntegratedCircuit
@@ -245,6 +246,33 @@ class IntegratedCircuit {
       id = in.readUByte()
     }
     // etc
+  }
+
+  /** Accept only empty client redraws; reject invalid uploads without changing
+    * the live circuit or deserializing client-supplied parts.
+    */
+  private[fabrication] def readRedraw(in: MCDataInput): Boolean = {
+    val (newName, newSize) =
+      try {
+        val newName = in.readString()
+        val newSize = Size(in.readUByte(), in.readUByte())
+        val boardSizes = 16 to 64 by 16
+        if (
+          !boardSizes.contains(newSize.width) ||
+          !boardSizes.contains(newSize.height)
+        ) return false
+        for (_ <- 0 until 4) if (in.readInt() != 0) return false
+        if (in.readUByte() != 255) return false
+
+        (newName, newSize)
+      } catch {
+        case NonFatal(_) => return false
+      }
+
+    clear()
+    name = newName
+    size = newSize
+    true
   }
 
   def read(in: MCDataInput, key: Int) = key match {

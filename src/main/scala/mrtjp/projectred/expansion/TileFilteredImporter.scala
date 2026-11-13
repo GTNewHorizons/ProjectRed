@@ -82,11 +82,19 @@ class TileFilteredImporter
 
   override def read(in: MCDataInput, key: Int) = key match {
     case 6 => colour = in.readByte()
+    case _ => super.read(in, key)
+  }
+
+  override def readFromClient(
+      in: MCDataInput,
+      key: Int,
+      player: EntityPlayer
+  ) = key match {
     case 7 =>
       if (colour == 15) colour = -1
       else colour = (colour + 1).toByte
       sendColourUpdate()
-    case _ => super.read(in, key)
+    case _ => super.readFromClient(in, key, player)
   }
 
   def sendColourUpdate() {

@@ -7,6 +7,7 @@ package mrtjp.projectred.exploration
 
 import codechicken.lib.data.{MCDataInput, MCDataOutput}
 import codechicken.lib.gui.GuiDraw
+import codechicken.lib.packet.PacketCustom
 import codechicken.lib.render.uv.{MultiIconTransformation, UVTransformation}
 import codechicken.lib.vec._
 import mrtjp.core.block.{InstancedBlock, InstancedBlockTile}
@@ -25,7 +26,7 @@ import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.inventory.{IInventory, ISidedInventory}
-import net.minecraft.item.ItemStack
+import net.minecraft.item.{Item, ItemStack}
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.util.IIcon
@@ -67,6 +68,23 @@ class TileBarrel
       out.writeItemStack(item.makeStack(0))
       out.writeInt(getStoredAmount)
     }
+  }
+
+  override protected def clientDescriptionPacketDetails(
+      packet: PacketCustom
+  ): String = {
+    val data = packet.getByteBuf.duplicate()
+    if (!data.readBoolean()) return "item=none, quantity=0"
+    val id = data.readInt()
+    if (id < 0) return "item=invalid, quantity=unknown"
+    data.readByte() // Barrel descriptions carry the quantity after the stack.
+    val meta = data.readShort()
+    val nbtLength = data.readShort()
+    // Skip the compressed tag without decompressing attacker-supplied NBT.
+    if (nbtLength >= 0) data.skipBytes(nbtLength)
+    val quantity = data.readInt()
+    val itemName = Item.itemRegistry.getNameForObject(Item.getItemById(id))
+    s"item=$itemName, id=$id, meta=$meta, quantity=$quantity"
   }
 
   override def readDesc(in: MCDataInput) {

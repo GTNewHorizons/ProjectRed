@@ -99,54 +99,54 @@ class StorageDrawersInvWrapper(inv: IInventory) extends InvWrapper(inv) {
   }
 
   override def injectItem(item: ItemKey, toAdd: Int): Int = {
+    if (toAdd <= 0) return 0
     var added = 0
-
-    for (mergePass <- Array(true, false)) {
-      for (i <- 0 until getDrawers.getDrawerCount) {
-        val drawer = getDrawers.getDrawer(i)
-
+    val drawers = getDrawers
+    val count = drawers.getDrawerCount
+    var pass = 0
+    while (pass < 2 && added < toAdd) {
+      var i = 0
+      while (i < count && added < toAdd) {
+        val drawer = drawers.getDrawer(i)
         if (drawer != null && drawer.canItemBeStored(item.testStack)) {
           val spaceLeft = drawer match {
             case voidable: IVoidable if voidable.isVoid => Int.MaxValue
             case _ =>
               drawer.getMaxCapacity(item.testStack) - drawer.getStoredItemCount
           }
-          val toAddToDrawer =
-            if (mergePass && drawer.isEmpty) 0
+          val amount =
+            if (pass == 0 && drawer.isEmpty) 0
             else math.min(spaceLeft, toAdd - added)
-
-          if (toAddToDrawer > 0) {
-            if (drawer.isEmpty) {
-              drawer.setStoredItemRedir(item.testStack, toAddToDrawer)
-            } else {
-              drawer.setStoredItemCount(
-                drawer.getStoredItemCount + toAddToDrawer
-              )
-            }
+          if (amount > 0) {
+            if (drawer.isEmpty)
+              drawer.setStoredItemRedir(item.testStack, amount)
+            else drawer.setStoredItemCount(drawer.getStoredItemCount + amount)
+            added += amount
           }
-
-          added += toAddToDrawer
         }
+        i += 1
       }
+      pass += 1
     }
-
     added
   }
 
-  override def extractItem(item: ItemKey, toExtract: Int) = {
+  override def extractItem(item: ItemKey, toExtract: Int): Int = {
+    if (toExtract <= 0) return 0
     var extracted = 0
-
-    for (i <- 0 until getDrawers.getDrawerCount) {
-      val drawer = getDrawers.getDrawer(i)
-
+    val drawers = getDrawers
+    val count = drawers.getDrawerCount
+    var i = 0
+    while (i < count && extracted < toExtract) {
+      val drawer = drawers.getDrawer(i)
       if (drawer != null && drawer.canItemBeExtracted(item.testStack)) {
-        val stored = drawer.getStoredItemCount
-        val toExtractFromDrawer = math.min(stored, toExtract - extracted)
-        drawer.setStoredItemCount(
-          drawer.getStoredItemCount - toExtractFromDrawer
-        )
-        extracted += toExtractFromDrawer
+        val amount = math.min(drawer.getStoredItemCount, toExtract - extracted)
+        if (amount > 0) {
+          drawer.setStoredItemCount(drawer.getStoredItemCount - amount)
+          extracted += amount
+        }
       }
+      i += 1
     }
     extracted
   }

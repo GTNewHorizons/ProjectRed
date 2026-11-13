@@ -17,7 +17,7 @@ import org.apache.logging.log4j.LogManager
   version = ProjectRedCore.VERSION,
   dependencies = "required-after:Forge;" +
     "required-after:ForgeMultipart;" +
-    "required-after:MrTJPCoreMod",
+    "required-after:MrTJPCoreMod@[1.4.1,)",
   modLanguage = "scala",
   guiFactory = "mrtjp.projectred.core.GuiConfigFactory",
   acceptedMinecraftVersions = "[1.7.10]",

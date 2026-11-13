@@ -39,8 +39,7 @@ object RouterServices {
 
       val newLease = r.getIPAddress
       if (routers.length <= newLease)
-        while (routers.length <= (newLease * 1.5).asInstanceOf[Int] + 1)
-          routers :+= null
+        routers = RouterArrayGrowth.references(routers, newLease)
 
       routers(newLease) = r
       UUIDTable += (r.getID -> r.getIPAddress)
@@ -123,9 +122,8 @@ object Router {
     val ip = Router.claimIPAddress()
     r.IPAddress = ip
     if (LSADatabase.length <= ip) {
-      val newLength = (ip * 1.5).asInstanceOf[Int] + 1
-      while (LSADatabase.length <= newLength) LSADatabase :+= null
-      while (LegacyLinkStateID.length <= newLength) LegacyLinkStateID :+= -1
+      LSADatabase = RouterArrayGrowth.references(LSADatabase, ip)
+      LegacyLinkStateID = RouterArrayGrowth.versions(LegacyLinkStateID, ip)
     }
     LegacyLinkStateID(ip) = 0
     LSADatabase(ip) = r.LSA
@@ -162,7 +160,7 @@ class Router(ID: UUID, parent: IWorldRouter) extends Ordered[Router] {
   /** * Link State **
     */
   private val LSA = new LSA
-  private var linkStateID = 0
+  @volatile private var linkStateID = 0
 
   /** * Identification **
     */

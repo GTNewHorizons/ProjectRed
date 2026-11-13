@@ -149,7 +149,11 @@ class TileICWorkbench extends TileICMachine with NetWorldCircuit {
     if (!watchers.contains(player) || !hasBP) return
     key match {
       case 4 => readClientICStream(in)
-      case 5 => circuit.readDesc(in); sendICDesc()
+      case 5 =>
+        if (circuit.readRedraw(in)) {
+          markDirty()
+          sendICDesc()
+        }
       case _ => super.readFromClient(in, key, player)
     }
   }

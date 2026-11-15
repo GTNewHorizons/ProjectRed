@@ -31,7 +31,7 @@ import net.minecraftforge.client.IItemRenderer.{
   ItemRenderType,
   ItemRendererHelper
 }
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.{EXTTextureFilterAnisotropic, GL11, GLContext}
 
 object RenderPipe {
   private final val dummyEntityItem = new EntityItem(null)
@@ -61,7 +61,7 @@ object RenderPipe {
     centerModelsRS = rsgen.centerModels
 
     val woolgen = new PipeModelGenerator
-    woolgen.applyScale(0.80)
+    woolgen.applyScale(0.85)
     sideModelsWool = woolgen.sideModels
     centerModelsWool = woolgen.centerModels
   }
@@ -81,20 +81,6 @@ object RenderPipe {
       uvt = new IconTransformation(p.getIcon(s))
       sideModels(s).render(t, uvt)
     }
-
-    val gen = new PipeModelGenerator
-    sideModels = gen.sideModels
-    centerModels = gen.centerModels
-
-    val rsgen = new PipeModelGenerator
-    rsgen.applyScale(0.90)
-    sideModelsRS = rsgen.sideModels
-    centerModelsRS = rsgen.centerModels
-
-    val woolgen = new PipeModelGenerator
-    woolgen.applyScale(0.85)
-    sideModelsWool = woolgen.sideModels
-    centerModelsWool = woolgen.centerModels
 
   }
 
@@ -152,6 +138,7 @@ object RenderPipe {
       pos: Vector3,
       frame: Float
   ) {
+    if (p.itemFlow.delegate.isEmpty) return
     GL11.glPushMatrix()
     GL11.glDisable(GL11.GL_LIGHTING)
     for (r <- p.itemFlow.delegate) if (!p.itemFlow.outputQueue.contains(r)) {
@@ -516,8 +503,55 @@ object PipeItemRenderer extends IItemRenderer {
       case EQUIPPED => renderWireInventory(damage, 0f, .0f, 0f, 1f)
       case EQUIPPED_FIRST_PERSON =>
         renderWireInventory(damage, 1f, -.6f, -.4f, 2f)
-      case INVENTORY => renderWireInventory(damage, 0f, -.1f, 0f, 1f)
+      case INVENTORY => renderInventory(damage)
       case _         =>
+    }
+  }
+
+  private def renderInventory(meta: Int) {
+    // Mipmaps average the narrow, transparent pipe frames into opaque faces at
+    // hotbar sizes. Keep inventory sampling independent of the world atlas state.
+    TextureUtils.bindAtlas(0)
+    val min =
+      GL11.glGetTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER)
+    val mag =
+      GL11.glGetTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER)
+    val anisotropic =
+      GLContext.getCapabilities.GL_EXT_texture_filter_anisotropic
+    val anisotropy =
+      if (anisotropic)
+        GL11.glGetTexParameterf(
+          GL11.GL_TEXTURE_2D,
+          EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT
+        )
+      else 1f
+    try {
+      GL11.glTexParameteri(
+        GL11.GL_TEXTURE_2D,
+        GL11.GL_TEXTURE_MIN_FILTER,
+        GL11.GL_NEAREST
+      )
+      GL11.glTexParameteri(
+        GL11.GL_TEXTURE_2D,
+        GL11.GL_TEXTURE_MAG_FILTER,
+        GL11.GL_NEAREST
+      )
+      if (anisotropic)
+        GL11.glTexParameterf(
+          GL11.GL_TEXTURE_2D,
+          EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT,
+          1f
+        )
+      renderWireInventory(meta, 0f, -.1f, 0f, 1f)
+    } finally {
+      GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, min)
+      GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, mag)
+      if (anisotropic)
+        GL11.glTexParameterf(
+          GL11.GL_TEXTURE_2D,
+          EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT,
+          anisotropy
+        )
     }
   }
 

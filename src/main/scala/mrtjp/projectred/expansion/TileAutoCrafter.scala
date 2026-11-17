@@ -166,10 +166,6 @@ class TileAutoCrafter
       currentOutput =
         ItemKeyStack.getOrNull(currentRecipe.getCraftingResult(invCrafting))
 
-      // One equality per input key, same rules as the pre-#69 code:
-      // meta ignored for damageable inputs, ore-dict matching for ore recipes.
-      // Exact ItemKey lookups break as soon as a tool (e.g. GT hammer) takes
-      // durability damage, since that changes its NBT.
       val isOre = currentRecipe.isInstanceOf[ShapedOreRecipe] ||
         currentRecipe.isInstanceOf[ShapelessOreRecipe]
       for ((k, _) <- currentInputs.result) {

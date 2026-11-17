@@ -30,7 +30,11 @@ import net.minecraftforge.oredict.{OreDictionary, ShapedOreRecipe}
 class ExplorationProxy_server extends IProxy {
   val guiIDBackpack = 1
 
-  override def preinit() {}
+  override def preinit() {
+    blockDecoratives = new BlockDecoratives
+    for (b <- DecorativeStoneDefs.values)
+      blockDecoratives.setHarvestLevel("pickaxe", b.harvest, b.meta)
+  }
 
   override def init() {
     itemWoolGin = new ItemWoolGin
@@ -40,10 +44,6 @@ class ExplorationProxy_server extends IProxy {
     blockOres = new BlockOre
     for (o <- OreDefs.values)
       blockOres.setHarvestLevel("pickaxe", o.harvest, o.meta)
-
-    blockDecoratives = new BlockDecoratives
-    for (b <- DecorativeStoneDefs.values)
-      blockDecoratives.setHarvestLevel("pickaxe", b.harvest, b.meta)
 
     blockDecorativeWalls = new BlockDecorativeWalls
 

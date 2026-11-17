@@ -7,6 +7,8 @@ package mrtjp.projectred.illumination
 
 import java.util
 
+import scala.collection.JavaConverters._
+
 import codechicken.lib.vec.Rotation._
 import codechicken.lib.vec.Vector3._
 import codechicken.lib.vec.{Cuboid6, Vector3}
@@ -35,7 +37,9 @@ object LightMicroMaterial {
   var traitID: Int = _
 
   def register() {
-    traitID = MicroblockGenerator.registerTrait(classOf[LightMicroblock])
+    traitID = MicroblockGenerator.registerTrait(
+      "mrtjp.projectred.illumination.LightMicroblock"
+    )
 
     for (i <- 16 until 32)
       MicroMaterialRegistry.registerMaterial(
@@ -45,21 +49,21 @@ object LightMicroMaterial {
   }
 }
 
-trait LightMicroblock extends Microblock {
-  override def shouldRenderDynamic = true
+object LightMicroblockLogic {
 
   @SideOnly(Side.CLIENT)
-  override def renderDynamic(pos: Vector3, frame: Float, pass: Int) {
+  def renderHalo(traitPart: AnyRef, pass: Int) {
     if (pass == 0) {
-      val boxes = this match {
+      val part = traitPart.asInstanceOf[Microblock]
+      val boxes = part match {
         case h: HollowMicroblock =>
           val size = h.getHollowSize
           val d1 = 0.5 - size / 32d
           val d2 = 0.5 + size / 32d
-          val t = (shape >> 4) / 8d
+          val t = (part.shape >> 4) / 8d
           val ex = 0.025
 
-          val tr = sideRotations(shape & 0xf).at(center)
+          val tr = sideRotations(part.shape & 0xf).at(center)
 
           Seq(
             new Cuboid6(0 - ex, 0 - ex, 0 - ex, 1 + ex, t + ex, d1 + ex),
@@ -69,26 +73,37 @@ trait LightMicroblock extends Microblock {
           )
             .map(c => c.apply(tr))
         case _ =>
-          val it = getCollisionBoxes.iterator()
+          val it = part.getCollisionBoxes.iterator()
           val bb = Seq.newBuilder[Cuboid6]
           while (it.hasNext) bb += it.next()
           bb.result().map(_.copy.expand(0.025))
       }
 
-      val colour = getIMaterial.asInstanceOf[LightMicroMaterial].meta - 16
+      val colour = part.getIMaterial.asInstanceOf[LightMicroMaterial].meta - 16
 
-      for (box <- boxes) RenderHalo.addLight(x, y, z, colour, box)
+      for (box <- boxes)
+        RenderHalo.addLight(part.x, part.y, part.z, colour, box)
     }
   }
 
-  override def getLightValue = {
+  // Object forces a runtime cast: the generated trait does not extend Microblock.
+  def lightValue(traitPart: AnyRef): Int = {
+    val part = traitPart.asInstanceOf[Microblock]
     if (Configurator.dimmLampParts) {
-      val totalSize = tile.partList
-        .collect { case p: LightMicroblock => p }
+      val totalSize = part.tile
+        .jPartList()
+        .asScala
+        .toVector
+        .collect {
+          case p if p.isInstanceOf[LightMicroblock] =>
+            p.asInstanceOf[Microblock]
+        }
         .map(_.getSize / 8.0)
         .sum
       math.min(15, (15 * totalSize).toInt)
-    } else if (tile.partList.exists(_.isInstanceOf[LightMicroblock])) 15
+    } else if (
+      part.tile.jPartList().asScala.exists(_.isInstanceOf[LightMicroblock])
+    ) 15
     else 0
   }
 }

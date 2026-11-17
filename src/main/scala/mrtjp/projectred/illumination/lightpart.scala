@@ -35,12 +35,14 @@ import org.lwjgl.opengl.GL11
 import scala.collection.JavaConversions._
 
 class BaseLightPart(obj: LightObject)
-    extends TMultiPart
-    with TCuboidPart
+    extends JCuboidPart
     with TSlottedPart
     with TNormalOcclusion
     with IRedstonePart
     with ILight {
+  override def occlusionTest(other: TMultiPart): Boolean =
+    NormalOcclusionTest.apply(this, other) && super.occlusionTest(other)
+
   protected var inverted = false
   protected var powered = false
   protected var meta: Byte = 0

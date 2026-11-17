@@ -9,10 +9,11 @@ import java.util.{List => JList}
 
 import codechicken.lib.render.{CCRenderState, TextureUtils}
 import codechicken.lib.vec.{BlockCoord, Scale, Translation, Vector3}
-import codechicken.multipart.{MultiPartRegistry, TItemMultiPart, TMultiPart}
+import codechicken.multipart.{MultiPartRegistry, TMultiPart}
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.item.{ItemCore, ItemDefinition, TItemGlassSound}
 import mrtjp.core.world.PlacementLib
+import mrtjp.projectred.core.TItemMultiPartPlacement
 import mrtjp.projectred.ProjectRedIntegration
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.creativetab.CreativeTabs
@@ -28,7 +29,7 @@ import org.lwjgl.opengl.GL11
 
 class ItemPartGate
     extends ItemCore("projectred.integration.gate")
-    with TItemMultiPart
+    with TItemMultiPartPlacement
     with TItemGlassSound {
   setHasSubtypes(true)
   setCreativeTab(ProjectRedIntegration.tabIntegration2)
@@ -51,7 +52,7 @@ class ItemPartGate
     if (!gtype.implemented) return null
 
     val gate =
-      MultiPartRegistry.createPart(gtype.partname, false).asInstanceOf[GatePart]
+      MultiPartRegistry.loadPart(gtype.partname, null).asInstanceOf[GatePart]
     if (gate != null)
       gate.preparePlacement(player, pos, side, item.getItemDamage)
     gate

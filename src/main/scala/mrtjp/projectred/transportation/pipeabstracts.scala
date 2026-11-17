@@ -25,6 +25,9 @@ abstract class SubcorePipePart
     with TSwitchPacket
     with TNormalOcclusion
     with ISidedHollowConnect {
+  override def occlusionTest(other: TMultiPart): Boolean =
+    NormalOcclusionTest.apply(this, other) && super.occlusionTest(other)
+
   var meta: Byte = 0
 
   def preparePlacement(side: Int, meta: Int) {

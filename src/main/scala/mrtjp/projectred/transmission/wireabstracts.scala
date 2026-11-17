@@ -11,6 +11,7 @@ import codechicken.microblock.{
   MicroMaterialRegistry
 }
 import codechicken.multipart.{
+  NormalOcclusionTest,
   PartMap,
   TMultiPart,
   TNormalOcclusion,
@@ -39,6 +40,9 @@ trait TWireCommons
     with TPropagationCommons
     with TSwitchPacket
     with TNormalOcclusion {
+  override def occlusionTest(other: TMultiPart): Boolean =
+    NormalOcclusionTest.apply(this, other) && super.occlusionTest(other)
+
   def preparePlacement(side: Int, meta: Int) {}
 
   override def onPartChanged(part: TMultiPart) {

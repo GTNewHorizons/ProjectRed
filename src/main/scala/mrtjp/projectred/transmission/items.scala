@@ -3,10 +3,11 @@ package mrtjp.projectred.transmission
 import java.util.{List => JList}
 
 import codechicken.lib.vec._
-import codechicken.multipart.{MultiPartRegistry, TItemMultiPart}
+import codechicken.multipart.MultiPartRegistry
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.item.{ItemCore, TItemGlassSound}
 import mrtjp.core.world.PlacementLib
+import mrtjp.projectred.core.TItemMultiPartPlacement
 import mrtjp.projectred.ProjectRedTransmission
 import net.minecraft.client.renderer.texture.IIconRegister
 import net.minecraft.creativetab.CreativeTabs
@@ -16,7 +17,7 @@ import net.minecraft.world.World
 
 abstract class ItemWireCommon(name: String)
     extends ItemCore(name)
-    with TItemMultiPart
+    with TItemMultiPartPlacement
     with TItemGlassSound {
   setHasSubtypes(true)
   setCreativeTab(ProjectRedTransmission.tabTransmission)
@@ -43,7 +44,7 @@ class ItemPartWire extends ItemWireCommon("projectred.transmission.wire") {
     else {
       val wiredef = WireDef.values(item.getItemDamage)
       val w = MultiPartRegistry
-        .createPart(wiredef.wireType, false)
+        .loadPart(wiredef.wireType, null)
         .asInstanceOf[WirePart]
       if (w != null) w.preparePlacement(side, item.getItemDamage)
       w
@@ -76,7 +77,7 @@ class ItemPartFramedWire
   ) = {
     val wiredef = WireDef.values(item.getItemDamage)
     val w = MultiPartRegistry
-      .createPart(wiredef.framedType, false)
+      .loadPart(wiredef.framedType, null)
       .asInstanceOf[FramedWirePart]
     if (w != null) w.preparePlacement(side, item.getItemDamage)
     w

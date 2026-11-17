@@ -15,7 +15,7 @@ class TransmissionProxy_server extends IProxy with IPartFactory2 {
   override def preinit() {}
 
   override def init() {
-    MultiPartRegistry.registerParts(
+    MultiPartRegistry.registerPartFactory(
       this,
       Array[String](
         "pr_redwire",
@@ -27,7 +27,7 @@ class TransmissionProxy_server extends IProxy with IPartFactory2 {
         "pr_pwrlow",
         "pr_fpwrlow"
 //            "pr_sredwire", "pr_sinsulated", "pr_sbundled" //legacy
-      )
+      ): _*
     )
     itemPartWire = new ItemPartWire
     itemPartFramedWire = new ItemPartFramedWire

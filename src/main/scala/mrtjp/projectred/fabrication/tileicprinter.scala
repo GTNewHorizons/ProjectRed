@@ -473,9 +473,9 @@ object TileICPrinter {
       case p: ButtonICPart    => add(new ItemStack(Blocks.stone_button), 0.25)
       case p: AlloyWireICPart => add(WireDef.RED_ALLOY.makeStack, 0.25)
       case p: InsulatedWireICPart =>
-        add(WireDef.INSULATED_WIRES(p.colour & 0xff).makeStack, 0.25)
+        add(WireDef.INSULATED_WIRES(15).makeStack, 0.25)
       case p: BundledCableICPart =>
-        add(WireDef.BUNDLED_WIRES((p.colour + 1) & 0xff).makeStack, 0.25)
+        add(WireDef.BUNDLED_WIRES(0).makeStack, 0.25)
       case p: GateICPart =>
         gd.apply(p.subID) match {
           case gd.IOSimple =>

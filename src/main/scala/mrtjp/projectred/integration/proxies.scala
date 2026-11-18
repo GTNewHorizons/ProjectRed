@@ -8,8 +8,10 @@ package mrtjp.projectred.integration
 import java.lang.{Character => JChar}
 
 import codechicken.lib.packet.PacketCustom
+import codechicken.lib.data.MCDataInput
+import net.minecraft.nbt.NBTTagCompound
 import codechicken.multipart.MultiPartRegistry
-import codechicken.multipart.MultiPartRegistry.IPartFactory
+import codechicken.multipart.MultiPartRegistry.IPartFactory2
 import cpw.mods.fml.common.registry.GameRegistry
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.core.gui.GuiHandler
@@ -21,13 +23,13 @@ import net.minecraft.item.ItemStack
 import net.minecraftforge.client.MinecraftForgeClient
 import net.minecraftforge.oredict.ShapedOreRecipe
 
-class IntegrationProxy_server extends IProxy with IPartFactory {
+class IntegrationProxy_server extends IProxy with IPartFactory2 {
   override def preinit() {
     PacketCustom.assignHandler(IntegrationSPH.channel, IntegrationSPH) // TODO
   }
 
   override def init() {
-    MultiPartRegistry.registerParts(
+    MultiPartRegistry.registerPartFactory(
       this,
       Array[String](
         "pr_sgate",
@@ -36,7 +38,7 @@ class IntegrationProxy_server extends IProxy with IPartFactory {
         "pr_bgate",
         "pr_tgate",
         "pr_rgate"
-      )
+      ): _*
     )
 
     itemPartGate2 = new ItemPartGate
@@ -46,7 +48,14 @@ class IntegrationProxy_server extends IProxy with IPartFactory {
 
   override def postinit() {}
 
-  override def createPart(name: String, client: Boolean) = name match {
+  override def createPart(name: String, nbt: NBTTagCompound) =
+    createPart(name, false)
+  override def createPart(name: String, packet: MCDataInput) =
+    createPart(name, true)
+  override def createPartForClientPreview(name: String, nbt: NBTTagCompound) =
+    createPart(name, true)
+
+  def createPart(name: String, client: Boolean) = name match {
     case "pr_sgate" => new ComboGatePart
     case "pr_igate" => new SequentialGatePart
     case "pr_agate" => new ArrayGatePart

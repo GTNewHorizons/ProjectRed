@@ -47,7 +47,7 @@ public final class GateFixture {
     }
 
     public static GatePart world(GameTestHelper helper, GateDefinition.GateDef definition, NBTTagCompound tag) {
-        GatePart gate = (GatePart) MultiPartRegistry.createPart(definition.partname(), false);
+        GatePart gate = (GatePart) MultiPartRegistry.loadPart(definition.partname(), null);
         gate.load(tag);
         TestPos origin = helper.absolute("gate");
         TestPos output = helper.absolute("port0");

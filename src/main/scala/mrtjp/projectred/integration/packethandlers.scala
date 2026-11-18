@@ -26,13 +26,13 @@ class IntegrationPH {
   def writePartIndex(out: MCDataOutput, part: TMultiPart) = {
     out
       .writeCoord(new BlockCoord(part.tile))
-      .writeByte(part.tile.partList.indexOf(part))
+      .writeByte(part.tile.jPartList().indexOf(part))
   }
 
   def readPartIndex(world: World, in: MCDataInput) = {
     val tile = PRLib.getMultipartTile(world, in.readCoord)
     try {
-      tile.partList(in.readUByte)
+      tile.jPartList().get(in.readUByte)
     } catch {
       case e: NullPointerException      => null
       case e: IndexOutOfBoundsException => null

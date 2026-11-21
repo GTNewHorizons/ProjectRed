@@ -45,6 +45,7 @@ class LeverICPart
 
   override def readClientPacket(in: MCDataInput) {
     on = !on
+    world.network.markSave()
     notify(0xf)
     sendStateUpdate()
   }

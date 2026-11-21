@@ -329,8 +329,9 @@ trait TTimerGateLogic extends SequentialICGateLogic with ITimerGuiLogic {
     var t = time
     val minTime = math.max(4, Configurator.minTimerTicks)
     if (t < minTime) t = minTime
-    if (t != pointer_max) {
+    if (t != getTimerMax) {
       pointer_max = t - 2
+      gate.world.network.markSave()
       sendPointerMaxUpdate()
     }
   }
@@ -431,6 +432,7 @@ class Sequencer(gate: SequentialGateICPart)
     if (t < minTime) t = minTime
     if (t != pointer_max) {
       pointer_max = t
+      gate.world.network.markSave()
       sendPointerMaxUpdate()
     }
   }
@@ -545,20 +547,24 @@ class Counter(gate: SequentialGateICPart)
   override def setCounterValue(gate: GateICPart, i: Int) {
     val oldVal = value
     value = Math.min(max, Math.max(0, i))
-    if (value != oldVal)
+    if (value != oldVal) {
+      gate.world.network.markSave()
+      gate.scheduleTick(2)
       sendValueUpdate()
+    }
   }
 
   override def setCounterMax(gate: GateICPart, i: Int) {
     val oldMax = max
     max = Math.min(32767, Math.max(1, i))
     if (max != oldMax) {
+      gate.world.network.markSave()
+      gate.scheduleTick(2)
       sendMaxUpdate()
       val oldVal = value
-      value = Math.min(value, Math.max(0, i))
+      value = Math.min(value, max)
       if (value != oldVal) {
         sendValueUpdate()
-        gate.scheduleTick(2)
       }
     }
   }
@@ -566,15 +572,19 @@ class Counter(gate: SequentialGateICPart)
   override def setCounterIncr(gate: GateICPart, i: Int) {
     val oldIncr = incr
     incr = Math.min(max, Math.max(1, i))
-    if (incr != oldIncr)
+    if (incr != oldIncr) {
+      gate.world.network.markSave()
       sendIncrUpdate()
+    }
   }
 
   override def setCounterDecr(gate: GateICPart, i: Int) {
     val oldDecr = decr
     decr = Math.min(max, Math.max(1, i))
-    if (decr != oldDecr)
+    if (decr != oldDecr) {
+      gate.world.network.markSave()
       sendDecrUpdate()
+    }
   }
 
   def onChange(gate: SequentialGateICPart) {
@@ -598,7 +608,7 @@ class Counter(gate: SequentialGateICPart)
   }
 
   def scheduledTick(gate: SequentialGateICPart) {
-    val oldOutput = gate.state
+    val oldOutput = gate.state >> 4
     var newOutput = 0
     if (value == max) newOutput = 1
     else if (value == 0) newOutput = 4
@@ -702,13 +712,15 @@ class Synchronizer(gate: SequentialGateICPart)
 
       gate.setState(gate.state & 0xf0 | newInput)
       gate.onInputChange()
-      if ((newInput & 4) != 0) setState2(0)
+      if ((newInput & 4) != 0)
+        setState2(state2 & 4) // retain pending pulse termination
       else {
         if ((high & 2) != 0) setState2(state2 | 1) // right
         if ((high & 8) != 0) setState2(state2 | 2) // left
       }
-      if (right && left) gate.scheduleTick(0)
+      if (!pulsing && right && left) gate.scheduleTick(0)
 
+      gate.world.network.markSave()
       if (state2 != oldValue) sendState2Update()
     }
   }
@@ -716,14 +728,14 @@ class Synchronizer(gate: SequentialGateICPart)
   override def scheduledTick(gate: SequentialGateICPart) {
     val oldValue = state2
     if (!pulsing && right && left) {
-      gate.setState(gate.state | 1 << 4)
-      gate.onOutputChange(1)
       setState2(state2 | 4) // pulsing
       gate.scheduleTick(2)
+      gate.setState(gate.state | 1 << 4)
+      gate.onOutputChange(1)
     } else if (pulsing) {
+      setState2(0) // off before notifying feedback
       gate.setState(gate.state & ~0x10)
       gate.onOutputChange(1)
-      setState2(0) // off
     }
     if (state2 != oldValue) sendState2Update()
   }

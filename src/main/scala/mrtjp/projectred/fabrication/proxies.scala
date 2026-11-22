@@ -40,7 +40,7 @@ class FabricationProxy_server extends IProxy with IPartFactory2 {
     itemICBlueprint = new ItemICBlueprint
     itemICChip = new ItemICChip
 
-    MultiPartRegistry.registerParts(this, "pr_icgate")
+    MultiPartRegistry.registerPartFactory(this, "pr_icgate")
 
     FabricationRecipes.initRecipes()
   }

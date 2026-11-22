@@ -1,7 +1,7 @@
 package mrtjp.projectred.transmission
 
 import codechicken.lib.lighting.LightModel
-import codechicken.lib.raytracer.{ExtendedMOP, IndexedCuboid6}
+import codechicken.lib.raytracer.IndexedCuboid6
 import codechicken.lib.render.CCRenderState.IVertexOperation
 import codechicken.lib.render._
 import codechicken.lib.render.uv.{IconTransformation, UVScale, UVTranslation}
@@ -12,6 +12,7 @@ import codechicken.microblock.{
   MicroMaterialRegistry,
   MicroblockRender
 }
+import codechicken.multipart.BlockMultipart
 import mrtjp.projectred.core.libmc.PRLib
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.{IIcon, MovingObjectPosition}
@@ -450,18 +451,19 @@ object JacketedHighlightRenderer extends IMicroHighlightRenderer {
       MicroMaterialRegistry.getMaterial(material).isTransparent
     ) false
     else {
-      val hitData: (Integer, Any) = ExtendedMOP.getData(hit)
-      val part = tile.partList(hitData._1)
-
-      part match {
-        case fpart: FramedWirePart =>
-          if (fpart.hasMaterial && fpart.material == material) false
-          else {
-            RenderFramedWire.renderCoverHighlight(fpart, material)
-            true
-          }
-        case _ => false
-      }
+      val index = BlockMultipart.hitPartIndex(hit)
+      val parts = tile.jPartList()
+      if (index < 0 || index >= parts.size) false
+      else
+        parts.get(index) match {
+          case fpart: FramedWirePart =>
+            if (fpart.hasMaterial && fpart.material == material) false
+            else {
+              RenderFramedWire.renderCoverHighlight(fpart, material)
+              true
+            }
+          case _ => false
+        }
     }
   }
 }

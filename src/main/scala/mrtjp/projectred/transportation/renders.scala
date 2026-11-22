@@ -1,7 +1,6 @@
 package mrtjp.projectred.transportation
 
 import codechicken.lib.lighting.LightModel
-import codechicken.lib.raytracer.ExtendedMOP
 import codechicken.lib.render.CCRenderState.IVertexOperation
 import codechicken.lib.render._
 import codechicken.lib.render.uv.{
@@ -18,6 +17,7 @@ import codechicken.microblock.{
   MicroMaterialRegistry,
   MicroblockClass
 }
+import codechicken.multipart.BlockMultipart
 import mrtjp.core.color.Colors
 import mrtjp.projectred.core.libmc.PRLib
 import net.minecraft.client.renderer.entity.{RenderItem, RenderManager}
@@ -457,13 +457,16 @@ object PipeRSHighlightRenderer extends IMicroHighlightRenderer {
 
     MicroMaterialRegistry.getMaterial(material) match {
       case b: BlockMicroMaterial if b.block == Blocks.redstone_block =>
-        val hitData: (Integer, _) = ExtendedMOP.getData(hit)
-        tile.partList(hitData._1) match {
-          case p: TRedstonePipe if !p.material =>
-            RenderPipe.renderRSMicroHighlight(p)
-            true
-          case _ => false
-        }
+        val index = BlockMultipart.hitPartIndex(hit)
+        val parts = tile.jPartList()
+        if (index < 0 || index >= parts.size) false
+        else
+          parts.get(index) match {
+            case p: TRedstonePipe if !p.material =>
+              RenderPipe.renderRSMicroHighlight(p)
+              true
+            case _ => false
+          }
       case _ => false
     }
   }
@@ -488,13 +491,16 @@ object PipeColourHighlightRenderer extends IMicroHighlightRenderer {
 
     MicroMaterialRegistry.getMaterial(material) match {
       case b: BlockMicroMaterial if b.block == Blocks.wool =>
-        val hitData: (Integer, _) = ExtendedMOP.getData(hit)
-        tile.partList(hitData._1) match {
-          case p: TColourFilterPipe if p.colour != b.meta =>
-            RenderPipe.renderWoolMicroHighlight(p, b.meta.toByte)
-            true
-          case _ => false
-        }
+        val index = BlockMultipart.hitPartIndex(hit)
+        val parts = tile.jPartList()
+        if (index < 0 || index >= parts.size) false
+        else
+          parts.get(index) match {
+            case p: TColourFilterPipe if p.colour != b.meta =>
+              RenderPipe.renderWoolMicroHighlight(p, b.meta.toByte)
+              true
+            case _ => false
+          }
       case _ => false
     }
   }

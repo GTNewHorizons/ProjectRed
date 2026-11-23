@@ -310,9 +310,11 @@ trait TTimerGateLogic extends SequentialICGateLogic with ITimerGuiLogic {
     {
       if (gate.world.network == null)
         saveTime // ic was loaded directly from stack, possibly for in-hand render
-      else if (gate.world.network.getWorld == null)
-        MultipartSaveLoad.loadingWorld.getTotalWorldTime // ic is being loaded with a workbench tile or gate
-      else
+      else if (gate.world.network.getWorld == null) {
+        // ic is being loaded with a workbench tile or gate; loadingWorld is null outside chunk loads (e.g. placement)
+        val loading = MultipartSaveLoad.loadingWorld
+        if (loading != null) loading.getTotalWorldTime else saveTime
+      } else
         gate.world.network.getWorld.getTotalWorldTime // normal access during operation
     }
 

@@ -58,6 +58,8 @@ class FabricationProxy_server extends IProxy with IPartFactory2 {
 
   override def createPart(name: String, nbt: NBTTagCompound) = createPart(name)
   override def createPart(name: String, packet: MCDataInput) = createPart(name)
+  override def createPartForClientPreview(name: String, nbt: NBTTagCompound) =
+    createPart(name)
 
   def createPart(name: String) = name match {
     case "pr_icgate" => new CircuitGatePart

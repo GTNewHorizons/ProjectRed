@@ -136,8 +136,6 @@ class IntegratedCircuit {
   var parts = MMap[(Int, Int), CircuitPart]()
   var errors = Map.empty[Point, (String, Int)]
 
-  private var scheduledTicks = MMap[(Int, Int), Long]()
-
   /** Mapped inputs and outputs of this IC. Outputs go to the world, inputs come
     * in from the world. OOOO OOOO OOOO OOOO IIII IIII IIII IIII
     */
@@ -335,7 +333,6 @@ class IntegratedCircuit {
   def clear() {
     parts.values.foreach { _.unbind() } // remove references
     parts = MMap()
-    scheduledTicks = MMap()
     name = "untitled"
     size = Size.zeroSize
     for (i <- 0 until 4) iostate(i) = 0
@@ -352,14 +349,6 @@ class IntegratedCircuit {
   }
 
   def tick() {
-    val t = network.getWorld.getTotalWorldTime
-    var rem = Seq[(Int, Int)]()
-    for ((k, v) <- scheduledTicks) if (v >= t) {
-      getPart(k._1, k._2).scheduledTick()
-      rem :+= k
-    }
-    rem.foreach(scheduledTicks.remove)
-
     for (part <- parts.values) part.update()
   }
 
@@ -413,17 +402,12 @@ class IntegratedCircuit {
     }
   }
 
-  def scheduleTick(x: Int, y: Int, ticks: Int) {
-    scheduledTicks += (x, y) -> (network.getWorld.getTotalWorldTime + ticks)
-  }
-
   // Convinience functions
   def setPart(p: Point, part: CircuitPart) { setPart(p.x, p.y, part) }
   def getPart(p: Point): CircuitPart = getPart(p.x, p.y)
   def removePart(p: Point) { removePart(p.x, p.y) }
   def notifyNeighbor(p: Point) { notifyNeighbor(p.x, p.y) }
   def notifyNeighbors(p: Point, mask: Int) { notifyNeighbors(p.x, p.y, mask) }
-  def scheduleTick(p: Point, ticks: Int) { scheduleTick(p.x, p.y, ticks) }
 }
 
 object CircuitPartDefs extends Enum {
@@ -447,6 +431,80 @@ object CircuitPartDefs extends Enum {
     override def name = s"$id"
 
     def createPart = factory.apply()
+  }
+}
+
+/** A tick deadline saved as the delay remaining under `key`, so it carries over
+  * to a world with a different clock. Older saves stored an absolute tick under
+  * `legacyKey`; that is checked against the clock on first use, and any
+  * deadline further out than `maxDelay` must come from another world's clock.
+  */
+class TickDeadline(maxDelay: Long, key: String, legacyKey: String) {
+  private var at = -1L // absolute tick on the attached world's clock
+  private var pending = -1L // remaining delay loaded without a clock
+  private var legacyAt = -1L // absolute tick from an older save, unchecked
+
+  def isSet = at >= 0 || pending >= 0 || legacyAt >= 0
+
+  def set(now: Long, delay: Long) {
+    clear()
+    at = now + delay
+  }
+
+  def setPending(delay: Long) {
+    clear()
+    if (delay >= 0) pending = delay
+  }
+
+  def clear() {
+    at = -1
+    pending = -1
+    legacyAt = -1
+  }
+
+  def isDue(now: Long) = {
+    if (pending >= 0 || legacyAt >= 0) set(now, resolvedAt(now) - now)
+    at >= 0 && now >= at
+  }
+
+  def deadline(now: => Long) =
+    if (pending >= 0 || legacyAt >= 0) resolvedAt(now) else at
+
+  def remaining(now: => Long) =
+    if (pending >= 0) pending
+    else if (!isSet) -1
+    else {
+      val n = now
+      math.max(0, resolvedAt(n) - n)
+    }
+
+  private def resolvedAt(now: Long) =
+    if (pending >= 0) now + pending
+    else if (legacyAt >= 0) {
+      val left = legacyAt - now
+      if (left > maxDelay) now else now + math.max(0, left)
+    } else at
+
+  def save(tag: NBTTagCompound, now: => Long) {
+    // an unchecked legacy deadline is kept as-is, so saving never needs a clock
+    if (legacyAt >= 0) tag.setLong(legacyKey, legacyAt)
+    else tag.setLong(key, remaining(now))
+  }
+
+  /** @param legacySavedAt
+    *   tick an older save was written at on its own clock, or -1
+    */
+  def load(tag: NBTTagCompound, legacySavedAt: Long = -1) {
+    if (tag.hasKey(key)) setPending(tag.getLong(key))
+    else {
+      clear()
+      val legacy = tag.getLong(legacyKey)
+      if (legacy >= 0)
+        if (legacySavedAt >= 0) {
+          val left = legacy - legacySavedAt
+          pending = if (left > maxDelay) 0 else math.max(0, left)
+        } else legacyAt = legacy
+    }
   }
 }
 
@@ -491,8 +549,6 @@ abstract class CircuitPart {
   def sendDescUpdate() { writeDesc(writeStreamOf(0)) }
 
   def update() {}
-  def scheduledTick() {}
-  def scheduleTick(ticks: Int) { world.scheduleTick(x, y, ticks) }
 
   def onAdded() {}
   def onRemoved() {}

@@ -6,7 +6,6 @@
 package mrtjp.projectred.fabrication
 
 import codechicken.lib.data.{MCDataInput, MCDataOutput}
-import codechicken.multipart.handler.MultipartSaveLoad
 import cpw.mods.fml.relauncher.{Side, SideOnly}
 import mrtjp.projectred.ProjectRedCore.log
 import mrtjp.projectred.core.Configurator
@@ -265,63 +264,75 @@ trait ICounterGuiLogic {
 
 trait TTimerGateLogic extends SequentialICGateLogic with ITimerGuiLogic {
   var pointer_max = 38
-  var pointer_start = -1L
-  var saveTime = -1L // used for blueprint in-hand rendering
+  var pointer_running = false
+  // start tick on the network world clock; may be negative in a young world
+  var pointer_start = 0L
+  // elapsed ticks read without a world clock; anchored once one is available
+  var pointer_pending = -1L
+
+  def isRunning = pointer_running
 
   abstract override def save(tag: NBTTagCompound) {
     super.save(tag)
     tag.setInteger("pmax", pointer_max)
-    tag.setLong(
-      "pelapsed",
-      if (pointer_start < 0) pointer_start else getTotalTime - pointer_start
-    )
-    tag.setLong("tsave", getTotalTime)
+    tag.setLong("pelapsed", pointerElapsed)
   }
 
   abstract override def load(tag: NBTTagCompound) {
     super.load(tag)
     pointer_max = tag.getInteger("pmax")
-    pointer_start = tag.getLong("pelapsed")
-    saveTime = tag.getLong("tsave")
-    if (pointer_start >= 0) pointer_start = getTotalTime - pointer_start
+    setPointerElapsed(tag.getLong("pelapsed"))
   }
 
   abstract override def writeDesc(packet: MCDataOutput) {
     super.writeDesc(packet)
     packet.writeInt(pointer_max)
-    packet.writeLong(pointer_start)
+    packet.writeLong(pointerElapsed)
   }
 
   abstract override def readDesc(packet: MCDataInput) {
     super.readDesc(packet)
     pointer_max = packet.readInt()
-    pointer_start = packet.readLong()
+    setPointerElapsed(packet.readLong())
   }
 
   abstract override def read(packet: MCDataInput, key: Int) = key match {
     case 12 => pointer_max = packet.readInt()
-    case 13 =>
-      pointer_start = packet.readInt()
-      if (pointer_start >= 0) pointer_start = getTotalTime - pointer_start
-    case _ => super.read(packet, key)
+    case 13 => setPointerElapsed(packet.readInt())
+    case _  => super.read(packet, key)
   }
 
-  def getTotalTime = // client-side safe version of getTotalWorldTime (workaround for no client world)
-    {
-      if (gate.world.network == null)
-        saveTime // ic was loaded directly from stack, possibly for in-hand render
-      else if (gate.world.network.getWorld == null)
-        MultipartSaveLoad.loadingWorld.getTotalWorldTime // ic is being loaded with a workbench tile or gate
-      else
-        gate.world.network.getWorld.getTotalWorldTime // normal access during operation
-    }
+  private def hasWorldClock =
+    gate.world != null && gate.world.network != null &&
+      gate.world.network.getWorld != null
 
-  def pointerValue =
-    if (pointer_start < 0) 0 else (getTotalTime - pointer_start).toInt
+  private def worldTime = gate.world.network.getWorld.getTotalWorldTime
+
+  private def setPointerElapsed(elapsed: Long) {
+    pointer_running = elapsed >= 0
+    pointer_pending = if (pointer_running) elapsed else -1
+    anchorPointer()
+  }
+
+  private def anchorPointer() {
+    if (pointer_pending >= 0 && hasWorldClock) {
+      pointer_start = worldTime - pointer_pending
+      pointer_pending = -1
+    }
+  }
+
+  private def pointerElapsed: Long = if (isRunning) pointerValue else -1
+
+  def pointerValue: Int = {
+    anchorPointer()
+    if (pointer_pending >= 0) pointer_pending.toInt
+    else if (!pointer_running) 0
+    else (worldTime - pointer_start).toInt
+  }
 
   def sendPointerMaxUpdate() { gate.writeStreamOf(12).writeInt(pointer_max) }
   def sendPointerUpdate() {
-    gate.writeStreamOf(13).writeInt(if (pointer_start < 0) -1 else pointerValue)
+    gate.writeStreamOf(13).writeInt(pointerElapsed.toInt)
   }
 
   override def getTimerMax = pointer_max + 2
@@ -337,32 +348,36 @@ trait TTimerGateLogic extends SequentialICGateLogic with ITimerGuiLogic {
   }
 
   override def onTick(gate: SequentialGateICPart) {
-    if (pointer_start >= 0)
-      if (getTotalTime >= pointer_start + pointer_max) pointerTick()
-      else if (pointer_start > getTotalTime)
-        pointer_start = getTotalTime
+    anchorPointer()
+    if (pointer_running && pointer_pending < 0) {
+      val now = worldTime
+      if (now >= pointer_start + pointer_max) pointerTick()
+      else if (pointer_start > now) pointer_start = now
+    }
   }
 
   def pointerTick()
 
   def resetPointer() {
-    if (pointer_start >= 0) {
-      pointer_start = -1
+    if (isRunning) {
+      pointer_running = false
+      pointer_pending = -1
       gate.world.network.markSave()
       if (!gate.world.network.isRemote) sendPointerUpdate()
     }
   }
 
   def startPointer() {
-    if (pointer_start < 0) {
-      pointer_start = getTotalTime
+    if (!isRunning) {
+      pointer_running = true
+      pointer_start = worldTime
       gate.world.network.markSave()
       if (!gate.world.network.isRemote) sendPointerUpdate()
     }
   }
 
   def interpPointer(f: Float) =
-    if (pointer_start < 0) 0f else (pointerValue + f) / pointer_max
+    if (!isRunning) 0f else (pointerValue + f) / pointer_max
 
   @SideOnly(Side.CLIENT)
   override def createGui(gate: SequentialGateICPart): CircuitGui =
@@ -400,7 +415,7 @@ class Timer(gate: SequentialGateICPart)
       gate.onInputChange()
     }
 
-    if (gate.schedTime < 0)
+    if (!gate.isScheduled)
       if (newInput > 0) resetPointer() else startPointer()
   }
 

@@ -20,7 +20,10 @@ abstract class GateICPart
   private var gateSubID: Byte = 0
   private var gateShape: Byte = 0
 
-  var schedTime = 0L
+  // no gate schedules further ahead than the longest repeater delay
+  private val sched =
+    new TickDeadline(Repeater.delays.max, "schedDelay", "schedTime")
+  sched.setPending(0) // new gates get a scheduled tick on their first update
   var schedDigital = false
 
   def getLogic[T]: T
@@ -41,7 +44,7 @@ abstract class GateICPart
     tag.setByte("subID", gateSubID)
     tag.setByte("shape", gateShape)
     tag.setByte("connMap", connMap)
-    tag.setLong("schedTime", schedTime)
+    sched.save(tag, worldTime)
   }
 
   override def load(tag: NBTTagCompound) {
@@ -49,7 +52,8 @@ abstract class GateICPart
     gateSubID = tag.getByte("subID")
     gateShape = tag.getByte("shape")
     connMap = tag.getByte("connMap")
-    schedTime = tag.getLong("schedTime")
+    // older Timer and State Cell saves recorded their save tick
+    sched.load(tag, if (tag.hasKey("tsave")) tag.getLong("tsave") else -1)
   }
 
   override def writeDesc(out: MCDataOutput) {
@@ -84,21 +88,25 @@ abstract class GateICPart
   override def canConnectPart(part: CircuitPart, r: Int) =
     getLogicPrimitive.canConnectTo(this, part, toInternal(r))
 
-  override def scheduledTick() {
+  def scheduledTick() {
     getLogicPrimitive.scheduledTick(this)
   }
 
-  override def scheduleTick(ticks: Int) {
+  private def worldTime = world.network.getWorld.getTotalWorldTime
+
+  def isScheduled = sched.isSet
+
+  /** Absolute tick of the pending scheduled tick, or -1. */
+  def schedTime: Long = sched.deadline(worldTime)
+
+  def scheduleTick(ticks: Int) {
     if (ticks == 0) scheduleDigitalTick()
-    else if (schedTime < 0)
-      schedTime = world.network.getWorld.getTotalWorldTime + ticks
+    else if (!sched.isSet) sched.set(worldTime, ticks)
   }
 
   def processScheduled() {
-    if (
-      schedTime >= 0 && world.network.getWorld.getTotalWorldTime >= schedTime
-    ) {
-      schedTime = -1
+    if (sched.isDue(worldTime)) {
+      sched.clear()
       scheduledTick()
     }
   }

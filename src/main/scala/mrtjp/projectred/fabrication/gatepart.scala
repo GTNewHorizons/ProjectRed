@@ -52,7 +52,8 @@ abstract class GateICPart
     gateSubID = tag.getByte("subID")
     gateShape = tag.getByte("shape")
     connMap = tag.getByte("connMap")
-    sched.load(tag)
+    // older Timer and State Cell saves recorded their save tick
+    sched.load(tag, if (tag.hasKey("tsave")) tag.getLong("tsave") else -1)
   }
 
   override def writeDesc(out: MCDataOutput) {

@@ -491,12 +491,19 @@ class TickDeadline(maxDelay: Long, key: String, legacyKey: String) {
     else tag.setLong(key, remaining(now))
   }
 
-  def load(tag: NBTTagCompound) {
+  /** @param legacySavedAt
+    *   tick an older save was written at on its own clock, or -1
+    */
+  def load(tag: NBTTagCompound, legacySavedAt: Long = -1) {
     if (tag.hasKey(key)) setPending(tag.getLong(key))
     else {
       clear()
       val legacy = tag.getLong(legacyKey)
-      if (legacy >= 0) legacyAt = legacy
+      if (legacy >= 0)
+        if (legacySavedAt >= 0) {
+          val left = legacy - legacySavedAt
+          pending = if (left > maxDelay) 0 else math.max(0, left)
+        } else legacyAt = legacy
     }
   }
 }

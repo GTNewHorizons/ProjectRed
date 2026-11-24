@@ -74,6 +74,42 @@ class ICDeadlineTest {
   }
 
   @Test
+  def legacyDeadlineWithSaveTickKeepsRemainingDelay(): Unit = {
+    val tag = new NBTTagCompound
+    tag.setLong("legacy", 1002)
+    val deadline = newDeadline()
+    deadline.load(tag, legacySavedAt = 1000)
+
+    assertEquals(2L, deadline.remaining(throw new AssertionError("read clock")))
+    assertFalse(deadline.isDue(900))
+    assertFalse(deadline.isDue(901))
+    assertTrue(deadline.isDue(902))
+  }
+
+  @Test
+  def legacyDeadlineWithSaveTickBeyondMaxDelayIsDueNow(): Unit = {
+    val tag = new NBTTagCompound
+    tag.setLong("legacy", 0)
+    val deadline = newDeadline()
+    deadline.load(tag, legacySavedAt = 5000)
+
+    assertTrue(deadline.isDue(10))
+  }
+
+  @Test
+  def legacyTimerPulseUsesSaveTick(): Unit = {
+    val (tag, pulseTick) = midPulseTimer()
+    tag.removeTag("schedDelay")
+    tag.setLong("schedTime", pulseTick + 2)
+    tag.setLong("tsave", pulseTick)
+    val placed = new Board
+    val part = placed.loadTimer(tag)
+    placed.attach(pulseTick - 100)
+
+    assertEquals(2, ticksUntil(placed, 200)(part.update())(!part.outputHigh))
+  }
+
+  @Test
   def pulseSavedMidwayEndsInYoungerWorld(): Unit = {
     val (tag, _) = midPulseTimer()
     val placed = new Board

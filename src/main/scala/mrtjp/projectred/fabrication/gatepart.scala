@@ -20,7 +20,9 @@ abstract class GateICPart
   private var gateSubID: Byte = 0
   private var gateShape: Byte = 0
 
-  private val sched = new TickDeadline
+  // no gate schedules further ahead than the longest repeater delay
+  private val sched =
+    new TickDeadline(Repeater.delays.max, "schedDelay", "schedTime")
   sched.setPending(0) // new gates get a scheduled tick on their first update
   var schedDigital = false
 
@@ -42,7 +44,7 @@ abstract class GateICPart
     tag.setByte("subID", gateSubID)
     tag.setByte("shape", gateShape)
     tag.setByte("connMap", connMap)
-    sched.save(tag, "schedDelay", worldTime)
+    sched.save(tag, worldTime)
   }
 
   override def load(tag: NBTTagCompound) {
@@ -50,7 +52,7 @@ abstract class GateICPart
     gateSubID = tag.getByte("subID")
     gateShape = tag.getByte("shape")
     connMap = tag.getByte("connMap")
-    sched.load(tag, "schedDelay", "schedTime")
+    sched.load(tag)
   }
 
   override def writeDesc(out: MCDataOutput) {

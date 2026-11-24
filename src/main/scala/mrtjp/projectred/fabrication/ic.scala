@@ -434,48 +434,70 @@ object CircuitPartDefs extends Enum {
   }
 }
 
-/** A tick deadline saved as the delay remaining, so it carries over to a world
-  * with a different clock.
+/** A tick deadline saved as the delay remaining under `key`, so it carries over
+  * to a world with a different clock. Older saves stored an absolute tick under
+  * `legacyKey`; that is checked against the clock on first use, and any
+  * deadline further out than `maxDelay` must come from another world's clock.
   */
-class TickDeadline {
+class TickDeadline(maxDelay: Long, key: String, legacyKey: String) {
   private var at = -1L // absolute tick on the attached world's clock
   private var pending = -1L // remaining delay loaded without a clock
+  private var legacyAt = -1L // absolute tick from an older save, unchecked
 
-  def isSet = at >= 0 || pending >= 0
+  def isSet = at >= 0 || pending >= 0 || legacyAt >= 0
 
   def set(now: Long, delay: Long) {
+    clear()
     at = now + delay
-    pending = -1
   }
 
   def setPending(delay: Long) {
-    at = -1
-    pending = if (delay < 0) -1 else delay
+    clear()
+    if (delay >= 0) pending = delay
   }
 
   def clear() {
     at = -1
     pending = -1
+    legacyAt = -1
   }
 
   def isDue(now: Long) = {
-    if (pending >= 0) set(now, pending)
+    if (pending >= 0 || legacyAt >= 0) set(now, resolvedAt(now) - now)
     at >= 0 && now >= at
   }
 
-  def deadline(now: => Long) = if (pending >= 0) now + pending else at
+  def deadline(now: => Long) =
+    if (pending >= 0 || legacyAt >= 0) resolvedAt(now) else at
 
   def remaining(now: => Long) =
-    if (pending >= 0) pending else if (at < 0) -1 else math.max(0, at - now)
+    if (pending >= 0) pending
+    else if (!isSet) -1
+    else {
+      val n = now
+      math.max(0, resolvedAt(n) - n)
+    }
 
-  def save(tag: NBTTagCompound, key: String, now: => Long) {
-    tag.setLong(key, remaining(now))
+  private def resolvedAt(now: Long) =
+    if (pending >= 0) now + pending
+    else if (legacyAt >= 0) {
+      val left = legacyAt - now
+      if (left > maxDelay) now else now + math.max(0, left)
+    } else at
+
+  def save(tag: NBTTagCompound, now: => Long) {
+    // an unchecked legacy deadline is kept as-is, so saving never needs a clock
+    if (legacyAt >= 0) tag.setLong(legacyKey, legacyAt)
+    else tag.setLong(key, remaining(now))
   }
 
-  def load(tag: NBTTagCompound, key: String, legacyKey: String) {
+  def load(tag: NBTTagCompound) {
     if (tag.hasKey(key)) setPending(tag.getLong(key))
-    // legacy absolute deadline, possibly from another world's clock: due on the first tick
-    else setPending(if (tag.getLong(legacyKey) >= 0) 0 else -1)
+    else {
+      clear()
+      val legacy = tag.getLong(legacyKey)
+      if (legacy >= 0) legacyAt = legacy
+    }
   }
 }
 

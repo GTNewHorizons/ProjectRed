@@ -85,7 +85,7 @@ abstract class GateICPart
   override def canConnectPart(part: CircuitPart, r: Int) =
     getLogicPrimitive.canConnectTo(this, part, toInternal(r))
 
-  override def scheduledTick() {
+  def scheduledTick() {
     getLogicPrimitive.scheduledTick(this)
   }
 
@@ -96,7 +96,7 @@ abstract class GateICPart
   /** Absolute tick of the pending scheduled tick, or -1. */
   def schedTime: Long = sched.deadline(worldTime)
 
-  override def scheduleTick(ticks: Int) {
+  def scheduleTick(ticks: Int) {
     if (ticks == 0) scheduleDigitalTick()
     else if (!sched.isSet) sched.set(worldTime, ticks)
   }

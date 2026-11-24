@@ -136,8 +136,6 @@ class IntegratedCircuit {
   var parts = MMap[(Int, Int), CircuitPart]()
   var errors = Map.empty[Point, (String, Int)]
 
-  private var scheduledTicks = MMap[(Int, Int), Long]()
-
   /** Mapped inputs and outputs of this IC. Outputs go to the world, inputs come
     * in from the world. OOOO OOOO OOOO OOOO IIII IIII IIII IIII
     */
@@ -335,7 +333,6 @@ class IntegratedCircuit {
   def clear() {
     parts.values.foreach { _.unbind() } // remove references
     parts = MMap()
-    scheduledTicks = MMap()
     name = "untitled"
     size = Size.zeroSize
     for (i <- 0 until 4) iostate(i) = 0
@@ -352,14 +349,6 @@ class IntegratedCircuit {
   }
 
   def tick() {
-    val t = network.getWorld.getTotalWorldTime
-    var rem = Seq[(Int, Int)]()
-    for ((k, v) <- scheduledTicks) if (v >= t) {
-      getPart(k._1, k._2).scheduledTick()
-      rem :+= k
-    }
-    rem.foreach(scheduledTicks.remove)
-
     for (part <- parts.values) part.update()
   }
 
@@ -413,17 +402,12 @@ class IntegratedCircuit {
     }
   }
 
-  def scheduleTick(x: Int, y: Int, ticks: Int) {
-    scheduledTicks += (x, y) -> (network.getWorld.getTotalWorldTime + ticks)
-  }
-
   // Convinience functions
   def setPart(p: Point, part: CircuitPart) { setPart(p.x, p.y, part) }
   def getPart(p: Point): CircuitPart = getPart(p.x, p.y)
   def removePart(p: Point) { removePart(p.x, p.y) }
   def notifyNeighbor(p: Point) { notifyNeighbor(p.x, p.y) }
   def notifyNeighbors(p: Point, mask: Int) { notifyNeighbors(p.x, p.y, mask) }
-  def scheduleTick(p: Point, ticks: Int) { scheduleTick(p.x, p.y, ticks) }
 }
 
 object CircuitPartDefs extends Enum {
@@ -536,8 +520,6 @@ abstract class CircuitPart {
   def sendDescUpdate() { writeDesc(writeStreamOf(0)) }
 
   def update() {}
-  def scheduledTick() {}
-  def scheduleTick(ticks: Int) { world.scheduleTick(x, y, ticks) }
 
   def onAdded() {}
   def onRemoved() {}

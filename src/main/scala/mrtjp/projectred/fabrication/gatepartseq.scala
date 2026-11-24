@@ -267,13 +267,16 @@ trait TTimerGateLogic extends SequentialICGateLogic with ITimerGuiLogic {
   var pointer_max = 38
   var pointer_start = -1L
   var saveTime = -1L // used for blueprint in-hand rendering
+  var restartPointer = false
 
   abstract override def save(tag: NBTTagCompound) {
     super.save(tag)
     tag.setInteger("pmax", pointer_max)
     tag.setLong(
       "pelapsed",
-      if (pointer_start < 0) pointer_start else getTotalTime - pointer_start
+      if (pointer_start < 0) pointer_start
+      else if (restartPointer) 0
+      else getTotalTime - pointer_start
     )
     tag.setLong("tsave", getTotalTime)
   }
@@ -283,13 +286,21 @@ trait TTimerGateLogic extends SequentialICGateLogic with ITimerGuiLogic {
     pointer_max = tag.getInteger("pmax")
     pointer_start = tag.getLong("pelapsed")
     saveTime = tag.getLong("tsave")
-    if (pointer_start >= 0) pointer_start = getTotalTime - pointer_start
+    restartPointer = false
+    if (pointer_start >= 0) {
+      if (hasTotalTime) pointer_start = getTotalTime - pointer_start
+      else {
+        // no world time yet (blueprint gate placement): restart on first tick
+        pointer_start = 0
+        restartPointer = true
+      }
+    }
   }
 
   abstract override def writeDesc(packet: MCDataOutput) {
     super.writeDesc(packet)
     packet.writeInt(pointer_max)
-    packet.writeLong(pointer_start)
+    packet.writeLong(if (restartPointer) -1 else pointer_start)
   }
 
   abstract override def readDesc(packet: MCDataInput) {
@@ -318,6 +329,10 @@ trait TTimerGateLogic extends SequentialICGateLogic with ITimerGuiLogic {
         gate.world.network.getWorld.getTotalWorldTime // normal access during operation
     }
 
+  def hasTotalTime =
+    gate.world.network == null || gate.world.network.getWorld != null ||
+      MultipartSaveLoad.loadingWorld != null
+
   def pointerValue =
     if (pointer_start < 0) 0 else (getTotalTime - pointer_start).toInt
 
@@ -339,6 +354,11 @@ trait TTimerGateLogic extends SequentialICGateLogic with ITimerGuiLogic {
   }
 
   override def onTick(gate: SequentialGateICPart) {
+    if (restartPointer) {
+      restartPointer = false
+      pointer_start = getTotalTime
+      if (!gate.world.network.isRemote) sendPointerUpdate()
+    }
     if (pointer_start >= 0)
       if (getTotalTime >= pointer_start + pointer_max) pointerTick()
       else if (pointer_start > getTotalTime)

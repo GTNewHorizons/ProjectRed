@@ -264,12 +264,13 @@ trait ICounterGuiLogic {
 
 trait TTimerGateLogic extends SequentialICGateLogic with ITimerGuiLogic {
   var pointer_max = 38
-  // start tick on the network world clock; -1 when stopped or not yet anchored
-  var pointer_start = -1L
+  var pointer_running = false
+  // start tick on the network world clock; may be negative in a young world
+  var pointer_start = 0L
   // elapsed ticks read without a world clock; anchored once one is available
   var pointer_pending = -1L
 
-  def isRunning = pointer_start >= 0 || pointer_pending >= 0
+  def isRunning = pointer_running
 
   abstract override def save(tag: NBTTagCompound) {
     super.save(tag)
@@ -308,8 +309,8 @@ trait TTimerGateLogic extends SequentialICGateLogic with ITimerGuiLogic {
   private def worldTime = gate.world.network.getWorld.getTotalWorldTime
 
   private def setPointerElapsed(elapsed: Long) {
-    pointer_start = -1
-    pointer_pending = if (elapsed < 0) -1 else elapsed
+    pointer_running = elapsed >= 0
+    pointer_pending = if (pointer_running) elapsed else -1
     anchorPointer()
   }
 
@@ -325,7 +326,7 @@ trait TTimerGateLogic extends SequentialICGateLogic with ITimerGuiLogic {
   def pointerValue: Int = {
     anchorPointer()
     if (pointer_pending >= 0) pointer_pending.toInt
-    else if (pointer_start < 0) 0
+    else if (!pointer_running) 0
     else (worldTime - pointer_start).toInt
   }
 
@@ -348,7 +349,7 @@ trait TTimerGateLogic extends SequentialICGateLogic with ITimerGuiLogic {
 
   override def onTick(gate: SequentialGateICPart) {
     anchorPointer()
-    if (pointer_start >= 0) {
+    if (pointer_running && pointer_pending < 0) {
       val now = worldTime
       if (now >= pointer_start + pointer_max) pointerTick()
       else if (pointer_start > now) pointer_start = now
@@ -359,7 +360,7 @@ trait TTimerGateLogic extends SequentialICGateLogic with ITimerGuiLogic {
 
   def resetPointer() {
     if (isRunning) {
-      pointer_start = -1
+      pointer_running = false
       pointer_pending = -1
       gate.world.network.markSave()
       if (!gate.world.network.isRemote) sendPointerUpdate()
@@ -368,6 +369,7 @@ trait TTimerGateLogic extends SequentialICGateLogic with ITimerGuiLogic {
 
   def startPointer() {
     if (!isRunning) {
+      pointer_running = true
       pointer_start = worldTime
       gate.world.network.markSave()
       if (!gate.world.network.isRemote) sendPointerUpdate()

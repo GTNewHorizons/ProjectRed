@@ -23,6 +23,17 @@ class ICTimerClockTest {
   }
 
   @Test
+  def placementInYoungerWorldResumesCountdown(): Unit = {
+    val placed = new Board
+    val part = placed.loadTimer(savedTimer(savedAt = 100, elapsed = 10))
+    placed.attach(5)
+
+    assertTrue(part.timer.isRunning)
+    assertEquals(10, part.timer.pointerValue)
+    assertEquals(28, placed.ticksUntilPulse(part, 100))
+  }
+
+  @Test
   def poweredPlacementStaysStopped(): Unit = {
     val placed = new Board
     val part = placed.loadTimer(savedTimer(savedAt = 100, elapsed = 10))

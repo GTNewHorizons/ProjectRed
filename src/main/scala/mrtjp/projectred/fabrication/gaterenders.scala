@@ -812,7 +812,7 @@ class RenderStateCell extends ICGateRenderer[SequentialGateICPart] {
     wires(3).on = (state & 0x88) != 0
     wires(4).on = (state & 2) != 0
     torches(0).on = (state & 0x10) != 0
-    torches(1).on = logic.pointer_start >= 0
+    torches(1).on = logic.isRunning
     chip.on = logic.state2 != 0
 
     reflect = gate.shape == 1

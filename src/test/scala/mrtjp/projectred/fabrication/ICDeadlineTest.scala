@@ -89,7 +89,7 @@ class ICDeadlineTest {
   @Test
   def legacyDeadlineWithSaveTickBeyondMaxDelayIsDueNow(): Unit = {
     val tag = new NBTTagCompound
-    tag.setLong("legacy", 0)
+    tag.setLong("legacy", 5500)
     val deadline = newDeadline()
     deadline.load(tag, legacySavedAt = 5000)
 

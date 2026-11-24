@@ -450,6 +450,51 @@ object CircuitPartDefs extends Enum {
   }
 }
 
+/** A tick deadline saved as the delay remaining, so it carries over to a world
+  * with a different clock.
+  */
+class TickDeadline {
+  private var at = -1L // absolute tick on the attached world's clock
+  private var pending = -1L // remaining delay loaded without a clock
+
+  def isSet = at >= 0 || pending >= 0
+
+  def set(now: Long, delay: Long) {
+    at = now + delay
+    pending = -1
+  }
+
+  def setPending(delay: Long) {
+    at = -1
+    pending = if (delay < 0) -1 else delay
+  }
+
+  def clear() {
+    at = -1
+    pending = -1
+  }
+
+  def isDue(now: Long) = {
+    if (pending >= 0) set(now, pending)
+    at >= 0 && now >= at
+  }
+
+  def deadline(now: => Long) = if (pending >= 0) now + pending else at
+
+  def remaining(now: => Long) =
+    if (pending >= 0) pending else if (at < 0) -1 else math.max(0, at - now)
+
+  def save(tag: NBTTagCompound, key: String, now: => Long) {
+    tag.setLong(key, remaining(now))
+  }
+
+  def load(tag: NBTTagCompound, key: String, legacyKey: String) {
+    if (tag.hasKey(key)) setPending(tag.getLong(key))
+    // legacy absolute deadline, possibly from another world's clock: due on the first tick
+    else setPending(if (tag.getLong(legacyKey) >= 0) 0 else -1)
+  }
+}
+
 object CircuitPart {
   def createPart(id: Int) = CircuitPartDefs(id).createPart
 }

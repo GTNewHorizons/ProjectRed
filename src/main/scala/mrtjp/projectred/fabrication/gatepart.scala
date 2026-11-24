@@ -20,7 +20,8 @@ abstract class GateICPart
   private var gateSubID: Byte = 0
   private var gateShape: Byte = 0
 
-  var schedTime = 0L
+  private val sched = new TickDeadline
+  sched.setPending(0) // new gates get a scheduled tick on their first update
   var schedDigital = false
 
   def getLogic[T]: T
@@ -41,7 +42,7 @@ abstract class GateICPart
     tag.setByte("subID", gateSubID)
     tag.setByte("shape", gateShape)
     tag.setByte("connMap", connMap)
-    tag.setLong("schedTime", schedTime)
+    sched.save(tag, "schedDelay", worldTime)
   }
 
   override def load(tag: NBTTagCompound) {
@@ -49,7 +50,7 @@ abstract class GateICPart
     gateSubID = tag.getByte("subID")
     gateShape = tag.getByte("shape")
     connMap = tag.getByte("connMap")
-    schedTime = tag.getLong("schedTime")
+    sched.load(tag, "schedDelay", "schedTime")
   }
 
   override def writeDesc(out: MCDataOutput) {
@@ -88,17 +89,21 @@ abstract class GateICPart
     getLogicPrimitive.scheduledTick(this)
   }
 
+  private def worldTime = world.network.getWorld.getTotalWorldTime
+
+  def isScheduled = sched.isSet
+
+  /** Absolute tick of the pending scheduled tick, or -1. */
+  def schedTime: Long = sched.deadline(worldTime)
+
   override def scheduleTick(ticks: Int) {
     if (ticks == 0) scheduleDigitalTick()
-    else if (schedTime < 0)
-      schedTime = world.network.getWorld.getTotalWorldTime + ticks
+    else if (!sched.isSet) sched.set(worldTime, ticks)
   }
 
   def processScheduled() {
-    if (
-      schedTime >= 0 && world.network.getWorld.getTotalWorldTime >= schedTime
-    ) {
-      schedTime = -1
+    if (sched.isDue(worldTime)) {
+      sched.clear()
       scheduledTick()
     }
   }

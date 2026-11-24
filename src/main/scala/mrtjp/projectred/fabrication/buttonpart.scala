@@ -17,18 +17,18 @@ class ButtonICPart
     with IPoweredCircuitPart
     with TClientNetCircuitPart {
   var on = false
-  var sched = -1L
+  private val depressAt = new TickDeadline
 
   override def save(tag: NBTTagCompound) {
     super.save(tag)
     tag.setBoolean("on", on)
-    tag.setLong("sched", sched)
+    depressAt.save(tag, "schedDelay", worldTime)
   }
 
   override def load(tag: NBTTagCompound) {
     super.load(tag)
     on = tag.getBoolean("on")
-    sched = tag.getLong("sched")
+    depressAt.load(tag, "schedDelay", "sched")
   }
 
   override def writeDesc(out: MCDataOutput) {
@@ -56,7 +56,7 @@ class ButtonICPart
       notify(0xf)
       sendStateUpdate()
 
-      sched = world.network.getWorld.getTotalWorldTime + 20 // schedule depress
+      depressAt.set(worldTime, 20)
     }
   }
 
@@ -66,14 +66,18 @@ class ButtonICPart
       notify(0xf)
       sendStateUpdate()
 
-      sched = -1 // clear depress schedule
+      depressAt.clear()
     }
   }
 
   override def update() {
-    if (sched != -1 && world.network.getWorld.getTotalWorldTime >= sched)
+    if (depressAt.isDue(worldTime)) {
+      depressAt.clear()
       depress()
+    }
   }
+
+  private def worldTime = world.network.getWorld.getTotalWorldTime
 
   def sendStateUpdate() {
     writeStreamOf(1).writeBoolean(on)

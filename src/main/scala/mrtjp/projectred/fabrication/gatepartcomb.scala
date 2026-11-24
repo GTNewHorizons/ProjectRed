@@ -259,7 +259,7 @@ object Repeater extends ComboICGateLogic {
     if (input == 0) 0 else 1
 
   override def onChange(gate: ComboGateICPart) {
-    if (gate.schedTime < 0) super.onChange(gate)
+    if (!gate.isScheduled) super.onChange(gate)
   }
 
   override def activate(gate: ComboGateICPart) {

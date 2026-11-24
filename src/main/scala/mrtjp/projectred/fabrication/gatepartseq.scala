@@ -413,7 +413,7 @@ class Timer(gate: SequentialGateICPart)
       gate.onInputChange()
     }
 
-    if (gate.schedTime < 0)
+    if (!gate.isScheduled)
       if (newInput > 0) resetPointer() else startPointer()
   }
 

@@ -118,8 +118,18 @@ object BlockLamp {
 
   private val cache = new LampLightCache
 
-  def getLightValue(world: World, x: Int, y: Int, z: Int) =
-    cache.get(world, x, y, z) >> 4
+  def getLightValue(world: World, x: Int, y: Int, z: Int): Int = {
+    val packed = cache.get(world, x, y, z)
+    if (packed != LampLightCache.MISS) packed >> 4
+    else if (world.isRemote || !world.blockExists(x, y, z)) 0
+    else
+      world
+        .getChunkFromBlockCoords(x, z)
+        .getTileEntityUnsafe(x & 15, y, z & 15) match {
+        case t: TileLamp => t.publishLight()
+        case _           => 0
+      }
+  }
   def setLightValue(
       world: World,
       x: Int,
@@ -141,12 +151,16 @@ trait Int4Consumer {
   def apply(x: Int, y: Int, z: Int, color: Int): Unit
 }
 
+private object LampLightCache {
+  final val MISS = -1
+}
+
 private class LampLightCache {
   private val tables = new java.util.WeakHashMap[World, LampLightTable]()
 
   def get(world: World, x: Int, y: Int, z: Int): Int = {
     val t = find(world)
-    if (t == null) 0 else t.get(pack(x, y, z))
+    if (t == null) LampLightCache.MISS else t.get(pack(x, y, z))
   }
 
   def put(world: World, x: Int, y: Int, z: Int, v: Int): Unit =
@@ -199,11 +213,11 @@ private class LampLightTable {
     while (n < keys.length) {
       val k = keys(i)
       if (k == key) return vals(i)
-      if (k == EMPTY) return 0
+      if (k == EMPTY) return LampLightCache.MISS
       i = (i + 1) & mask
       n += 1
     }
-    0
+    LampLightCache.MISS
   }
 
   def put(key: Long, v: Int): Unit = {
@@ -328,19 +342,14 @@ class TileLamp extends InstancedBlockTile with ILight {
   }
 
   private def recomputeLight() {
-    lightCache =
-      if (inverted != powered)
-        IlluminationProxy.getLightValue(getColor, 15)
-      else 0
+    lightCache = publishLight()
     lightDirty = false
-    BlockLamp.setLightValue(
-      world,
-      x,
-      y,
-      z,
-      lightCache,
-      getColor
-    )
+  }
+
+  private[illumination] def publishLight(): Int = {
+    val light = if (isOn) IlluminationProxy.getLightValue(getColor, 15) else 0
+    BlockLamp.setLightValue(world, x, y, z, light, getColor)
+    light
   }
 
   override def onNeighborChange(b: Block) {

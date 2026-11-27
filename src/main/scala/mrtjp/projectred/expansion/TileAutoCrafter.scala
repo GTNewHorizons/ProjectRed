@@ -50,7 +50,7 @@ class TileAutoCrafter
   private var cycleTimer1 = getUnpoweredCycleTimer
   private var cycleTimer2 = getPoweredCycleTimer
 
-  private var recipeEquality: ItemEquality = _
+  private val inputEqualities = new java.util.HashMap[ItemKey, ItemEquality]()
   private val recipeCache = new java.util.HashMap[String, IRecipe]()
   private lazy val allRecipes =
     CraftingManager.getInstance().getRecipeList.asInstanceOf[JList[IRecipe]]
@@ -140,7 +140,7 @@ class TileAutoCrafter
     currentRecipe = null
     currentInputs.clear()
     currentOutput = null
-    recipeEquality = null
+    inputEqualities.clear()
 
     val plan = getStackInSlot(planSlot)
     if (plan == null || !ItemPlan.hasRecipeInside(plan)) return
@@ -166,13 +166,21 @@ class TileAutoCrafter
       currentOutput =
         ItemKeyStack.getOrNull(currentRecipe.getCraftingResult(invCrafting))
 
-      recipeEquality = new ItemEquality
-      recipeEquality.matchNBT = true
-      recipeEquality.matchMeta =
-        !currentOutput.key.makeStack(0).isItemStackDamageable
-      recipeEquality.matchOre = currentRecipe.isInstanceOf[ShapedOreRecipe] ||
+      val isOre = currentRecipe.isInstanceOf[ShapedOreRecipe] ||
         currentRecipe.isInstanceOf[ShapelessOreRecipe]
+      for ((k, _) <- currentInputs.result) {
+        val eq = new ItemEquality
+        eq.matchNBT = true
+        eq.matchMeta = !k.makeStack(0).isItemStackDamageable
+        eq.matchOre = isOre
+        inputEqualities.put(k, eq)
+      }
     }
+  }
+
+  private def equalityFor(k: ItemKey): ItemEquality = {
+    val eq = inputEqualities.get(k)
+    if (eq != null) eq else ItemEquality.standard
   }
 
   override def markDirty() {
@@ -196,10 +204,13 @@ class TileAutoCrafter
     if (currentRecipe == null || !checkSpaceForOutput)
       return false
 
+    // Aggregate storage by exact key first so equality checks run per distinct
+    // stored item, not per slot; then match each input against it fuzzily.
     val storage = buildStorageMap()
     if (
       !currentInputs.result.forall { case (k, amt) =>
-        storage.getOrElse(k, 0) >= amt
+        val eq = equalityFor(k)
+        storage.iterator.filter(e => eq.matches(k, e._1)).map(_._2).sum >= amt
       }
     ) return false
 
@@ -208,24 +219,6 @@ class TileAutoCrafter
 
     produceOutput()
     true
-  }
-
-  def containsEnoughResource(item: ItemKey, amount: Int): Boolean = {
-    val eq = new ItemEquality
-    eq.matchMeta = !item.makeStack(0).isItemStackDamageable
-    eq.matchNBT = true
-    eq.matchOre = currentRecipe.isInstanceOf[ShapedOreRecipe] || currentRecipe
-      .isInstanceOf[ShapelessOreRecipe]
-
-    var found = 0
-    for (i <- 9 until 27) {
-      val s = getStackInSlot(i)
-      if (s != null && eq.matches(item, ItemKey.get(s))) {
-        found += s.stackSize
-        if (found >= amount) return true
-      }
-    }
-    false
   }
 
   def checkSpaceForOutput = {
@@ -242,9 +235,10 @@ class TileAutoCrafter
 
   def eatResource(item: ItemKey, amount: Int) {
     var left = amount
+    val eq = equalityFor(item)
     for (i <- 9 until 27 if left > 0) {
       val s = getStackInSlot(i)
-      if (s != null && recipeEquality.matches(item, ItemKey.get(s))) {
+      if (s != null && eq.matches(item, ItemKey.get(s))) {
         if (s.getItem.hasContainerItem(s)) {
           val cStack = s.getItem.getContainerItem(s)
           setInventorySlotContents(i, cStack)

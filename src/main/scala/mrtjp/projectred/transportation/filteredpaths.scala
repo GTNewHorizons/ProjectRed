@@ -65,7 +65,10 @@ class Path(val filters: Set[PathFilter]) {
   def allowItem(item: ItemKey): Boolean = filters.forall(_.allowItem(item))
   def allowColor(c: Int) = filters.forall(_.allowColor(c))
 
-  val pathFlags = filters.foldLeft(0x3)((b, f) => f.pathFlags & b)
+  val pathFlags = filters.foldLeft(0x3) { (flags, filter) =>
+    filter.freeze()
+    flags & filter.pathFlags
+  }
   val flagRouteTo = (pathFlags & 0x1) != 0
   val flagRouteFrom = (pathFlags & 0x2) != 0
 }
@@ -75,23 +78,57 @@ object PathFilter {
 }
 
 class PathFilter {
+  private var frozen = false
+  private var frozenHash = 0
+  private var flagsValue = 0x3
+  private var filterExcludeValue = true
+  private var itemFilterValue: Set[ItemKey] = Set.empty
+  private var colorExcludeValue = true
+  private var colorsValue = 0
 
-  /** 00FT T - can travel to F - can come from
-    */
-  var pathFlags = 0x3
+  // Keep the existing builder getter/setter ABI. A path publishes an immutable
+  // filter: changing a key after insertion would corrupt its hash set.
+  private def requireMutable() {
+    if (frozen)
+      throw new IllegalStateException("Cannot modify a published path filter")
+  }
+  def pathFlags: Int = flagsValue
+  def pathFlags_=(value: Int) { requireMutable(); flagsValue = value }
+  def filterExclude: Boolean = filterExcludeValue
+  def filterExclude_=(value: Boolean) {
+    requireMutable(); filterExcludeValue = value
+  }
+  def itemFilter: Set[ItemKey] = itemFilterValue
+  def itemFilter_=(value: Set[ItemKey]) {
+    requireMutable(); itemFilterValue = value
+  }
+  def colorExclude: Boolean = colorExcludeValue
+  def colorExclude_=(value: Boolean) {
+    requireMutable(); colorExcludeValue = value
+  }
+  def colors: Int = colorsValue
+  def colors_=(value: Int) { requireMutable(); colorsValue = value }
 
-  // Filter for items
-  var filterExclude = true
-  var itemFilter: Set[ItemKey] = Set.empty
   def allowItem(item: ItemKey) = itemFilter.contains(item) != filterExclude
-
-  // Filter for colors
-  var colorExclude = true
-  var colors = 0
   def filterContainsColor(c: Int) = (colors & 1 << c) != 0
   def allowColor(c: Int) = if (0 until 16 contains c)
     filterContainsColor(c) != colorExclude
   else true
+
+  private def valueHash: Int = {
+    var h = 17
+    h = h * 31 + pathFlags
+    h = h * 31 + (if (filterExclude) 1231 else 1237)
+    h = h * 31 + itemFilter.hashCode
+    h = h * 31 + (if (colorExclude) 1231 else 1237)
+    h * 31 + colors
+  }
+
+  private[transportation] def freeze() {
+    if (!frozen) { frozenHash = valueHash; frozen = true }
+  }
+
+  override def hashCode(): Int = if (frozen) frozenHash else valueHash
 
   override def equals(other: Any) = other match {
     case that: PathFilter =>

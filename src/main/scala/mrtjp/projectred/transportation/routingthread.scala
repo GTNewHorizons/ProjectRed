@@ -1,15 +1,25 @@
 package mrtjp.projectred.transportation
 
-import java.util.concurrent.PriorityBlockingQueue
-
 object TableUpdateThread {
-  private val updateCalls = new PriorityBlockingQueue[RouteLayerUpdater]()
+  private val updateCalls = new CoalescingUpdateQueue[Router](
+    _.getLinkStateID,
+    (router, version) => new RouteLayerUpdater(router, version),
+    (left, leftVersion, right, rightVersion) => {
+      var c = 0
+      if (rightVersion <= 0)
+        c = java.lang.Integer.compare(leftVersion, rightVersion)
+      if (c == 0)
+        c = java.lang.Integer.compare(left.getIPAddress, right.getIPAddress)
+      if (c == 0) c = java.lang.Integer.compare(rightVersion, leftVersion)
+      c
+    }
+  )
   private var average = 0L
 
   val avgSync = new AnyRef
 
   def add(r: Router) {
-    updateCalls.add(new RouteLayerUpdater(r))
+    updateCalls.add(r)
   }
 
   def remove(run: Runnable) = updateCalls.remove(run)
@@ -27,7 +37,7 @@ class TableUpdateThread(i: Int) extends Thread("PR RoutingThread #" + i) {
   override def run() {
     import TableUpdateThread._
 
-    var job: RouteLayerUpdater = null
+    var job: Runnable = null
     try {
       while ({ job = updateCalls.take; job } != null) {
         val starttime = System.nanoTime
@@ -45,10 +55,8 @@ class TableUpdateThread(i: Int) extends Thread("PR RoutingThread #" + i) {
   }
 }
 
-private[this] class RouteLayerUpdater(val router: Router)
-    extends Runnable
-    with Ordered[RouteLayerUpdater] {
-  private val newVersion = router.getLinkStateID
+private[this] class RouteLayerUpdater(val router: Router, newVersion: Int)
+    extends Runnable {
   private var complete = false
 
   def run() {
@@ -68,11 +76,4 @@ private[this] class RouteLayerUpdater(val router: Router)
     complete = true
   }
 
-  override def compare(that: RouteLayerUpdater) = {
-    var c = 0
-    if (that.newVersion <= 0) c = newVersion - that.newVersion
-    if (c == 0) c = router.getIPAddress - that.router.getIPAddress
-    if (c == 0) c = that.newVersion - newVersion
-    c
-  }
 }
